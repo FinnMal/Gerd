@@ -8,5 +8,8 @@
     "assetBundlePatterns": [
       "**/*"
     ]
+  },
+  "module.exports": {
+    "assets": ["./assets/fonts"]
   }
 }
