@@ -31,7 +31,7 @@ export default class HomeScreen extends React.Component {
 	}
 
 	render() {
-		var s = require('./../app/style.jss');
+		var s = require('./../app/style.js');
 		const marginLeft = this.margin.interpolate({
 			inputRange: [ 0, 2000 ],
 			outputRange: [ 0, 2000 ],
