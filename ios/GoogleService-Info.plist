@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>489695065428-v8nbheril8uahpc5p98fikt7ak7n6kjt.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.489695065428-v8nbheril8uahpc5p98fikt7ak7n6kjt</string>
+	<key>API_KEY</key>
+	<string>AIzaSyCwObZYDs5SnddHVu-aaQ_eF5TjwrQXIx4</string>
+	<key>GCM_SENDER_ID</key>
+	<string>489695065428</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>de.gerd</string>
+	<key>PROJECT_ID</key>
+	<string>gerd-eu</string>
+	<key>STORAGE_BUCKET</key>
+	<string>gerd-eu.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:489695065428:ios:cf61a5e0aff829e9d344c1</string>
+	<key>DATABASE_URL</key>
+	<string>https://gerd-eu.firebaseio.com</string>
+</dict>
+</plist>

@@ -29,6 +29,27 @@ export async function getUserID(cb) {
 	}
 }
 
+export function getAgoText(time) {
+	var cur_time = new Date().getTime() / 1000;
+	if (cur_time > time) {
+		var diff = cur_time - time;
+		var ago_pre = 'Vor ';
+	} else if (time > cur_time) {
+		var diff = time - cur_time;
+		var ago_pre = 'In ';
+	} else
+		return 'Gerade eben';
+
+	if (diff < 60) var ago = Math.round(diff) + ' Sek.';
+	else if (diff > 59 && diff < 3600) var ago = Math.round(diff / 60) + ' Min.';
+	else if (diff > 3599 && diff < 86400) var ago = Math.round(diff / 3600) + ' Std.';
+	else if (diff > 86399 && diff < 604800) var ago = Math.round(diff / 86400) + ' Tagen';
+	else if (diff > 604799 && diff < 2592000) var ago = Math.round(diff / 604800) + ' Wochen';
+	else if (diff > 2591999 && diff < 31536000) var ago = Math.round(diff / 2592000) + ' Monaten';
+	else if (diff > 31535999) var ago = Math.round(diff / 31536000) + ' Jahren';
+	return ago_pre + ago;
+}
+
 export function msToHMS(duration) {
 	var milliseconds = parseInt(duration % 1000 / 100),
 		seconds = parseInt(duration / 1000 % 60),

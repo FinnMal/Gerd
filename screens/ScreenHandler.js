@@ -61,8 +61,6 @@ export default class ScreenHandler extends React.Component {
 			outputRange: [ 0, 2000 ],
 		});
 
-		var iconColor = this.state.nav[1].visible ? 'white' : 'red';
-
 		return (
 			<View style={s.container}>
 				<StatusBar hidden={true} />
@@ -109,6 +107,15 @@ export default class ScreenHandler extends React.Component {
 								width: 44,
 								height: 44,
 								borderRadius: 44 / 2,
+								shadowColor: '#0DF5E3',
+								shadowOffset: {
+									width: 6,
+									height: 0,
+								},
+								shadowOpacity: 0.20,
+								shadowRadius: 20.00,
+
+								elevation: 10,
 							}}
 						/>
 					</Animated.View>
@@ -186,7 +193,6 @@ export default class ScreenHandler extends React.Component {
 					this.state.nav[i].iconColor = 'white';
 					this.state.nav[i].visible = false;
 				} else {
-					this.state.nav[i].iconColor = '#38304C';
 					this.state.nav[i].visible = true;
 				}
 			}
@@ -199,7 +205,17 @@ export default class ScreenHandler extends React.Component {
 					duration: 220,
 					easing: Easing.ease,
 				})
-				.start();
+				.start(() => {
+					for (var i = 0; i < 4; i++) {
+						if (id != i) {
+							this.state.nav[i].iconColor = 'white';
+						} else {
+							this.state.nav[i].iconColor = '#38304C';
+						}
+					}
+
+					this.forceUpdate();
+				});
 
 			//if(this.last_nav_id > id) this.state.nav[id].moveTo = "left"
 			//else this.state.nav[id].moveTo = "right"

@@ -8,14 +8,22 @@ import ScreenHandler from './screens/ScreenHandler';
 import HomeScreen from './screens/Home';
 import ManagmentScreen from './screens/Managment';
 import MessagesScreen from './screens/Messages';
+import MessageScreen from './screens/Message';
 import SettingsScreen from './screens/Settings';
 import { YellowBox } from 'react-native';
-//import { NetInfo } from 'react-native-netinfo'
-
+import Firebase from 'firebase';
 YellowBox.ignoreWarnings([ 'Warning: isMounted(...) is deprecated', 'Module RCTImageLoader' ]);
-
-//firebase.config().enableDeveloperMode();
-
+const firebaseConfig = {
+	apiKey: 'AIzaSyA8WgcS53qQskfdqzJInCK-VlBOU_gPMYI',
+	authDomain: 'gerd-eu.firebaseapp.com',
+	databaseURL: 'https://gerd-eu.firebaseio.com',
+	projectId: 'gerd-eu',
+	storageBucket: 'gerd-eu.appspot.com',
+	messagingSenderId: '489695065428',
+	appId: '1:489695065428:web:b9c6acce57e1e6cdd344c1',
+	measurementId: 'G-MFKRBK5EZS',
+};
+const app = Firebase.initializeApp(firebaseConfig);
 /**
 NetInfo.getConnectionInfo().then((connectionInfo) => {
   console.log(
@@ -65,6 +73,10 @@ const MainNavigator = createStackNavigator(
 		},
 		SettingsScreen: {
 			screen: SettingsScreen,
+			navigationOptions: navigationOptions,
+		},
+		MessageScreen: {
+			screen: MessageScreen,
 			navigationOptions: navigationOptions,
 		},
 	},
