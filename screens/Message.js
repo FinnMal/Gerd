@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { Headlines } from './../app/constants.js';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faChevronCircleLeft, faClock } from '@fortawesome/free-solid-svg-icons';
+import { faChevronCircleLeft, faClock, faArrowAltCircleDown } from '@fortawesome/free-solid-svg-icons';
 import { NotificationCard } from './../app/components.js';
 import database from '@react-native-firebase/database';
 import { SafeAreaView } from 'react-navigation'; //added this import
@@ -34,8 +34,8 @@ export default class MessageScreen extends React.Component {
 	_getHeadlineMarginTop = () => {
 		const { scrollY } = this.state;
 		return scrollY.interpolate({
-			inputRange: [ 0, 160, 200 ],
-			outputRange: [ 200, 81, 0 ],
+			inputRange: [ 0, 160, 210 ],
+			outputRange: [ 200, 81, 15 ],
 			extrapolate: 'clamp',
 			useNativeDriver: true,
 		});
@@ -66,8 +66,19 @@ export default class MessageScreen extends React.Component {
 		const { scrollY } = this.state;
 
 		return scrollY.interpolate({
-			inputRange: [ 0, 160, 190 ],
-			outputRange: [ 20, 20, -29 ],
+			inputRange: [ 0, 160, 210 ],
+			outputRange: [ 20, 20, 20 ],
+			extrapolate: 'clamp',
+			useNativeDriver: true,
+		});
+	};
+
+	_getBackButtonMarginTop = () => {
+		const { scrollY } = this.state;
+
+		return scrollY.interpolate({
+			inputRange: [ 0, 160, 210 ],
+			outputRange: [ 40, 40, -29 ],
 			extrapolate: 'clamp',
 			useNativeDriver: true,
 		});
@@ -89,6 +100,7 @@ export default class MessageScreen extends React.Component {
 		const headlineMarginTop = this._getHeadlineMarginTop();
 		const headlineMarginLeft = this._getHeadlineMarginLeft();
 		const backButtonMarginLeft = this._getBackButtonMarginLeft();
+		const backButtonMarginTop = this._getBackButtonMarginTop();
 		const imageScale = this._getImageScale();
 
 		var s = require('./../app/style.js');
@@ -137,10 +149,11 @@ export default class MessageScreen extends React.Component {
 								</Text>
 							</View>
 						</View>
-
 						<Animated.Image
 							blurRadius={30}
 							style={{
+								backgroundColor: 'rgba(0,0,0,1)',
+								flex: 1,
 								zIndex: -1,
 								height: 370,
 								resizeMode: 'cover',
@@ -162,6 +175,7 @@ export default class MessageScreen extends React.Component {
 					overScrollMode={'never'}
 					style={{
 						zIndex: 10,
+						marginBottom: -35,
 					}}
 					onScroll={Animated.event([
 						{
@@ -181,6 +195,35 @@ export default class MessageScreen extends React.Component {
 							<Text style={{ fontFamily: 'Poppins-Regular', fontSize: 20, color: 'white' }}>
 								Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr.
 							</Text>
+							<View
+								style={{
+									paddingTop: 20,
+									paddingLeft: 30,
+									borderRadius: 30,
+									marginLeft: -22,
+									marginTop: 20,
+									backgroundColor: '#38304C',
+									height: 200,
+									width: '120%',
+								}}
+							>
+								<Text style={{ fontFamily: 'Poppins-Bold', fontSize: 37, color: '#B3A9AF' }}>Dateien</Text>
+								<View
+									style={{
+										marginTop: 20,
+										borderRadius: 13,
+										padding: 10,
+										backgroundColor: '#201A30',
+										marginRight: 55,
+										color: '#ADA4A9',
+									}}
+								>
+									<FontAwesomeIcon style={{ zIndex: 0 }} size={29} color="#ADA4A9" icon={faArrowAltCircleDown} />
+									<Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 23, color: '#ADA4A9' }}>lorem.pdf</Text>
+									<Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 16, color: '#ADA4A9' }}>12MB</Text>
+								</View>
+
+							</View>
 						</View>
 					</View>
 				</Animated.ScrollView>
@@ -189,7 +232,7 @@ export default class MessageScreen extends React.Component {
 						([ s.headlineIcon ], {
 							zIndex: 20,
 							position: 'absolute',
-							marginTop: 40,
+							marginTop: backButtonMarginTop,
 							marginLeft: backButtonMarginLeft,
 						})
 					}
