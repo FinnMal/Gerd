@@ -51,6 +51,7 @@ class HomeScreen extends React.Component {
 							var club = snap.val();
 							message.color = club.color;
 							message.club_name = club.name;
+							message.club_img = club.logo;
 							message.ago = utils.getAgoText(message.send_at);
 							this.state.mesList[total_messages - i] = message;
 							i++;
@@ -77,16 +78,14 @@ class HomeScreen extends React.Component {
 						color={mes.color}
 						key={key}
 						headline={mes.headline}
-						text={mes.text}
-						clubImg={require('./../assets/img/cvjm_logo_vektor-converted.png')}
-						clubName={mes.club_name}
+						short_text={mes.short_text}
+						long_text={mes.long_text}
+						club_img={mes.club_img}
+						img={mes.img}
+						club_name={mes.club_name}
 						ago={mes.ago}
-						onPress={() => {
-							this.props.navigation.navigate('MessageScreen', {
-								utilsObject: this.utils,
-								navigation: this.props.navigation,
-							});
-						}}
+						downloads={mes.downloads}
+						navigation={this.props.navigation}
 					/>
 				);
 			});
