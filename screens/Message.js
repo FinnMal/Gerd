@@ -20,7 +20,7 @@ import {
 import { Headlines } from './../app/constants.js';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faChevronCircleLeft, faClock, faArrowAltCircleDown } from '@fortawesome/free-solid-svg-icons';
-import { NotificationCard, DownloadCard } from './../app/components.js';
+import { NotificationCard, DownloadCard, EventCard } from './../app/components.js';
 import database from '@react-native-firebase/database';
 import { SafeAreaView } from 'react-navigation'; //added this import
 
@@ -108,6 +108,8 @@ export default class MessageScreen extends React.Component {
 	};
 
 	render() {
+		const content = this.props.navigation.getParam('content', null);
+
 		const headlineFontScale = this._getHeadlineFontScale();
 		const headlineMarginTop = this._getHeadlineMarginTop();
 		const headlineMarginLeft = this._getHeadlineMarginLeft();
@@ -118,11 +120,20 @@ export default class MessageScreen extends React.Component {
 		var s = require('./../app/style.js');
 
 		var downloadsElements = null;
-		const files = this.props.navigation.getParam('files', null);
-		if (files) {
-			downloadsElements = Object.keys(files).map(key => {
-				var file = files[key];
-				return <DownloadCard name={file.name} size={file.size} download_url={file.download_url} />;
+		if (content.files) {
+			downloadsElements = Object.keys(content.files).map(key => {
+				var file = content.files[key];
+				return (
+					<DownloadCard key={key} name={file.name} type={file.type} size={file.size} download_url={file.download_url} />
+				);
+			});
+		}
+
+		var eventsElements = null;
+		if (content.events) {
+			eventsElements = Object.keys(content.events).map(key => {
+				var event = content.events[key];
+				return <EventCard key={key} editable={false} name={event.name} date={event.date} location={event.location} />;
 			});
 		}
 
@@ -143,7 +154,7 @@ export default class MessageScreen extends React.Component {
 									color: 'white',
 								}}
 							>
-								{this.props.navigation.getParam('headline', null)}
+								{content.headline}
 							</Animated.Text>
 							<View
 								style={{
@@ -161,13 +172,13 @@ export default class MessageScreen extends React.Component {
 								<Text
 									style={{ fontFamily: 'Poppins-Medium', marginTop: -2, fontSize: 13, marginLeft: 10, color: 'white' }}
 								>
-									{this.props.navigation.getParam('ago', null)}
+									{content.ago}
 								</Text>
 								<FontAwesomeIcon style={{ marginLeft: 20 }} size={13} color="#F5F5F5" icon={faClock} />
 								<Text
 									style={{ fontFamily: 'Poppins-Medium', marginTop: -2, fontSize: 13, marginLeft: 10, color: 'white' }}
 								>
-									{this.props.navigation.getParam('club_name', null)}
+									{content.club_name}
 								</Text>
 							</View>
 						</View>
@@ -190,7 +201,7 @@ export default class MessageScreen extends React.Component {
 									resizeMode: 'cover',
 								}}
 								source={{
-									uri: this.props.navigation.getParam('img', null),
+									uri: content.img,
 								}}
 							>
 								<Animated.View
@@ -233,23 +244,37 @@ export default class MessageScreen extends React.Component {
 					>
 						<View style={{ marginTop: 30, marginLeft: 22, marginRight: 20 }}>
 							<Text style={{ fontFamily: 'Poppins-Regular', fontSize: 20, color: 'white' }}>
-								{this.props.navigation.getParam('long_text', null)}
+								{content.long_text}
 							</Text>
 							<View
 								style={{
 									paddingTop: 20,
+									paddingBottom: 40,
 									paddingLeft: 30,
 									borderRadius: 30,
 									marginLeft: -22,
 									marginTop: 20,
 									backgroundColor: '#38304C',
-									height: 200,
 									width: '120%',
 								}}
 							>
-								<Text style={{ fontFamily: 'Poppins-Bold', fontSize: 40, color: '#B3A9AF' }}>Dateien</Text>
-								{downloadsElements}
+								{downloadsElements
+									? <View>
+											<Text style={{ fontFamily: 'Poppins-Bold', fontSize: 40, color: '#B3A9AF' }}>Dateien</Text>
+											{downloadsElements}
+										</View>
+									: void 0}
 
+								{eventsElements
+									? <View>
+											<Text style={{ fontFamily: 'Poppins-Bold', marginTop: 50, fontSize: 40, color: '#B3A9AF' }}>
+												Events
+											</Text>
+											<View style={{ marginTop: 20, marginRight: 55 }}>
+												{eventsElements}
+											</View>
+										</View>
+									: void 0}
 							</View>
 						</View>
 					</View>

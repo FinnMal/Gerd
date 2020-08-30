@@ -15,10 +15,12 @@ import {
 	Easing,
 	Dimensions,
 	TouchableWithoutFeedback,
-	Keyboard
+	Keyboard,
+	KeyboardAvoidingView
 } from 'react-native';
 
 import { Headlines } from './../app/constants.js';
+import InputScrollView from 'react-native-input-scroll-view';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import {
 	faChevronCircleLeft,
@@ -40,7 +42,9 @@ import {
 	faFileImage,
 	faFileAlt,
 	faTimesCircle,
-	faCheck
+	faCheck,
+	faPaperPlane,
+	faFilePdf
 } from '@fortawesome/free-solid-svg-icons';
 import { ClubCard, ModalCard, EventCard, FileCard } from './../app/components.js';
 import database from '@react-native-firebase/database';
@@ -55,11 +59,11 @@ export default class NewMessageScreen extends React.Component {
 		this.state = {
 			curPageIndex: 0,
 			clubsList: [],
-			headlineInputValue: 'Placeholder',
 			event_modal_visible: false,
 			events: [],
 			files: [],
 			group_serach: '',
+			long_text_input_has_focus: false,
 		};
 
 		this.headlineMarginLeft = new Animated.Value(40);
@@ -161,16 +165,20 @@ export default class NewMessageScreen extends React.Component {
 		const task = reference.putFile(pathToFile);
 
 		task.on('state_changed', taskSnapshot => {
-			this.state.files[pos].uploaded_percentage = taskSnapshot.bytesTransferred / taskSnapshot.totalBytes * 100;
-			this.forceUpdate();
-			console.log(`${taskSnapshot.bytesTransferred} transferred out of ${taskSnapshot.totalBytes}`);
+			if (this.state.files[pos]) {
+				if (this.state.files[pos].storage_path == taskSnapshot.metadata.name) {
+					this.state.files[pos].uploaded_percentage = taskSnapshot.bytesTransferred / taskSnapshot.totalBytes * 100;
+					this.forceUpdate();
+					return;
+				}
+			}
+			task.cancel();
 		});
 
 		task.then(async () => {
 			const url = await storage().ref(this.state.files[pos].storage_path).getDownloadURL();
 			this.state.files[pos].download_url = url;
 			this.state.files[pos].uploading = false;
-			alert(url);
 		});
 	}
 
@@ -219,7 +227,7 @@ export default class NewMessageScreen extends React.Component {
 		this.forceUpdate();
 	}
 
-	editEvent(key, name, location, date) {
+	editEvent(key, name, date, location) {
 		var event = {
 			modal_visible: false,
 			name: name,
@@ -323,7 +331,10 @@ export default class NewMessageScreen extends React.Component {
 					files: files,
 				};
 
-				database().ref('messages/list').push(mes).then(() => this.props.navigate.back().bind(this));
+				database()
+					.ref('messages/list')
+					.push(mes)
+					.then(() => this.props.navigation.navigate('ScreenHandler').bind(this));
 			}
 		});
 	}
@@ -382,70 +393,82 @@ export default class NewMessageScreen extends React.Component {
 		} else if (this.state.curPageIndex == 1) {
 			pageHeadline = 'Mitteilung eingeben';
 			pageContent = (
-				<View>
-					<View style={{ marginBottom: 40 }}>
-						<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>ÜBERSCHRIFT</Text>
-						<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
-							<TextInput
-								multiline
-								onBlur={() => Keyboard.dismiss()}
-								style={{
-									maxHeight: 70,
-									fontFamily: 'Poppins-Medium',
-									marginTop: 8,
-									padding: 15,
-									fontSize: 17,
-									color: '#D5D3D9',
-								}}
-								value={this.state.headlineInputValue}
-								onChangeText={text => this.onChangeText('headline', text)}
-							/>
-						</View>
-					</View>
+				<View
+					style={{
+						height: 600,
+					}}
+				>
 
-					<View style={{ marginBottom: 40 }}>
-						<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>ANREIßER</Text>
-						<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
-							<TextInput
-								multiline
-								keyboardType="default"
-								multiline={true}
-								onBlur={() => Keyboard.dismiss()}
-								style={{
-									height: 70,
-									fontFamily: 'Poppins-Medium',
-									marginTop: 8,
-									padding: 15,
-									fontSize: 17,
-									color: '#D5D3D9',
-								}}
-								value={this.state.shortTextInputValue}
-								onChangeText={text => this.onChangeText('shortText', text)}
-							/>
+					<InputScrollView topOffset={120} style={{ zIndex: 100 }}>
+						<View style={{ marginBottom: 40 }}>
+							<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>ÜBERSCHRIFT</Text>
+							<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
+								<TextInput
+									multiline
+									onBlur={() => Keyboard.dismiss()}
+									style={{
+										maxHeight: 70,
+										fontFamily: 'Poppins-Medium',
+										marginTop: 8,
+										padding: 15,
+										fontSize: 17,
+										color: '#D5D3D9',
+									}}
+									value={this.state.headlineInputValue}
+									onChangeText={text => this.onChangeText('headline', text)}
+								/>
+							</View>
 						</View>
-					</View>
 
-					<View style={{ marginBottom: 40 }}>
-						<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>TEXT</Text>
-						<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
-							<TextInput
-								multiline
-								keyboardType="default"
-								multiline={true}
-								onBlur={() => Keyboard.dismiss()}
-								style={{
-									height: 150,
-									fontFamily: 'Poppins-Medium',
-									marginTop: 8,
-									padding: 15,
-									fontSize: 17,
-									color: '#D5D3D9',
-								}}
-								value={this.state.textInputValue}
-								onChangeText={text => this.onChangeText('text', text)}
-							/>
+						<View style={{ marginBottom: 40 }}>
+							<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>ANREIßER</Text>
+							<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
+								<TextInput
+									multiline
+									keyboardType="default"
+									onBlur={() => Keyboard.dismiss()}
+									style={{
+										minHeight: 70,
+										fontFamily: 'Poppins-Medium',
+										marginTop: 8,
+										padding: 15,
+										fontSize: 17,
+										color: '#D5D3D9',
+									}}
+									value={this.state.shortTextInputValue}
+									onChangeText={text => this.onChangeText('shortText', text)}
+								/>
+							</View>
 						</View>
-					</View>
+
+						<View style={{ marginBottom: 300 }}>
+							<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>TEXT</Text>
+							<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
+								<TextInput
+									multiline
+									keyboardType="default"
+									onBlur={() => {
+										Keyboard.dismiss();
+										this.state.long_text_input_has_focus = false;
+									}}
+									onFocus={() => {
+										//this.scrollView.scrollToEnd({ animated: true });
+										this.state.long_text_input_has_focus = true;
+									}}
+									style={{
+										minHeight: 180,
+										fontFamily: 'Poppins-Medium',
+										marginTop: 8,
+										padding: 15,
+										fontSize: 17,
+										color: '#D5D3D9',
+									}}
+									value={this.state.textInputValue}
+									onChangeText={text => this.onChangeText('text', text)}
+								/>
+							</View>
+						</View>
+					</InputScrollView>
 				</View>
 			);
 		} else if (this.state.curPageIndex == 2) {
@@ -457,6 +480,7 @@ export default class NewMessageScreen extends React.Component {
 						<EventCard
 							key={key}
 							pos={key}
+							editable={true}
 							name={event.name}
 							date={event.date}
 							location={event.location}
@@ -479,7 +503,7 @@ export default class NewMessageScreen extends React.Component {
 							style={{
 								fontFamily: 'Poppins-ExtraBold',
 								color: '#514D5D',
-								fontSize: 22,
+								fontSize: 30,
 								alignSelf: 'center',
 							}}
 						>KEINE EVENTS</Text>
@@ -518,7 +542,7 @@ export default class NewMessageScreen extends React.Component {
 							style={{
 								fontFamily: 'Poppins-ExtraBold',
 								color: '#514D5D',
-								fontSize: 22,
+								fontSize: 30,
 								alignSelf: 'center',
 							}}
 						>KEINE DATEIEN</Text>
@@ -614,7 +638,7 @@ export default class NewMessageScreen extends React.Component {
 				<StatusBar hidden={true} />
 				<ModalCard
 					visible={this.state.event_modal_visible}
-					name="Neue Veranstalung"
+					name="Neue Veranstaltung"
 					location=""
 					date={new Date().toLocaleString()}
 					onDone={(name, date, location) => this.addEvent(name, date, location)}
@@ -622,11 +646,12 @@ export default class NewMessageScreen extends React.Component {
 				{this.state.curPageIndex == 0
 					? <TouchableOpacity
 							style={{
-								marginTop: 40,
+								zIndex: 20,
+								marginTop: 52,
 								marginLeft: 20,
 								position: 'absolute',
 							}}
-							onPress={() => this.selectClub(key)}
+							onPress={() => this.props.navigation.navigate('ScreenHandler')}
 						>
 							<FontAwesomeIcon style={{ zIndex: 0 }} size={29} color="#F5F5F5" icon={faChevronCircleLeft} />
 						</TouchableOpacity>
@@ -636,31 +661,28 @@ export default class NewMessageScreen extends React.Component {
 					? <Animated.View
 							style={{
 								zIndex: 10,
-								marginLeft: 20,
-								marginTop: 40,
+								marginTop: 50,
+								width: '100%',
 								flexWrap: 'wrap',
 								alignItems: 'center',
 								justifyContent: 'center',
 								flexDirection: 'row',
 							}}
 						>
-							<Text style={{ justifySelf: 'center', color: 'white', fontFamily: 'Poppins-Bold', fontSize: 25 }}>
+							<Text style={{ justifySelf: 'center', color: 'white', fontFamily: 'Poppins-Bold', fontSize: 27 }}>
 								{pageHeadline}
 							</Text>
 						</Animated.View>
 					: void 0}
 
 				{pageContent != ''
-					? <View style={{ marginTop: 40, marginLeft: 20, marginRight: 20 }}>
+					? <View style={{ marginTop: 30, marginLeft: 20, marginRight: 20 }}>
 							{pageContent}
 						</View>
 					: void 0}
 
 				<View
 					style={{
-						//borderWidth: 1,
-						//borderColor: 'red',
-
 						marginTop: 720,
 						width: '89.2%',
 						position: 'absolute',
@@ -671,47 +693,16 @@ export default class NewMessageScreen extends React.Component {
 						flexDirection: 'row',
 					}}
 				>
-					<TouchableOpacity
-						style={{
-							justifyContent: 'center',
-							alignSelf: 'center',
-							width: 47,
-							height: 47,
-							borderRadius: 40,
-							backgroundColor: '#38304C',
-							justifyContent: 'center',
 
-							shadowColor: '#38304C',
-							shadowOffset: {
-								width: 6,
-								height: 0,
-							},
-							shadowOpacity: 0.20,
-							shadowRadius: 20.00,
-						}}
-						onPress={() => this.previousPage()}
-					>
-						<FontAwesomeIcon
-							style={{
-								alignSelf: 'center',
-								textAlign: 'center',
-								zIndex: 0,
-							}}
-							size={27}
-							color="#F5F5F5"
-							icon={faChevronLeft}
-						/>
-					</TouchableOpacity>
-
-					{this.state.curPageIndex == 2 || this.state.curPageIndex == 3
+					{this.state.curPageIndex > 0
 						? <TouchableOpacity
 								style={{
 									justifyContent: 'center',
 									alignSelf: 'center',
-									width: 50,
-									height: 50,
+									width: 47,
+									height: 47,
 									borderRadius: 40,
-									backgroundColor: '#0DF5E3',
+									backgroundColor: '#38304C',
 									justifyContent: 'center',
 
 									shadowColor: '#38304C',
@@ -721,6 +712,49 @@ export default class NewMessageScreen extends React.Component {
 									},
 									shadowOpacity: 0.20,
 									shadowRadius: 20.00,
+								}}
+								onPress={() => this.previousPage()}
+							>
+								<FontAwesomeIcon
+									style={{
+										alignSelf: 'center',
+										textAlign: 'center',
+										zIndex: 0,
+									}}
+									size={27}
+									color="#F5F5F5"
+									icon={faChevronLeft}
+								/>
+							</TouchableOpacity>
+						: <TouchableOpacity
+								style={{
+									justifyContent: 'center',
+									alignSelf: 'center',
+									width: 47,
+									height: 47,
+								}}
+							/>}
+
+					{this.state.curPageIndex == 2 || this.state.curPageIndex == 3
+						? <TouchableOpacity
+								style={{
+									justifyContent: 'center',
+									alignSelf: 'center',
+									width: 65,
+									height: 65,
+									marginLeft: 138,
+									borderRadius: 40,
+									position: 'absolute',
+									backgroundColor: '#0DF5E3',
+									justifyContent: 'center',
+
+									shadowColor: '#0DF5E3',
+									shadowOffset: {
+										width: 0,
+										height: 0,
+									},
+									shadowOpacity: 0.4,
+									shadowRadius: 15.00,
 								}}
 								onPress={
 									this.state.curPageIndex == 2 ? () => this.openAddEventModal() : () => this.openUploadFileModal()
@@ -732,7 +766,7 @@ export default class NewMessageScreen extends React.Component {
 										textAlign: 'center',
 										zIndex: 0,
 									}}
-									size={27}
+									size={30}
 									color="#38304C"
 									icon={this.state.curPageIndex == 2 ? faPlus : faUpload}
 								/>
@@ -776,14 +810,17 @@ export default class NewMessageScreen extends React.Component {
 					{this.state.curPageIndex == 4
 						? <TouchableOpacity
 								style={{
-									justifyContent: 'center',
 									alignSelf: 'center',
 									width: 50,
 									height: 50,
+									marginLeft: 280,
 									borderRadius: 40,
 									backgroundColor: '#0DF5E3',
 									justifyContent: 'center',
-
+									alignItems: 'center',
+									alignContent: 'center',
+									padding: 5,
+									position: 'absolute',
 									shadowColor: '#38304C',
 									shadowOffset: {
 										width: 6,
@@ -802,7 +839,7 @@ export default class NewMessageScreen extends React.Component {
 									}}
 									size={27}
 									color="#38304C"
-									icon={faCheck}
+									icon={faPaperPlane}
 								/>
 							</TouchableOpacity>
 						: void 0}

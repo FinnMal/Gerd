@@ -7,19 +7,25 @@ import {
 	ActionSheetIOS,
 	StyleSheet,
 	ActivityIndicator,
-	Modal
+	Modal,
+	Platform
 } from 'react-native';
 import AutoHeightImage from 'react-native-auto-height-image';
+import FileViewer from 'react-native-file-viewer';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import {
 	faChevronCircleRight,
 	faArrowAltCircleDown,
-	faTimesCircle,
 	faQuoteRight,
 	faCalendar,
 	faMapMarker,
 	faPen,
 	faTrash,
+	faChevronCircleLeft,
+	faChevronLeft,
+	faChevronRight,
+	faPlus,
+	faPlusCircle,
 	faUpload,
 	faCloudUploadAlt,
 	faFile,
@@ -32,7 +38,11 @@ import {
 	faFileAudio,
 	faFileVideo,
 	faFileImage,
-	faFileAlt
+	faFileAlt,
+	faTimesCircle,
+	faCheck,
+	faPaperPlane,
+	faFilePdf
 } from '@fortawesome/free-solid-svg-icons';
 import { withNavigation } from 'react-navigation';
 import { useNavigation } from '@react-navigation/native';
@@ -40,16 +50,18 @@ import RNFetchBlob from 'rn-fetch-blob';
 import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
 import CameraRoll from '@react-native-community/cameraroll';
+import { AnimatedCircularProgress } from 'react-native-circular-progress';
 
 export class NotificationCard extends React.Component {
 	render() {
+		const content = this.props.content;
 		var s = require('./style.js');
 		return (
 			<TouchableOpacity
 				style={{
 					height: 'auto',
 					width: '86%',
-					backgroundColor: this.props.color,
+					backgroundColor: content.color,
 					alignSelf: 'flex-start',
 					marginTop: 40,
 					marginLeft: 21,
@@ -57,7 +69,7 @@ export class NotificationCard extends React.Component {
 
 					borderRadius: 13,
 
-					shadowColor: this.props.color,
+					shadowColor: content.color,
 					shadowOffset: {
 						width: 6,
 						height: 6,
@@ -67,12 +79,7 @@ export class NotificationCard extends React.Component {
 				}}
 				onPress={() => {
 					this.props.navigation.navigate('MessageScreen', {
-						club_name: this.props.club_name,
-						ago: this.props.ago,
-						headline: this.props.headline,
-						long_text: this.props.long_text,
-						img: this.props.img,
-						files: this.props.files,
+						content: this.props.content,
 					});
 				}}
 			>
@@ -92,7 +99,7 @@ export class NotificationCard extends React.Component {
 							fontSize: 30,
 							color: '#FFFFFF',
 						}}
-					>{this.props.headline}</Text>
+					>{content.headline}</Text>
 					<FontAwesomeIcon
 						style={{
 							marginLeft: 'auto',
@@ -112,7 +119,7 @@ export class NotificationCard extends React.Component {
 						marginTop: 5,
 						marginLeft: 15,
 					}}
-				>{this.props.short_text}</Text>
+				>{content.short_text}</Text>
 
 				<View
 					style={{
@@ -128,7 +135,7 @@ export class NotificationCard extends React.Component {
 						style={{ borderRadius: 36 }}
 						width={36}
 						source={{
-							uri: this.props.club_img,
+							uri: content.club_img,
 						}}
 					/>
 					<View
@@ -136,9 +143,9 @@ export class NotificationCard extends React.Component {
 							marginLeft: 15,
 						}}
 					>
-						<Text style={{ marginTop: 4, fontSize: 13, color: 'white' }}>{this.props.ago}</Text>
+						<Text style={{ marginTop: 4, fontSize: 13, color: 'white' }}>{content.ago}</Text>
 						<Text style={{ marginTop: -2, fontSize: 16, fontFamily: 'Poppins-SemiBold', color: 'white' }}>
-							{this.props.club_name}
+							{content.club_name}
 						</Text>
 					</View>
 				</View>
@@ -149,24 +156,50 @@ export class NotificationCard extends React.Component {
 }
 
 export class DownloadCard extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			download_progress: 0,
+			downloaded: false,
+			path: '',
+		};
+	}
+
+	_openFile() {
+		FileViewer.open(Platform.OS === 'android' ? 'file://' + this.state.path : '' + this.state.path)
+			.then(() => {})
+			.catch(error => {
+				// error
+			});
+	}
+
 	_downloadFile(url) {
+		//const directoryFile = RNFS.ExternalStorageDirectoryPath + '/Gerd/';
+		//RNFS.mkdir(directoryFile);
+		//let fileName;
+		//fileName = 'filename.zip';
+		//let dirs = directoryFile + this.props.name + '.' + this.props.type.split('/')[1];
+
 		RNFetchBlob
 			.config({
+				path: RNFetchBlob.fs.dirs.DocumentDir + '/' + this.props.name + '.' + this.props.type.split('/')[1],
 				fileCache: true,
+				appendExt: this.props.type.split('/')[1],
 			})
-			.fetch('GET', url)
-			// the image is now dowloaded to device's storage
-			.then(resp => {
-				// the image path you can use it directly with Image component
-				imagePath = resp.path();
-				return resp.readFile('base64');
+			.fetch('GET', url, {
+				'Cache-Control': 'no-store',
 			})
-			.then(base64Data => {
-				let options = {
-					url: 'data:image/jpg;base64,' + base64Data,
-					type: 'image/jpg',
-				};
-
+			// listen to download progress event
+			.progress({ count: 1000 }, (received, total) => {
+				this.state.download_progress = received / total * 100;
+				this.forceUpdate();
+				console.log('progress: ' + received / total * 100 + '%');
+			})
+			.then(res => {
+				this.state.downloaded = true;
+				this.state.path = res.path();
+				this.forceUpdate();
+				/*
 				Share.open(options)
 					.then(res => {
 						console.log(res);
@@ -174,9 +207,7 @@ export class DownloadCard extends React.Component {
 					.catch(err => {
 						err && console.log(err);
 					});
-
-				// remove the file from storage
-				//return RNFS.unlink(imagePath);
+*/
 			});
 
 		/*
@@ -201,37 +232,72 @@ export class DownloadCard extends React.Component {
 	}
 
 	render() {
+		var icon = faFile;
+		if (this.props.type == 'application/pdf') icon = faFilePdf;
+		if (this.props.type == 'application/msword') icon = faFileWord;
+		if (this.props.type == 'application/mspowerpoint') icon = faFilePowerpoint;
+		if (this.props.type == 'application/msexcel') icon = faFileExcel;
+		if (this.props.type == 'application/pdf') icon = faFilePdf;
+		if (this.props.type == 'application/zip') icon = faFileArchive;
+		if (this.props.type == 'text/comma-separated-values	') icon = faFileCsv;
+
+		if (!this.props.icon) {
+			if (this.props.type.includes('audio')) icon = faFileAudio;
+			if (this.props.type.includes('video')) icon = faFileVideo;
+			if (this.props.type.includes('image')) icon = faFileImage;
+			if (this.props.type.includes('text')) icon = faFileAlt;
+		}
+
 		var s = require('./style.js');
 		return (
-			<View
-				style={{
-					marginTop: 20,
-					borderRadius: 13,
-					padding: 10,
-					backgroundColor: '#201A30',
-					marginRight: 55,
-					color: '#ADA4A9',
-					flexWrap: 'wrap',
-					alignItems: 'flex-start',
-					flexDirection: 'row',
+			<TouchableOpacity
+				onPress={() => {
+					if (!this.state.downloaded) this._downloadFile(this.props.download_url);
+					else this._openFile();
 				}}
 			>
-				<TouchableOpacity
-					onPress={() => this._downloadFile(this.props.download_url)}
-					style={{ zIndex: 0, marginTop: 6, marginLeft: 5 }}
+				<View
+					style={{
+						marginTop: 20,
+						borderRadius: 13,
+						padding: 10,
+						backgroundColor: '#201A30',
+						marginRight: 55,
+						color: '#ADA4A9',
+						flexWrap: 'wrap',
+						alignItems: 'flex-start',
+						flexDirection: 'row',
+					}}
 				>
-					<FontAwesomeIcon size={35} color="#ADA4A9" icon={faArrowAltCircleDown} />
-				</TouchableOpacity>
+					{!this.state.downloaded
+						? <AnimatedCircularProgress
+								size={41}
+								width={6}
+								style={{ position: 'absolute', marginTop: 13, marginLeft: 12 }}
+								fill={this.state.download_progress}
+								tintColor="#0DF5E3"
+								onAnimationComplete={() => console.log('onAnimationComplete')}
+								backgroundColor="#201A30"
+							/>
+						: void 0}
 
-				<View style={{ marginLeft: 16 }}>
-					<Text style={{ marginTop: 2, fontFamily: 'Poppins-SemiBold', fontSize: 23, color: '#ADA4A9' }}>
-						{this.props.name}
-					</Text>
-					<Text style={{ marginTop: -6, fontFamily: 'Poppins-SemiBold', fontSize: 16, color: '#ADA4A9' }}>
-						{Math.round(this.props.size / 1000)} MB
-					</Text>
+					<FontAwesomeIcon
+						style={{ zIndex: 0, marginTop: 6, marginLeft: 5 }}
+						size={35}
+						color="#ADA4A9"
+						icon={this.state.downloaded ? icon : faArrowAltCircleDown}
+					/>
+
+					<View style={{ marginLeft: 16 }}>
+						<Text style={{ marginTop: 2, fontFamily: 'Poppins-SemiBold', fontSize: 23, color: '#ADA4A9' }}>
+							{this.props.name}
+						</Text>
+						<Text style={{ marginTop: -6, fontFamily: 'Poppins-SemiBold', fontSize: 16, color: '#ADA4A9' }}>
+							{Math.round(this.props.size / 1000000, 2)} MB
+						</Text>
+					</View>
 				</View>
-			</View>
+			</TouchableOpacity>
 		);
 	}
 }
@@ -327,7 +393,10 @@ export class ModalCard extends React.Component {
 							flexDirection: 'row',
 						}}
 					>
-						<Text style={{ fontFamily: 'Poppins-Bold', color: 'white', fontSize: 25, width: '76%' }} numberOfLines={1}>
+						<Text
+							style={{ height: 30, fontFamily: 'Poppins-Bold', color: 'white', fontSize: 25, width: '76%' }}
+							numberOfLines={1}
+						>
 							{this.state.name}
 						</Text>
 						<TouchableOpacity
@@ -367,25 +436,6 @@ export class ModalCard extends React.Component {
 								onChangeText={text => this.onChange('name', text)}
 							/>
 						</View>
-					</View><View style={{ marginBottom: 20 }}>
-						<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>LOCATION</Text>
-						<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
-							<TextInput
-								multiline
-								autoCorrect={false}
-								keyboardType="default"
-								multiline={true}
-								style={{
-									fontFamily: 'Poppins-Medium',
-									marginTop: 8,
-									padding: 15,
-									fontSize: 17,
-									color: '#D5D3D9',
-								}}
-								value={this.state.location}
-								onChangeText={text => this.onChange('location', text)}
-							/>
-						</View>
 					</View>
 					<View style={{ marginBottom: 20 }}>
 						<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>DATE</Text>
@@ -407,6 +457,27 @@ export class ModalCard extends React.Component {
 							/>
 						</View>
 					</View>
+					<View style={{ marginBottom: 20 }}>
+						<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>LOCATION</Text>
+						<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
+							<TextInput
+								multiline
+								autoCorrect={false}
+								keyboardType="default"
+								multiline={true}
+								style={{
+									fontFamily: 'Poppins-Medium',
+									marginTop: 8,
+									padding: 15,
+									fontSize: 17,
+									color: '#D5D3D9',
+								}}
+								value={this.state.location}
+								onChangeText={text => this.onChange('location', text)}
+							/>
+						</View>
+					</View>
+
 				</View>
 			</Modal>
 		);
@@ -439,25 +510,27 @@ export class EventCard extends React.Component {
 		}
 	}
 
-	onChange(key, name, location, date) {
+	onChange(key, name, date, location) {
 		this.state.modal_visible = false;
 		this.forceUpdate();
-		this.props.onChange(key, name, location, date);
+		this.props.onChange(key, name, date, location);
 	}
 
 	render() {
 		var s = require('./style.js');
 		return (
 			<View>
-				<ModalCard
-					visible={this.state.modal_visible}
-					name={this.props.name}
-					location={this.props.location}
-					date={this.props.date}
-					onDone={(name, location, date) => this.onChange(this.props.pos, name, location, date)}
-				/>
+				{this.props.editable
+					? <ModalCard
+							visible={this.state.modal_visible}
+							name={this.props.name}
+							date={this.props.date}
+							location={this.props.location}
+							onDone={(name, date, location) => this.onChange(this.props.pos, name, date, location)}
+						/>
+					: void 0}
 
-				<View style={{ backgroundColor: '#38304C', padding: 25, borderRadius: 15 }}>
+				<View style={{ backgroundColor: this.props.editable ? '#38304C' : '#201A30', padding: 25, borderRadius: 15 }}>
 					<View
 						style={{
 							marginBottom: 25,
@@ -520,47 +593,69 @@ export class EventCard extends React.Component {
 							{this.props.location}
 						</Text>
 					</View>
+
+					{!this.props.editable
+						? <TouchableOpacity
+								style={{
+									backgroundColor: '#38304C',
+									borderRadius: 25,
+									marginTop: 30,
+									marginLeft: 20,
+									marginRight: 20,
+									padding: 12,
+									justifyContent: 'center',
+									alignItems: 'center',
+								}}
+							>
+								<Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 17, color: '#D8CDCD' }}>
+									In Kalender speichern
+								</Text>
+							</TouchableOpacity>
+						: void 0}
+
 				</View>
-				<View
-					style={{
-						marginTop: -15,
-						marginLeft: 245,
-						width: 500,
-						justifyContent: 'flex-start',
-						flexWrap: 'wrap',
-						flexDirection: 'row',
-					}}
-				>
-					<TouchableOpacity
-						onPress={() => this.editEvent()}
-						style={{
-							borderRadius: 30,
-							width: 30,
-							height: 30,
-							zIndex: 0,
-							backgroundColor: '#0DF5E3',
-							justifyContent: 'center',
-							alignItems: 'center',
-						}}
-					>
-						<FontAwesomeIcon size={17} color="#38304C" icon={faPen} />
-					</TouchableOpacity>
-					<TouchableOpacity
-						onPress={() => this.props.onDelete(this.props.pos)}
-						style={{
-							borderRadius: 30,
-							width: 30,
-							height: 30,
-							zIndex: 0,
-							marginLeft: 10,
-							backgroundColor: '#0DF5E3',
-							justifyContent: 'center',
-							alignItems: 'center',
-						}}
-					>
-						<FontAwesomeIcon size={17} color="#38304C" icon={faTrash} />
-					</TouchableOpacity>
-				</View>
+				{this.props.editable
+					? <View
+							style={{
+								marginTop: -15,
+								marginLeft: 245,
+								width: 500,
+								justifyContent: 'flex-start',
+								flexWrap: 'wrap',
+								flexDirection: 'row',
+							}}
+						>
+							<TouchableOpacity
+								onPress={() => this.editEvent()}
+								style={{
+									borderRadius: 30,
+									width: 30,
+									height: 30,
+									zIndex: 0,
+									backgroundColor: '#0DF5E3',
+									justifyContent: 'center',
+									alignItems: 'center',
+								}}
+							>
+								<FontAwesomeIcon size={17} color="#38304C" icon={faPen} />
+							</TouchableOpacity>
+							<TouchableOpacity
+								onPress={() => this.props.onDelete(this.props.pos)}
+								style={{
+									borderRadius: 30,
+									width: 30,
+									height: 30,
+									zIndex: 0,
+									marginLeft: 10,
+									backgroundColor: '#0DF5E3',
+									justifyContent: 'center',
+									alignItems: 'center',
+								}}
+							>
+								<FontAwesomeIcon size={17} color="#38304C" icon={faTrash} />
+							</TouchableOpacity>
+						</View>
+					: void 0}
 			</View>
 		);
 	}

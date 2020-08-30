@@ -29,24 +29,28 @@ export async function getUserID(cb) {
 	}
 }
 
-export function getAgoText(time) {
+export function getAgoText(time, with_ago_pre = true, with_in_pre = true, small_text = false) {
+	var ago_pre = '';
 	var cur_time = new Date().getTime() / 1000;
 	if (cur_time > time) {
 		var diff = cur_time - time;
-		var ago_pre = 'Vor ';
+		ago_pre = with_ago_pre ? 'Vor ' : '';
 	} else if (time > cur_time) {
 		var diff = time - cur_time;
-		var ago_pre = 'In ';
+		ago_pre = with_in_pre ? 'In  ' : '';
 	} else
-		return 'Gerade eben';
+		return +(!small_text ? ' Gerade eben' : 'now');
 
-	if (diff < 60) var ago = Math.round(diff) + ' Sek.';
-	else if (diff > 59 && diff < 3600) var ago = Math.round(diff / 60) + ' Min.';
-	else if (diff > 3599 && diff < 86400) var ago = Math.round(diff / 3600) + ' Std.';
-	else if (diff > 86399 && diff < 604800) var ago = Math.round(diff / 86400) + ' Tagen';
-	else if (diff > 604799 && diff < 2592000) var ago = Math.round(diff / 604800) + ' Wochen';
-	else if (diff > 2591999 && diff < 31536000) var ago = Math.round(diff / 2592000) + ' Monaten';
-	else if (diff > 31535999) var ago = Math.round(diff / 31536000) + ' Jahren';
+	if (diff < 60) var ago = Math.round(diff) + (!small_text ? ' Sek.' : ' sec');
+	else if (diff > 59 && diff < 3600) var ago = Math.round(diff / 60) + (!small_text ? ' Min.' : ' min');
+	else if (diff > 3599 && diff < 86400) var ago = Math.round(diff / 3600) + (!small_text ? ' Std.' : ' std');
+	else if (diff > 86399 && diff < 604800) var ago = Math.round(diff / 86400) + (!small_text ? ' Tagen' : ' day');
+	else if (diff > 604799 && diff < 2592000) var ago = Math.round(diff / 604800) + (!small_text ? ' Wochen' : ' w');
+	else if (diff > 2591999 && diff < 31536000) var ago = Math.round(diff / 2592000) + (!small_text ? ' Monaten' : ' m');
+	else if (diff > 31535999) var ago = Math.round(diff / 31536000) + (!small_text ? ' Jahren' : ' j');
+
+	//if (small_text) ago = ago.toLowerCase().split('.').join('');
+
 	return ago_pre + ago;
 }
 
