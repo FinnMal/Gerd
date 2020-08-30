@@ -101,7 +101,7 @@ export default class MessageScreen extends React.Component {
 
 		return scrollY.interpolate({
 			inputRange: [ 0, 160 ],
-			outputRange: [ 'rgba(0, 0, 0, 0.3)', 'rgba(32, 26, 48, 1)' ],
+			outputRange: [ 'rgba(0, 0, 0, 0.3)', 'rgba(32, 26, 48, 0.6)' ],
 			extrapolate: 'clamp',
 			useNativeDriver: true,
 		});
@@ -118,18 +118,11 @@ export default class MessageScreen extends React.Component {
 		var s = require('./../app/style.js');
 
 		var downloadsElements = null;
-		const downloads = this.props.navigation.getParam('downloads', null);
-		if (downloads) {
-			downloadsElements = Object.keys(downloads).map(key => {
-				var download = downloads[key];
-				return (
-					<DownloadCard
-						name={download.name}
-						format={download.format}
-						size={download.size}
-						download_url={download.download_url}
-					/>
-				);
+		const files = this.props.navigation.getParam('files', null);
+		if (files) {
+			downloadsElements = Object.keys(files).map(key => {
+				var file = files[key];
+				return <DownloadCard name={file.name} size={file.size} download_url={file.download_url} />;
 			});
 		}
 
@@ -235,7 +228,7 @@ export default class MessageScreen extends React.Component {
 							zIndex: 10,
 							marginTop: 240,
 							backgroundColor: '#201A30',
-							borderRadius: 35,
+							borderRadius: 30,
 						}}
 					>
 						<View style={{ marginTop: 30, marginLeft: 22, marginRight: 20 }}>

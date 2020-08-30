@@ -84,7 +84,7 @@ class HomeScreen extends React.Component {
 						img={mes.img}
 						club_name={mes.club_name}
 						ago={mes.ago}
-						downloads={mes.downloads}
+						files={mes.files}
 						navigation={this.props.navigation}
 					/>
 				);
@@ -171,7 +171,7 @@ class HomeScreen extends React.Component {
 	}
 
 	openAddMessage() {
-		alert('Test');
+		this.props.navigation.navigate('NewMessageScreen', {});
 	}
 }
 
