@@ -73,21 +73,7 @@ class HomeScreen extends React.Component {
 		if (this.props.show) {
 			const cardsList = Object.keys(this.state.mesList).map(key => {
 				var mes = this.state.mesList[key];
-				return (
-					<NotificationCard
-						color={mes.color}
-						key={key}
-						headline={mes.headline}
-						short_text={mes.short_text}
-						long_text={mes.long_text}
-						club_img={mes.club_img}
-						img={mes.img}
-						club_name={mes.club_name}
-						ago={mes.ago}
-						files={mes.files}
-						navigation={this.props.navigation}
-					/>
-				);
+				return <NotificationCard content={mes} key={key} navigation={this.props.navigation} />;
 			});
 
 			return (
