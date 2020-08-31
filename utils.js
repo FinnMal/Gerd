@@ -29,6 +29,13 @@ export async function getUserID(cb) {
 	}
 }
 
+export function getAgoSec(time) {
+	var cur_time = new Date().getTime() / 1000;
+	if (cur_time > time) return cur_time - time;
+	if (time > cur_time) return time - cur_time;
+	return 0;
+}
+
 export function getAgoText(time, with_ago_pre = true, with_in_pre = true, small_text = false) {
 	var ago_pre = '';
 	var cur_time = new Date().getTime() / 1000;

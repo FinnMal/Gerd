@@ -29,22 +29,54 @@ class HomeScreen extends React.Component {
 		var utils = this.props.utilsObject;
 		//var uid = utils.USER_ID;
 		this.state = {
-			mesList: [],
+			newMesList: [],
+			todayMesList: [],
+			olderMesList: [],
 			clubs: {},
 			moveTo: 'none',
+			navPos: 0,
+			unread_messages_count: 0,
 		};
 		this.margin = new Animated.Value(0);
+		this.navMarginLeft = new Animated.Value(0);
 
 		database().ref('messages/list').on(
 			'value',
 			(function(snapshot) {
 				var messages = snapshot.val();
-				this.state.mesList = [];
-				var total_messages = Object.keys(messages).length;
 
-				var i = 0;
+				this.state.unread_messages_count = 0;
 				Object.keys(messages).map(key => {
 					var message = messages[key];
+					if (message.read_by) {
+						if (message.read_by['default']) return;
+					}
+					this.state.unread_messages_count++;
+					this.forceUpdate();
+				});
+				this.forceUpdate();
+			}).bind(this)
+		);
+
+		database().ref('messages/list').on(
+			'value',
+			(function(snapshot) {
+				var messages = snapshot.val();
+				this.state.newMesList = [];
+				this.state.todayMesList = [];
+				this.state.olderMesList = [];
+				var total_messages = Object.keys(messages).length;
+
+				var checked = 0;
+				Object.keys(messages).map(key => {
+					var message = messages[key];
+					message.id = key;
+
+					var read_by_user = false;
+					if (message.read_by) {
+						if (message.read_by['default']) read_by_user = true;
+					}
+
 					database().ref('clubs/' + message.club_id).once(
 						'value',
 						(function(snap) {
@@ -53,14 +85,64 @@ class HomeScreen extends React.Component {
 							message.club_name = club.name;
 							message.club_img = club.logo;
 							message.ago = utils.getAgoText(message.send_at);
-							this.state.mesList[total_messages - i] = message;
-							i++;
-							this.forceUpdate();
+							message.ago_seconds = utils.getAgoSec(message.send_at);
+
+							console.log(message.headline + ': ' + message.ago_seconds);
+							if (!read_by_user) this.state.newMesList[this.state.newMesList.length] = message;
+							else if (message.ago_seconds / 60 / 60 < 24)
+								this.state.todayMesList[this.state.todayMesList.length] = message;
+							else
+								this.state.olderMesList[this.state.olderMesList.length] = message;
+							checked++;
+
+							if (checked == total_messages) {
+								this.sortList('newMesList');
+								this.sortList('todayMesList');
+								this.sortList('olderMesList');
+
+								this.generateCards('newMesList');
+								this.generateCards('todayMesList');
+								this.generateCards('olderMesList');
+
+								this.forceUpdate();
+							}
 						}).bind(this)
 					);
 				});
 			}).bind(this)
 		);
+	}
+
+	sortList(listName) {
+		var list = this.state[listName];
+		list.sort(function(a, b) {
+			return parseInt(a.ago_seconds) - parseInt(b.ago_seconds);
+		});
+		this.state[listName] = list;
+	}
+
+	generateCards(listName) {
+		var cardsList = Object.keys(this.state[listName]).map(key => {
+			var mes = this.state[listName][key];
+			return <NotificationCard content={mes} key={key} navigation={this.props.navigation} />;
+		});
+		this.state[listName] = cardsList;
+	}
+
+	navigateSection(pos, forceUpdate = true) {
+		this.navMarginLeft.setValue(this.state.navPos * 115 - 3);
+
+		this.state.navPos = pos;
+		if (forceUpdate) this.forceUpdate();
+
+		Animated
+			.timing(this.navMarginLeft, {
+				useNativeDriver: false,
+				toValue: pos * 115 - 3,
+				duration: 140,
+				easing: Easing.ease,
+			})
+			.start(() => {});
 	}
 
 	render() {
@@ -70,12 +152,13 @@ class HomeScreen extends React.Component {
 			outputRange: [ 0, 2000 ],
 		});
 
-		if (this.props.show) {
-			const cardsList = Object.keys(this.state.mesList).map(key => {
-				var mes = this.state.mesList[key];
-				return <NotificationCard content={mes} key={key} navigation={this.props.navigation} />;
-			});
+		const nav_margin_left = this.navMarginLeft.interpolate({
+			inputRange: [ 0, 2000 ],
+			outputRange: [ 0, 2000 ],
+		});
 
+		if (this.props.show) {
+			if (this.state.newMesList.length == 0 && this.state.navPos == 0) this.navigateSection(1, false);
 			return (
 				<View
 					onLayout={event => {
@@ -113,7 +196,32 @@ class HomeScreen extends React.Component {
 								flexDirection: 'row',
 							}}
 						>
-							<View
+							{this.state.unread_messages_count
+								? <View
+										style={{
+											minHeight: 20,
+											minWidth: 20,
+											zIndex: 100,
+											position: 'absolute',
+											marginTop: -10,
+											marginLeft: 50,
+											borderRadius: 40,
+											paddingLeft: 5,
+											paddingRight: 5,
+											paddingTop: 2,
+											paddingBottom: 1,
+											backgroundColor: 'red',
+											justifyContent: 'center',
+											alignItems: 'center',
+										}}
+									>
+										<Text style={{ fontFamily: 'Poppins-SemiBold', color: 'white' }}>
+											{this.state.unread_messages_count}
+										</Text>
+									</View>
+								: void 0}
+
+							<Animated.View
 								style={{
 									borderRadius: 16,
 									marginTop: -2.5,
@@ -126,22 +234,35 @@ class HomeScreen extends React.Component {
 										width: 6,
 										height: 0,
 									},
+									marginLeft: nav_margin_left,
 									shadowOpacity: 0.20,
 									shadowRadius: 20.00,
 								}}
 							/>
-							<TouchableOpacity style={styles.navTouch}>
-								<Text style={[ styles.navText, { marginLeft: 20, color: '#201A30' } ]}>Neu</Text>
+
+							<TouchableOpacity style={[ styles.navTouch ]} onPress={() => this.navigateSection(0)}>
+
+								<Text style={[ styles.navText, { color: this.state.navPos == 0 ? '#201A30' : '#ffffff' } ]}>
+									Neu
+								</Text>
 							</TouchableOpacity>
-							<TouchableOpacity style={styles.navTouch}>
-								<Text style={styles.navText}>Heute</Text>
+							<TouchableOpacity style={styles.navTouch} onPress={() => this.navigateSection(1)}>
+								<Text style={[ styles.navText, { color: this.state.navPos == 1 ? '#201A30' : '#ffffff' } ]}>
+									Heute
+								</Text>
 							</TouchableOpacity>
-							<TouchableOpacity style={styles.navTouch}>
-								<Text style={styles.navText}>Älter</Text>
+							<TouchableOpacity style={styles.navTouch} onPress={() => this.navigateSection(2)}>
+								<Text style={[ styles.navText, { color: this.state.navPos == 2 ? '#201A30' : '#ffffff' } ]}>
+									Älter
+								</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
-					{cardsList}
+					<View style={{ marginBottom: 70 }}>
+						{this.state.navPos == 0 ? this.state.newMesList : void 0}
+						{this.state.navPos == 1 ? this.state.todayMesList : void 0}
+						{this.state.navPos == 2 ? this.state.olderMesList : void 0}
+					</View>
 				</View>
 			);
 		}
@@ -174,8 +295,11 @@ const styles = StyleSheet.create({
 		color: 'white',
 	},
 	navTouch: {
+		width: 70,
 		marginTop: 0,
 		marginRight: 45,
+		alignItems: 'center',
+		justifyContent: 'center',
 	},
 });
 
