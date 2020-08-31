@@ -12,6 +12,8 @@ import MessagesScreen from './screens/Messages';
 import MessageScreen from './screens/Message';
 import NewMessageScreen from './screens/NewMessage';
 import SettingsScreen from './screens/Settings';
+import ChatScreen from './screens/Chat';
+
 import { YellowBox, AppRegistry } from 'react-native';
 import Firebase from 'firebase';
 import auth from '@react-native-firebase/auth';
@@ -77,6 +79,10 @@ const MainNavigator = createStackNavigator(
 		},
 		NewMessageScreen: {
 			screen: NewMessageScreen,
+			navigationOptions: navigationOptions,
+		},
+		ChatScreen: {
+			screen: ChatScreen,
 			navigationOptions: navigationOptions,
 		},
 	},

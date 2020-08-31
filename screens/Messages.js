@@ -18,8 +18,9 @@ import {
 
 import { Headlines } from './../app/constants.js';
 import database from '@react-native-firebase/database';
+import { withNavigation } from 'react-navigation';
 
-export default class MessagesScreen extends React.Component {
+class MessagesScreen extends React.Component {
 	constructor(props) {
 		super(props);
 		var utils = this.props.utilsObject;
@@ -52,12 +53,11 @@ export default class MessagesScreen extends React.Component {
 
 								if (chat.last_message_id) {
 									if (chat.messages[chat.last_message_id]) {
-										if (message.send_at > chat.messages[chat.last_message_id].send_at)
-											chat.last_message_id = message.id;
+										if (message.send_at > chat.messages[chat.last_message_id].send_at) chat.last_message_id = mes_key;
 									} else
-										chat.last_message_id = message.id;
+										chat.last_message_id = mes_key;
 								} else
-									chat.last_message_id = message.id;
+									chat.last_message_id = mes_key;
 							});
 
 							chat.messages[chat.last_message_id].ago_text = utils.getAgoText(
@@ -100,7 +100,7 @@ export default class MessagesScreen extends React.Component {
 		if (this.state.chats) {
 			chatsElements = Object.keys(this.state.chats).map(key => {
 				var chat = this.state.chats[key];
-				return <ChatCard key={key} chat={chat} />;
+				return <ChatCard navigation={this.props.navigation} key={key} chat={chat} />;
 			});
 		}
 
@@ -161,6 +161,11 @@ class ChatCard extends React.Component {
 					flexWrap: 'wrap',
 					flexDirection: 'row',
 				}}
+				onPress={() => {
+					this.props.navigation.navigate('ChatScreen', {
+						chat: chat,
+					});
+				}}
 			>
 				<Image
 					style={{ borderRadius: 36 }}
@@ -172,44 +177,48 @@ class ChatCard extends React.Component {
 				/>
 				<View
 					style={{
-						width: 235,
-						marginLeft: 15,
+						marginLeft: 20,
 						justifyContent: 'center',
 					}}
 				>
-					<View
-						style={{
-							justifyContent: 'center',
-						}}
-					>
-						<Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 18, color: '#C2C1C7' }}>{chat.user_name}</Text>
-						<Text numberOfLines={1} style={{ fontFamily: 'Poppins-Regular', color: '#7B7784' }}>
-							{chat.messages[chat.last_message_id].text}
-						</Text>
-					</View>
+					<Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 18, color: '#C2C1C7' }}>{chat.user_name}</Text>
+					<Text numberOfLines={1} style={{ fontFamily: 'Poppins-Regular', color: '#7B7784' }}>
+						{chat.messages[chat.last_message_id].text}
+					</Text>
 				</View>
 				<View
 					style={{
-						marginBottom: 4,
+						width: 100,
+						height: 50,
+						position: 'absolute',
+						marginLeft: 300,
 						alignSelf: 'flex-end',
 					}}
 				>
-					<Text style={{ fontFamily: 'Poppins-Regular', color: '#6F6B79' }}>
+					<Text style={{ marginTop: 0, fontFamily: 'Poppins-Regular', color: '#6F6B79' }}>
 						{chat.messages[chat.last_message_id].ago_text}
 					</Text>
 					{chat.unread_messages_count
 						? <View
 								style={{
-									marginTop: 3,
+									marginLeft: 5,
+									minWidth: 21,
+									minHeight: 20,
+									position: 'absolute',
+									marginTop: 22,
 									borderRadius: 40,
 									paddingTop: 2,
 									paddingBottom: 1,
+									paddingLeft: 6,
+									paddingRight: 6,
 									backgroundColor: '#0DF5E3',
 									justifyContent: 'center',
 									alignItems: 'center',
 								}}
 							>
-								<Text style={{ fontFamily: 'Poppins-SemiBold', color: 'white' }}>{chat.unread_messages_count}</Text>
+								<Text style={{ fontFamily: 'Poppins-SemiBold', color: 'white' }}>
+									{chat.unread_messages_count}
+								</Text>
 							</View>
 						: void 0}
 
@@ -227,3 +236,5 @@ const styles = StyleSheet.create({
 		backgroundColor: 'transparent',
 	},
 });
+
+export default withNavigation(MessagesScreen);

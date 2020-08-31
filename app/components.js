@@ -56,102 +56,108 @@ export class NotificationCard extends React.Component {
 	render() {
 		const content = this.props.content;
 		var s = require('./style.js');
-		return (
-			<TouchableOpacity
-				style={{
-					height: 'auto',
-					width: '86%',
-					backgroundColor: content.color,
-					alignSelf: 'flex-start',
-					marginTop: 40,
-					marginLeft: 21,
-					marginRight: 21,
 
-					borderRadius: 13,
-
-					shadowColor: content.color,
-					shadowOffset: {
-						width: 6,
-						height: 6,
-					},
-					shadowOpacity: 0.5,
-					shadowRadius: 20.00,
-				}}
-				onPress={() => {
-					this.props.navigation.navigate('MessageScreen', {
-						content: this.props.content,
-					});
-				}}
-			>
-				<View
-					style={{
-						width: '90%',
-						marginTop: 13,
-						marginLeft: 15,
-						display: 'flex',
-						flexDirection: 'row',
-					}}
-				>
-					<Text
+		if (content) {
+			if (content.headline && content.short_text && content.color) {
+				return (
+					<TouchableOpacity
 						style={{
+							height: 'auto',
+							width: '86%',
+							backgroundColor: content.color,
 							alignSelf: 'flex-start',
-							fontFamily: 'Poppins-Bold',
-							fontSize: 30,
-							color: '#FFFFFF',
-						}}
-					>{content.headline}</Text>
-					<FontAwesomeIcon
-						style={{
-							marginLeft: 'auto',
-							alignSelf: 'flex-end',
-							marginBottom: 7,
-						}}
-						size={25}
-						color="#E9E9E9"
-						icon={faChevronCircleRight}
-					/>
-				</View>
-				<Text
-					style={{
-						fontSize: 20,
-						fontFamily: 'Poppins-Regular',
-						color: 'white',
-						marginTop: 5,
-						marginLeft: 15,
-					}}
-				>{content.short_text}</Text>
+							marginTop: 40,
+							marginLeft: 21,
+							marginRight: 21,
 
-				<View
-					style={{
-						width: '90%',
-						marginBottom: 20,
-						marginTop: 20,
-						marginLeft: 15,
-						display: 'flex',
-						flexDirection: 'row',
-					}}
-				>
-					<AutoHeightImage
-						style={{ borderRadius: 36 }}
-						width={36}
-						source={{
-							uri: content.club_img,
+							borderRadius: 13,
+
+							shadowColor: content.color,
+							shadowOffset: {
+								width: 6,
+								height: 6,
+							},
+							shadowOpacity: 0.5,
+							shadowRadius: 20.00,
 						}}
-					/>
-					<View
-						style={{
-							marginLeft: 15,
+						onPress={() => {
+							this.props.navigation.navigate('MessageScreen', {
+								content: this.props.content,
+							});
 						}}
 					>
-						<Text style={{ marginTop: 4, fontSize: 13, color: 'white' }}>{content.ago}</Text>
-						<Text style={{ marginTop: -2, fontSize: 16, fontFamily: 'Poppins-SemiBold', color: 'white' }}>
-							{content.club_name}
-						</Text>
-					</View>
-				</View>
+						<View
+							style={{
+								width: '90%',
+								marginTop: 13,
+								marginLeft: 15,
+								display: 'flex',
+								flexDirection: 'row',
+							}}
+						>
+							<Text
+								style={{
+									alignSelf: 'flex-start',
+									fontFamily: 'Poppins-Bold',
+									fontSize: 30,
+									color: '#FFFFFF',
+								}}
+							>{content.headline}</Text>
+							<FontAwesomeIcon
+								style={{
+									marginLeft: 'auto',
+									alignSelf: 'flex-end',
+									marginBottom: 7,
+								}}
+								size={25}
+								color="#E9E9E9"
+								icon={faChevronCircleRight}
+							/>
+						</View>
+						<Text
+							style={{
+								fontSize: 20,
+								fontFamily: 'Poppins-Regular',
+								color: 'white',
+								marginTop: 5,
+								marginLeft: 15,
+							}}
+						>{content.short_text}</Text>
 
-			</TouchableOpacity>
-		);
+						<View
+							style={{
+								width: '90%',
+								marginBottom: 20,
+								marginTop: 20,
+								marginLeft: 15,
+								display: 'flex',
+								flexDirection: 'row',
+							}}
+						>
+							<AutoHeightImage
+								style={{ borderRadius: 36 }}
+								width={36}
+								source={{
+									uri: content.club_img,
+								}}
+							/>
+							<View
+								style={{
+									marginLeft: 15,
+								}}
+							>
+								<Text style={{ marginTop: 4, fontSize: 13, color: 'white' }}>{content.ago}</Text>
+								<Text style={{ marginTop: -2, fontSize: 16, fontFamily: 'Poppins-SemiBold', color: 'white' }}>
+									{content.club_name}
+								</Text>
+							</View>
+						</View>
+
+					</TouchableOpacity>
+				);
+			}
+		}
+		return <View />;
 	}
 }
 
@@ -168,18 +174,10 @@ export class DownloadCard extends React.Component {
 	_openFile() {
 		FileViewer.open(Platform.OS === 'android' ? 'file://' + this.state.path : '' + this.state.path)
 			.then(() => {})
-			.catch(error => {
-				// error
-			});
+			.catch(error => {});
 	}
 
 	_downloadFile(url) {
-		//const directoryFile = RNFS.ExternalStorageDirectoryPath + '/Gerd/';
-		//RNFS.mkdir(directoryFile);
-		//let fileName;
-		//fileName = 'filename.zip';
-		//let dirs = directoryFile + this.props.name + '.' + this.props.type.split('/')[1];
-
 		RNFetchBlob
 			.config({
 				path: RNFetchBlob.fs.dirs.DocumentDir + '/' + this.props.name + '.' + this.props.type.split('/')[1],
@@ -189,7 +187,6 @@ export class DownloadCard extends React.Component {
 			.fetch('GET', url, {
 				'Cache-Control': 'no-store',
 			})
-			// listen to download progress event
 			.progress({ count: 1000 }, (received, total) => {
 				this.state.download_progress = received / total * 100;
 				this.forceUpdate();
@@ -199,36 +196,7 @@ export class DownloadCard extends React.Component {
 				this.state.downloaded = true;
 				this.state.path = res.path();
 				this.forceUpdate();
-				/*
-				Share.open(options)
-					.then(res => {
-						console.log(res);
-					})
-					.catch(err => {
-						err && console.log(err);
-					});
-*/
 			});
-
-		/*
-		var date = new Date();
-		const { config, fs } = RNFetchBlob;
-		let PictureDir = fs.dirs.PictureDir; // this is the pictures directory. You can check the available directories in the wiki.
-		let options = {
-			fileCache: true,
-			addAndroidDownloads: {
-				useDownloadManager: true, // setting it to true will use the device's native download manager and will be shown in the notification bar.
-				notification: false,
-				path: PictureDir + '/' + Math.floor(date.getTime() + date.getSeconds() / 2) + '.png', // this is the path where your downloaded file will live in
-				description: 'Downloading image.',
-			},
-		};
-		config(options).fetch('GET', url).then(res => {
-			alert(options.addAndroidDownloads.path);
-			console.log(res.base64());
-			console.log(res);
-		});
-		*/
 	}
 
 	render() {

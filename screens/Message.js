@@ -27,9 +27,14 @@ import { SafeAreaView } from 'react-navigation'; //added this import
 export default class MessageScreen extends React.Component {
 	constructor(props) {
 		super(props);
+
+		const mes = this.props.navigation.getParam('content', null);
+
 		this.state = {
 			scrollY: new Animated.Value(0),
 		};
+
+		database().ref('messages/list/' + mes.id + '/read_by/default').set(true);
 	}
 
 	_getHeadlineMarginTop = () => {
