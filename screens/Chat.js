@@ -43,11 +43,13 @@ class ChatScreen extends React.Component {
 
 	_sendMessage() {
 		const chat = this.props.navigation.getParam('chat', null);
+
 		var mes = {
 			text: this.state.cur_message,
 			send_at: new Date().getTime() / 1000,
 			read: false,
-			sender: 'default',
+			sender: chat.user_id_1 != 'default' ? chat.user_id_2 : chat.user_id_1,
+			receiver: chat.user_id_1 != 'default' ? chat.user_id_1 : chat.user_id_2,
 		};
 
 		database().ref('chats/' + chat.id + '/messages').push(mes);

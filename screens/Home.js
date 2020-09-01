@@ -124,7 +124,9 @@ class HomeScreen extends React.Component {
 	generateCards(listName) {
 		var cardsList = Object.keys(this.state[listName]).map(key => {
 			var mes = this.state[listName][key];
-			return <NotificationCard content={mes} key={key} navigation={this.props.navigation} />;
+			return (
+				<NotificationCard utils={this.props.utilsObject} content={mes} key={key} navigation={this.props.navigation} />
+			);
 		});
 		this.state[listName] = cardsList;
 	}
