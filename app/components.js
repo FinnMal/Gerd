@@ -83,6 +83,7 @@ export class NotificationCard extends React.Component {
 						onPress={() => {
 							this.props.navigation.navigate('MessageScreen', {
 								content: this.props.content,
+								utils: this.props.utils,
 							});
 						}}
 					>

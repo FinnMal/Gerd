@@ -110,6 +110,8 @@ export default class App extends Component {
 		OneSignal.addEventListener('received', this.onReceived);
 		OneSignal.addEventListener('opened', this.onOpened);
 		OneSignal.addEventListener('ids', this.onIds);
+
+		OneSignal.sendTag('2', 'ja');
 	}
 	componentWillUnmount() {
 		OneSignal.removeEventListener('received', this.onReceived);

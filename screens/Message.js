@@ -28,29 +28,82 @@ export default class MessageScreen extends React.Component {
 	constructor(props) {
 		super(props);
 
+		var headlineHeight = 0;
 		const mes = this.props.navigation.getParam('content', null);
 
 		this.state = {
 			scrollY: new Animated.Value(0),
+			headlineHeight: -1,
+			backBtnY: 0,
+			cardY: 0,
+			inputRange: [ 0, 160, 210 ],
+			shortInputRange: [ 0, 160 ],
+			ago: mes.ago,
+			send_at: mes.send_at,
+			ago_seconds: mes.ago_seconds,
+			agoTextInterval: null,
 		};
+
+		if (mes.ago_seconds < 3600) {
+			this.state.agoTextInterval = setInterval(
+				(function() {
+					this._updateAgoText();
+				}).bind(this),
+				1000
+			);
+		}
 
 		database().ref('messages/list/' + mes.id + '/read_by/default').set(true);
 	}
 
+	componentWillUnmount() {
+		clearInterval(this.state.agoTextInterval);
+	}
+
+	_updateAgoText() {
+		if (this.state.ago_seconds < 3600) {
+			this.state.ago_seconds++;
+			this.state.ago = this.props.navigation.getParam('utils', null).getAgoText(this.state.send_at);
+			this.forceUpdate();
+		} else
+			clearInterval(this.state.agoTextInterval);
+	}
+
 	_getHeadlineMarginTop = () => {
-		const { scrollY } = this.state;
+		// 160
+		const { scrollY, shortInputRange, inputRange, headlineHeight } = this.state;
 		return scrollY.interpolate({
-			inputRange: [ 0, 160, 210 ],
-			outputRange: [ 200, 81, 15 ],
+			inputRange: inputRange,
+			outputRange: [ 165, headlineHeight + 33, headlineHeight - 40 ],
 			extrapolate: 'clamp',
 			useNativeDriver: true,
 		});
 	};
 
-	_getHeadlineMarginLeft = () => {
-		const { scrollY } = this.state;
+	_getHeadlineLines = () => {
+		// 160
+		const { scrollY, shortInputRange, inputRange, headlineHeight } = this.state;
 		return scrollY.interpolate({
-			inputRange: [ 0, 160 ],
+			inputRange: inputRange,
+			outputRange: [ 10, 10, 10 ],
+			useNativeDriver: true,
+		});
+	};
+
+	_getHeadlineMaxWidth = () => {
+		// 160
+		const { scrollY, shortInputRange, inputRange, headlineHeight } = this.state;
+		return scrollY.interpolate({
+			inputRange: inputRange,
+			outputRange: [ 380, 380, 700 ],
+			useNativeDriver: true,
+		});
+	};
+
+	_getHeadlineMarginLeft = () => {
+		const { scrollY, shortInputRange, inputRange, headlineHeight } = this.state;
+		return scrollY.interpolate({
+			inputRange: shortInputRange,
 			outputRange: [ 20, 30 ],
 			extrapolate: 'clamp',
 			useNativeDriver: true,
@@ -58,10 +111,10 @@ export default class MessageScreen extends React.Component {
 	};
 
 	_getHeadlineFontScale = () => {
-		const { scrollY } = this.state;
-
+		const { scrollY, shortInputRange, inputRange, headlineHeight } = this.state;
+		console.log(scrollY);
 		return scrollY.interpolate({
-			inputRange: [ 0, 160 ],
+			inputRange: shortInputRange,
 			outputRange: [ 1, 0.65 ],
 			extrapolate: 'clamp',
 			useNativeDriver: true,
@@ -69,10 +122,10 @@ export default class MessageScreen extends React.Component {
 	};
 
 	_getBackButtonMarginLeft = () => {
-		const { scrollY } = this.state;
+		const { scrollY, shortInputRange, inputRange, headlineHeight } = this.state;
 
 		return scrollY.interpolate({
-			inputRange: [ 0, 160, 210 ],
+			inputRange: inputRange,
 			outputRange: [ 20, 20, 20 ],
 			extrapolate: 'clamp',
 			useNativeDriver: true,
@@ -80,10 +133,10 @@ export default class MessageScreen extends React.Component {
 	};
 
 	_getBackButtonMarginTop = () => {
-		const { scrollY } = this.state;
+		const { scrollY, shortInputRange, inputRange, headlineHeight } = this.state;
 
 		return scrollY.interpolate({
-			inputRange: [ 0, 160, 210 ],
+			inputRange: inputRange,
 			outputRange: [ 40, 40, -29 ],
 			extrapolate: 'clamp',
 			useNativeDriver: true,
@@ -91,10 +144,10 @@ export default class MessageScreen extends React.Component {
 	};
 
 	_getImageScale = () => {
-		const { scrollY } = this.state;
+		const { scrollY, shortInputRange, inputRange, headlineHeight } = this.state;
 
 		return scrollY.interpolate({
-			inputRange: [ 0, 160 ],
+			inputRange: shortInputRange,
 			outputRange: [ 1, 1.5 ],
 			extrapolate: 'clamp',
 			useNativeDriver: true,
@@ -102,11 +155,12 @@ export default class MessageScreen extends React.Component {
 	};
 
 	_getImageOpacity = () => {
-		const { scrollY } = this.state;
+		const { scrollY, shortInputRange, inputRange, headlineHeight } = this.state;
 
 		return scrollY.interpolate({
-			inputRange: [ 0, 160 ],
-			outputRange: [ 'rgba(0, 0, 0, 0.3)', 'rgba(32, 26, 48, 0.6)' ],
+			inputRange: shortInputRange,
+			//outputRange: [ 'rgba(0, 0, 0, 0.3)', 'rgba(32, 26, 48, 0.6)' ],
+			outputRange: [ 'rgba(0, 0, 0, 0.3)', 'rgba(32, 26, 48, 0.5)' ],
 			extrapolate: 'clamp',
 			useNativeDriver: true,
 		});
@@ -116,6 +170,7 @@ export default class MessageScreen extends React.Component {
 		const content = this.props.navigation.getParam('content', null);
 
 		const headlineFontScale = this._getHeadlineFontScale();
+		const headlineMaxWidth = this._getHeadlineMaxWidth();
 		const headlineMarginTop = this._getHeadlineMarginTop();
 		const headlineMarginLeft = this._getHeadlineMarginLeft();
 		const backButtonMarginLeft = this._getBackButtonMarginLeft();
@@ -147,6 +202,7 @@ export default class MessageScreen extends React.Component {
 				<View style={{ position: 'absolute' }}>
 					<View style={{ width: 400, marginLeft: 0, marginTop: -50, position: 'absolute' }}>
 						<View style={{ position: 'absolute' }}>
+
 							<Animated.Text
 								style={{
 									fontFamily: 'Poppins-Bold',
@@ -155,8 +211,15 @@ export default class MessageScreen extends React.Component {
 									marginTop: headlineMarginTop,
 									fontSize: 40,
 									transform: [ { scale: headlineFontScale } ],
-
 									color: 'white',
+								}}
+								onLayout={event => {
+									var { x, y, width, height } = event.nativeEvent.layout;
+									if (this.state.headlineHeight == -1) {
+										this.setState({ headlineHeight: height });
+										this.setState({ inputRange: [ 0, 70 + height, 120 + height ] });
+										this.setState({ shortInputRange: [ 0, 70 + height ] });
+									}
 								}}
 							>
 								{content.headline}
@@ -168,7 +231,7 @@ export default class MessageScreen extends React.Component {
 									flexWrap: 'wrap',
 									alignItems: 'flex-start',
 									flexDirection: 'row',
-									marginTop: 260,
+									marginTop: 260 + this.state.headlineHeight - 85,
 									position: 'absolute',
 									marginLeft: 20,
 								}}
@@ -177,7 +240,7 @@ export default class MessageScreen extends React.Component {
 								<Text
 									style={{ fontFamily: 'Poppins-Medium', marginTop: -2, fontSize: 13, marginLeft: 10, color: 'white' }}
 								>
-									{content.ago}
+									{this.state.ago}
 								</Text>
 								<FontAwesomeIcon style={{ marginLeft: 20 }} size={13} color="#F5F5F5" icon={faClock} />
 								<Text
@@ -191,7 +254,7 @@ export default class MessageScreen extends React.Component {
 							style={{
 								flex: 1,
 								zIndex: -1,
-								height: 370,
+								height: 370 + this.state.headlineHeight,
 								resizeMode: 'cover',
 								marginTop: 0,
 								transform: [ { scale: imageScale } ],
@@ -202,7 +265,7 @@ export default class MessageScreen extends React.Component {
 								style={{
 									flex: 1,
 									zIndex: -1,
-									height: 370,
+									height: 370 + this.state.headlineHeight,
 									resizeMode: 'cover',
 								}}
 								source={{
@@ -221,6 +284,7 @@ export default class MessageScreen extends React.Component {
 
 				</View>
 				<Animated.ScrollView
+					showsVerticalScrollIndicator={false}
 					alwaysBounceHorizontal={false}
 					alwaysBounceVertical={false}
 					bounces={false}
@@ -242,7 +306,7 @@ export default class MessageScreen extends React.Component {
 					<View
 						style={{
 							zIndex: 10,
-							marginTop: 240,
+							marginTop: 240 + this.state.headlineHeight - 90,
 							backgroundColor: '#201A30',
 							borderRadius: 30,
 						}}
@@ -293,6 +357,11 @@ export default class MessageScreen extends React.Component {
 							marginLeft: backButtonMarginLeft,
 						})
 					}
+					onLayout={event => {
+						var { x, y, width, height } = event.nativeEvent.layout;
+						console.log(y);
+						this.setState({ backBtnY: y });
+					}}
 				>
 					<TouchableOpacity onPress={() => this.props.navigation.navigate('ScreenHandler')}>
 						<FontAwesomeIcon style={{ zIndex: 0 }} size={29} color="#F5F5F5" icon={faChevronCircleLeft} />

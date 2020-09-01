@@ -48,6 +48,7 @@ export function getAgoText(time, with_ago_pre = true, with_in_pre = true, small_
 	} else
 		return +(!small_text ? ' Gerade eben' : 'now');
 
+	console.log('time: ' + time);
 	if (diff < 60) var ago = Math.round(diff) + (!small_text ? ' Sek.' : ' sec');
 	else if (diff > 59 && diff < 3600) var ago = Math.round(diff / 60) + (!small_text ? ' Min.' : ' min');
 	else if (diff > 3599 && diff < 86400) var ago = Math.round(diff / 3600) + (!small_text ? ' Std.' : ' std');
