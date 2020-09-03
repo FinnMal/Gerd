@@ -43,13 +43,14 @@ class MessagesScreen extends React.Component {
 						'value',
 						(function(snap) {
 							var chat = snap.val();
+							chat.id = chat_id;
 							chat.unread_messages_count = 0;
 							chat.last_message_send_at = 0;
 							chat.last_message_id = null;
 
 							Object.keys(chat.messages).map(mes_key => {
 								var message = chat.messages[mes_key];
-								if (!message.read) chat.unread_messages_count++;
+								if (!message.read && message.receiver == 'default') chat.unread_messages_count++;
 
 								if (chat.last_message_id) {
 									if (chat.messages[chat.last_message_id]) {
@@ -59,13 +60,15 @@ class MessagesScreen extends React.Component {
 								} else
 									chat.last_message_id = mes_key;
 							});
+							chat.last_message = chat.messages[chat.last_message_id];
 
-							chat.messages[chat.last_message_id].ago_text = utils.getAgoText(
-								chat.messages[chat.last_message_id].send_at,
-								false,
-								false,
-								true
-							);
+							chat.last_message.ago_text = utils.getAgoText(chat.last_message.send_at, false, false, true);
+
+							var list = Object.values(chat.messages);
+							list.sort(function(a, b) {
+								return parseInt(a.send_at) - parseInt(b.send_at);
+							});
+							chat.messages = list;
 
 							var reciver_user_id = chat.user_id_1 != 'default' ? chat.user_id_1 : chat.user_id_2;
 							database().ref('users/' + reciver_user_id + '/img').once(
@@ -183,7 +186,7 @@ class ChatCard extends React.Component {
 				>
 					<Text style={{ fontFamily: 'Poppins-SemiBold', fontSize: 18, color: '#C2C1C7' }}>{chat.user_name}</Text>
 					<Text numberOfLines={1} style={{ fontFamily: 'Poppins-Regular', color: '#7B7784' }}>
-						{chat.messages[chat.last_message_id].text}
+						{chat.last_message.text}
 					</Text>
 				</View>
 				<View
@@ -196,7 +199,7 @@ class ChatCard extends React.Component {
 					}}
 				>
 					<Text style={{ marginTop: 0, fontFamily: 'Poppins-Regular', color: '#6F6B79' }}>
-						{chat.messages[chat.last_message_id].ago_text}
+						{chat.last_message.ago_text}
 					</Text>
 					{chat.unread_messages_count
 						? <View

@@ -29,6 +29,22 @@ export async function getUserID(cb) {
 	}
 }
 
+export async function setMessageRead(mes_id, read = true) {
+	try {
+		await AsyncStorage.setItem(mes_id + '_read', 'yes');
+	} catch (e) {
+	}
+}
+
+export function hasReadMessage(mes_id) {
+	const read = AsyncStorage.getItem(mes_id + '_read');
+
+	if (read == 'yes') alert(mes_id + ' read');
+	else alert(mes_id + ' not read');
+
+	return read == 'yes';
+}
+
 export function getAgoSec(time) {
 	var cur_time = new Date().getTime() / 1000;
 	if (cur_time > time) return cur_time - time;
