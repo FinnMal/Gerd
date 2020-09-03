@@ -96,24 +96,27 @@ export class NotificationCard extends React.Component {
 								flexDirection: 'row',
 							}}
 						>
-							<Text
-								style={{
-									alignSelf: 'flex-start',
-									fontFamily: 'Poppins-Bold',
-									fontSize: 30,
-									color: '#FFFFFF',
-								}}
-							>{content.headline}</Text>
 							<FontAwesomeIcon
 								style={{
-									marginLeft: 'auto',
-									alignSelf: 'flex-end',
+									marginLeft: 270,
+									marginTop: 5,
+									position: 'absolute',
 									marginBottom: 7,
 								}}
 								size={25}
 								color="#E9E9E9"
 								icon={faChevronCircleRight}
 							/>
+							<Text
+								style={{
+									marginRight: 23,
+									alignSelf: 'flex-start',
+									fontFamily: 'Poppins-Bold',
+									fontSize: 30,
+									color: '#FFFFFF',
+								}}
+							>{content.headline}</Text>
+
 						</View>
 						<Text
 							style={{
@@ -122,6 +125,7 @@ export class NotificationCard extends React.Component {
 								color: 'white',
 								marginTop: 5,
 								marginLeft: 15,
+								marginRight: 15,
 							}}
 						>{content.short_text}</Text>
 
@@ -159,115 +163,6 @@ export class NotificationCard extends React.Component {
 			}
 		}
 		return <View />;
-	}
-}
-
-export class DownloadCard extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = {
-			download_progress: 0,
-			downloaded: false,
-			path: '',
-		};
-	}
-
-	_openFile() {
-		FileViewer.open(Platform.OS === 'android' ? 'file://' + this.state.path : '' + this.state.path)
-			.then(() => {})
-			.catch(error => {});
-	}
-
-	_downloadFile(url) {
-		RNFetchBlob
-			.config({
-				path: RNFetchBlob.fs.dirs.DocumentDir + '/' + this.props.name + '.' + this.props.type.split('/')[1],
-				fileCache: true,
-				appendExt: this.props.type.split('/')[1],
-			})
-			.fetch('GET', url, {
-				'Cache-Control': 'no-store',
-			})
-			.progress({ count: 1000 }, (received, total) => {
-				this.state.download_progress = received / total * 100;
-				this.forceUpdate();
-				console.log('progress: ' + received / total * 100 + '%');
-			})
-			.then(res => {
-				this.state.downloaded = true;
-				this.state.path = res.path();
-				this.forceUpdate();
-			});
-	}
-
-	render() {
-		var icon = faFile;
-		if (this.props.type == 'application/pdf') icon = faFilePdf;
-		if (this.props.type == 'application/msword') icon = faFileWord;
-		if (this.props.type == 'application/mspowerpoint') icon = faFilePowerpoint;
-		if (this.props.type == 'application/msexcel') icon = faFileExcel;
-		if (this.props.type == 'application/pdf') icon = faFilePdf;
-		if (this.props.type == 'application/zip') icon = faFileArchive;
-		if (this.props.type == 'text/comma-separated-values	') icon = faFileCsv;
-
-		if (!this.props.icon) {
-			if (this.props.type.includes('audio')) icon = faFileAudio;
-			if (this.props.type.includes('video')) icon = faFileVideo;
-			if (this.props.type.includes('image')) icon = faFileImage;
-			if (this.props.type.includes('text')) icon = faFileAlt;
-		}
-
-		var s = require('./style.js');
-		return (
-			<TouchableOpacity
-				onPress={() => {
-					if (!this.state.downloaded) this._downloadFile(this.props.download_url);
-					else this._openFile();
-				}}
-			>
-				<View
-					style={{
-						marginTop: 20,
-						borderRadius: 13,
-						padding: 10,
-						backgroundColor: '#201A30',
-						marginRight: 55,
-						color: '#ADA4A9',
-						flexWrap: 'wrap',
-						alignItems: 'flex-start',
-						flexDirection: 'row',
-					}}
-				>
-					{!this.state.downloaded
-						? <AnimatedCircularProgress
-								size={41}
-								width={6}
-								style={{ position: 'absolute', marginTop: 13, marginLeft: 12 }}
-								fill={this.state.download_progress}
-								tintColor="#0DF5E3"
-								onAnimationComplete={() => console.log('onAnimationComplete')}
-								backgroundColor="#201A30"
-							/>
-						: void 0}
-
-					<FontAwesomeIcon
-						style={{ zIndex: 0, marginTop: 6, marginLeft: 5 }}
-						size={35}
-						color="#ADA4A9"
-						icon={this.state.downloaded ? icon : faArrowAltCircleDown}
-					/>
-
-					<View style={{ marginLeft: 16 }}>
-						<Text style={{ marginTop: 2, fontFamily: 'Poppins-SemiBold', fontSize: 23, color: '#ADA4A9' }}>
-							{this.props.name}
-						</Text>
-						<Text style={{ marginTop: -6, fontFamily: 'Poppins-SemiBold', fontSize: 16, color: '#ADA4A9' }}>
-							{Math.round(this.props.size / 1000000, 2)} MB
-						</Text>
-					</View>
-				</View>
-			</TouchableOpacity>
-		);
 	}
 }
 
@@ -635,9 +530,36 @@ export class FileCard extends React.Component {
 		super(props);
 
 		this.state = {
+			download_progress: 0,
+			downloaded: false,
+			path: '',
 			name: this.props.name,
 			modal_visible: false,
+			size: this.props.size,
 		};
+
+		if (this.props.path) this.state.path = this.props.path;
+
+		if (this.state.size < 1000) {
+			// Byte
+			this.state.size = Math.round(this.state.size) + ' B';
+		}
+		if (this.state.size < 1000000) {
+			// KB
+			this.state.size = Math.round(this.state.size / 1000) + ' KB';
+		} else if (this.props.size < 1000000000) {
+			// MB
+			this.state.size = Math.round(this.state.size / 1000000) + ' MB';
+		} else if (this.props.size < 1000000000000) {
+			// GB
+			this.state.size = Math.round(this.state.size / 1000000000) + ' GB';
+		}
+	}
+
+	_openFile() {
+		FileViewer.open(Platform.OS === 'android' ? 'file://' + this.state.path : '' + this.state.path)
+			.then(() => {})
+			.catch(error => {});
 	}
 
 	_openFileOptions() {
@@ -662,6 +584,28 @@ export class FileCard extends React.Component {
 		);
 	}
 
+	_downloadFile(url) {
+		RNFetchBlob
+			.config({
+				path: RNFetchBlob.fs.dirs.DocumentDir + '/' + this.props.name + '.' + this.props.type.split('/')[1],
+				fileCache: true,
+				appendExt: this.props.type.split('/')[1],
+			})
+			.fetch('GET', url, {
+				'Cache-Control': 'no-store',
+			})
+			.progress({ count: 1000 }, (received, total) => {
+				this.state.download_progress = received / total * 100;
+				this.forceUpdate();
+				console.log('progress: ' + received / total * 100 + '%');
+			})
+			.then(res => {
+				this.state.downloaded = true;
+				this.state.path = res.path();
+				this.forceUpdate();
+			});
+	}
+
 	onChangeText(value) {
 		this.state.name = value;
 		this.forceUpdate();
@@ -674,133 +618,202 @@ export class FileCard extends React.Component {
 	}
 
 	render() {
+		if (this.props.downloadable && !this.state.downloaded) var icon = faArrowAltCircleDown;
+		else var icon = faFile;
+		if (this.state.downloaded || !this.props.downloadable) {
+			if (this.props.type == 'application/pdf') icon = faFilePdf;
+			if (this.props.type == 'application/msword') icon = faFileWord;
+			if (this.props.type == 'application/mspowerpoint') icon = faFilePowerpoint;
+			if (this.props.type == 'application/msexcel') icon = faFileExcel;
+			if (this.props.type == 'application/pdf') icon = faFilePdf;
+			if (this.props.type == 'application/zip') icon = faFileArchive;
+			if (this.props.type == 'text/comma-separated-values	') icon = faFileCsv;
+
+			if (!this.props.icon) {
+				if (this.props.type.includes('audio')) icon = faFileAudio;
+				if (this.props.type.includes('video')) icon = faFileVideo;
+				if (this.props.type.includes('image')) icon = faFileImage;
+				if (this.props.type.includes('text')) icon = faFileAlt;
+			}
+		}
+
+		var s = require('./style.js');
 		return (
 			<View style={{ marginBottom: 30 }}>
-				<Modal animationType="slide" presentationStyle="formSheet" visible={this.state.modal_visible}>
+				{this.props.editable
+					? <Modal animationType="slide" presentationStyle="formSheet" visible={this.state.modal_visible}>
+							<View
+								style={{
+									padding: 20,
+									backgroundColor: '#201A30',
+									height: '100%',
+								}}
+							>
+								<View
+									style={{
+										marginBottom: 10,
+										justifyContent: 'space-between',
+										flexWrap: 'wrap',
+										flexDirection: 'row',
+									}}
+								>
+									<Text
+										style={{ fontFamily: 'Poppins-Bold', color: 'white', fontSize: 25, width: '76%' }}
+										numberOfLines={1}
+									>
+										Datei bearbeiten
+									</Text>
+									<TouchableOpacity
+										style={{
+											height: 30,
+											borderRadius: 10,
+											marginLeft: 10,
+											width: 70,
+											padding: 5,
+											paddingLeft: 10,
+											backgroundColor: '#0DF5E3',
+										}}
+										onPress={text => this.editFile()}
+									>
+										<Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: '#38304C' }}>FERTIG</Text>
+									</TouchableOpacity>
+								</View>
+
+								<View
+									style={{ marginLeft: -20, height: 0.5, marginBottom: 40, backgroundColor: '#38304C', width: '140%' }}
+								/>
+
+								<View style={{ marginBottom: 20 }}>
+									<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>NAME</Text>
+									<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
+										<TextInput
+											multiline
+											autoCorrect={false}
+											keyboardType="default"
+											multiline={true}
+											style={{
+												fontFamily: 'Poppins-Medium',
+												marginTop: 8,
+												padding: 15,
+												fontSize: 17,
+												color: '#D5D3D9',
+											}}
+											value={this.state.name}
+											onChangeText={text => this.onChangeText(text)}
+										/>
+									</View>
+								</View>
+							</View>
+						</Modal>
+					: void 0}
+
+				<TouchableOpacity
+					onPress={() => {
+						if (this.props.downloadable && !this.state.downloaded) this._downloadFile(this.props.download_url);
+						else this._openFile();
+					}}
+				>
 					<View
 						style={{
-							padding: 20,
-							backgroundColor: '#201A30',
-							height: '100%',
+							marginTop: this.props.editable ? 0 : 20,
+							marginRight: this.props.editable ? 0 : 55,
+
+							justifyContent: 'flex-start',
+							flexWrap: 'wrap',
+							flexDirection: 'row',
+							padding: 15,
+							backgroundColor: this.props.editable ? '#38304C' : '#201A30',
+							marginBottom: 0,
+							borderRadius: 13,
 						}}
 					>
 						<View
 							style={{
-								marginBottom: 10,
-								justifyContent: 'space-between',
-								flexWrap: 'wrap',
-								flexDirection: 'row',
+								justifyContent: 'center',
+								alignItems: 'center',
 							}}
 						>
-							<Text
-								style={{ fontFamily: 'Poppins-Bold', color: 'white', fontSize: 25, width: '76%' }}
-								numberOfLines={1}
-							>
-								Datei bearbeiten
-							</Text>
-							<TouchableOpacity
-								style={{
-									height: 30,
-									borderRadius: 10,
-									marginLeft: 10,
-									width: 70,
-									padding: 5,
-									paddingLeft: 10,
-									backgroundColor: '#0DF5E3',
-								}}
-								onPress={text => this.editFile()}
-							>
-								<Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: '#38304C' }}>FERTIG</Text>
-							</TouchableOpacity>
+
+							<FontAwesomeIcon
+								style={{ zIndex: 0 }}
+								size={35}
+								color={this.props.editable ? '#D1CFD5' : '#ADA4A9'}
+								icon={icon}
+							/>
+							{this.props.downloadable && !this.state.downloaded
+								? <AnimatedCircularProgress
+										size={41}
+										width={2}
+										style={{ position: 'absolute', marginTop: 13, marginLeft: 12 }}
+										fill={this.state.download_progress}
+										tintColor="#0DF5E3"
+										onAnimationComplete={() => console.log('onAnimationComplete')}
+										backgroundColor="#201A30"
+									/>
+								: void 0}
 						</View>
 
-						<View
-							style={{ marginLeft: -20, height: 0.5, marginBottom: 40, backgroundColor: '#38304C', width: '140%' }}
-						/>
-
-						<View style={{ marginBottom: 20 }}>
-							<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>NAME</Text>
-							<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
-								<TextInput
-									multiline
-									autoCorrect={false}
-									keyboardType="default"
-									multiline={true}
+						<View style={{ marginLeft: 20, width: this.props.editable ? 225 : 228 }}>
+							<Text
+								style={{
+									fontSize: 19,
+									fontFamily: 'Poppins-SemiBold',
+									color: this.props.editable ? '#D1CFD5' : '#ADA4A9',
+								}}
+							>
+								{this.props.name}
+							</Text>
+							<Text
+								style={{
+									fontSize: 15,
+									fontFamily: 'Poppins-SemiBold',
+									color: this.props.editable ? '#D1CFD5' : '#ADA4A9',
+								}}
+							>
+								{this.state.size}
+							</Text>
+						</View>
+						{this.props.editable
+							? <View
 									style={{
-										fontFamily: 'Poppins-Medium',
-										marginTop: 8,
-										padding: 15,
-										fontSize: 17,
-										color: '#D5D3D9',
+										padding: 1,
+										justifyContent: 'center',
+										alignItems: 'center',
 									}}
-									value={this.state.name}
-									onChangeText={text => this.onChangeText(text)}
+								>
+									<TouchableOpacity onPress={() => this._openFileOptions()} style={{ zIndex: 0 }}>
+										<FontAwesomeIcon size={20} color="#D1CFD5" icon={faEllipsisV} />
+									</TouchableOpacity>
+								</View>
+							: void 0}
+					</View>
+					{this.props.uploading && this.props.editable
+						? <View
+								style={{
+									marginLeft: 15,
+									marginRight: 15,
+									marginTop: -2,
+								}}
+							>
+								<View
+									style={{
+										borderRadius: 3,
+										shadowColor: '#0DF5E3',
+										shadowOffset: {
+											width: 6,
+											height: 6,
+										},
+										shadowOpacity: 0.5,
+										shadowRadius: 20.00,
+										backgroundColor: '#0DF5E3',
+										height: 2,
+										width: '' + this.props.uploaded_percentage + '%',
+										maxWidth: 1000,
+									}}
 								/>
 							</View>
-						</View>
-					</View>
-				</Modal>
-				<View
-					style={{
-						justifyContent: 'flex-start',
-						flexWrap: 'wrap',
-						flexDirection: 'row',
-						padding: 15,
-						backgroundColor: '#38304C',
-						marginBottom: 0,
-						borderRadius: 13,
-					}}
-				>
-					<View>
-						<View
-							style={{
-								opacity: 0,
-								position: 'absolute',
-								marginLeft: 10,
-								marginTop: 13,
-								backgroundColor: '#0DF5E3',
-								height: 17,
-								width: 16,
-							}}
-						/>
-						<FontAwesomeIcon style={{ position: 'absolute' }} size={30} color="#D1CFD5" icon={this.props.icon} />
-					</View>
-					<View style={{ marginLeft: 60, width: 220 }}>
-						<Text style={{ fontSize: 19, fontFamily: 'Poppins-SemiBold', color: '#D1CFD5' }}>{this.props.name}</Text>
-						<Text style={{ fontSize: 15, fontFamily: 'Poppins-SemiBold', color: '#D1CFD5' }}>
-							{Math.round(this.props.size / 1000000)} MB
-						</Text>
-					</View>
-					<TouchableOpacity onPress={() => this._openFileOptions()} style={{ zIndex: 0, marginTop: 6, marginLeft: 5 }}>
-						<FontAwesomeIcon size={20} color="#D1CFD5" icon={faEllipsisV} />
-					</TouchableOpacity>
-				</View>
-				{this.props.uploading
-					? <View
-							style={{
-								marginLeft: 15,
-								marginRight: 15,
-								marginTop: -2,
-							}}
-						>
-							<View
-								style={{
-									borderRadius: 3,
-									shadowColor: '#0DF5E3',
-									shadowOffset: {
-										width: 6,
-										height: 6,
-									},
-									shadowOpacity: 0.5,
-									shadowRadius: 20.00,
-									backgroundColor: '#0DF5E3',
-									height: 2,
-									width: '' + this.props.uploaded_percentage + '%',
-									maxWidth: 1000,
-								}}
-							/>
-						</View>
-					: void 0}
+						: void 0}
+				</TouchableOpacity>
 			</View>
 		);
 	}

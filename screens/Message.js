@@ -10,6 +10,7 @@ import {
 	Image,
 	Button,
 	TouchableOpacity,
+	ActionSheetIOS,
 	ScrollView,
 	Animated,
 	Easing,
@@ -19,8 +20,8 @@ import {
 } from 'react-native';
 import { Headlines } from './../app/constants.js';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faChevronCircleLeft, faClock, faArrowAltCircleDown } from '@fortawesome/free-solid-svg-icons';
-import { NotificationCard, DownloadCard, EventCard } from './../app/components.js';
+import { faChevronCircleLeft, faClock, faArrowAltCircleDown, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
+import { NotificationCard, FileCard, EventCard } from './../app/components.js';
 import database from '@react-native-firebase/database';
 import { SafeAreaView } from 'react-navigation'; //added this import
 
@@ -29,6 +30,7 @@ export default class MessageScreen extends React.Component {
 		super(props);
 
 		var headlineHeight = 0;
+		const utils = this.props.navigation.getParam('utils', null);
 		const mes = this.props.navigation.getParam('content', null);
 
 		this.state = {
@@ -52,8 +54,8 @@ export default class MessageScreen extends React.Component {
 				1000
 			);
 		}
-
-		database().ref('messages/list/' + mes.id + '/read_by/default').set(true);
+		//utils.setMessageRead(mes.id);
+		database().ref('users/default/messages/' + mes.id + '/read').set(true);
 	}
 
 	componentWillUnmount() {
@@ -166,6 +168,33 @@ export default class MessageScreen extends React.Component {
 		});
 	};
 
+	_openMessageModal() {
+		ActionSheetIOS.showActionSheetWithOptions(
+			{
+				options: [ 'Abbrechen', 'Bearbeiten', 'Löschen' ],
+				destructiveButtonIndex: 2,
+				cancelButtonIndex: 0,
+			},
+			buttonIndex => {
+				if (buttonIndex === 0) {
+				} else if (buttonIndex === 1) {
+					// edit uploaded file
+					this.state.modal_visible = true;
+					this.forceUpdate();
+				} else if (buttonIndex === 2) {
+					this._deleteMessage();
+				}
+			}
+		);
+	}
+
+	_deleteMessage() {
+		const mes = this.props.navigation.getParam('content', null);
+		database().ref('messages/list/' + mes.id + '/invisible').set(true);
+		// TODO: Alert to confirm delete
+		// -> navigate to ScreenHandler
+	}
+
 	render() {
 		const content = this.props.navigation.getParam('content', null);
 
@@ -184,7 +213,15 @@ export default class MessageScreen extends React.Component {
 			downloadsElements = Object.keys(content.files).map(key => {
 				var file = content.files[key];
 				return (
-					<DownloadCard key={key} name={file.name} type={file.type} size={file.size} download_url={file.download_url} />
+					<FileCard
+						key={key}
+						editable={false}
+						downloadable={true}
+						name={file.name}
+						type={file.type}
+						size={file.size}
+						download_url={file.download_url}
+					/>
 				);
 			});
 		}
@@ -202,7 +239,6 @@ export default class MessageScreen extends React.Component {
 				<View style={{ position: 'absolute' }}>
 					<View style={{ width: 400, marginLeft: 0, marginTop: -50, position: 'absolute' }}>
 						<View style={{ position: 'absolute' }}>
-
 							<Animated.Text
 								style={{
 									fontFamily: 'Poppins-Bold',
@@ -242,9 +278,12 @@ export default class MessageScreen extends React.Component {
 								>
 									{this.state.ago}
 								</Text>
-								<FontAwesomeIcon style={{ marginLeft: 20 }} size={13} color="#F5F5F5" icon={faClock} />
+								<Image
+									style={{ opacity: 0.9, borderRadius: 14, marginLeft: 20, height: 13, width: 13 }}
+									source={{ uri: content.club_img }}
+								/>
 								<Text
-									style={{ fontFamily: 'Poppins-Medium', marginTop: -2, fontSize: 13, marginLeft: 10, color: 'white' }}
+									style={{ fontFamily: 'Poppins-Medium', marginTop: -1, fontSize: 13, marginLeft: 10, color: 'white' }}
 								>
 									{content.club_name}
 								</Text>
@@ -306,45 +345,49 @@ export default class MessageScreen extends React.Component {
 					<View
 						style={{
 							zIndex: 10,
+							minHeight: 615,
 							marginTop: 240 + this.state.headlineHeight - 90,
 							backgroundColor: '#201A30',
-							borderRadius: 30,
+							borderTopLeftRadius: 30,
+							borderTopRightRadius: 30,
 						}}
 					>
 						<View style={{ marginTop: 30, marginLeft: 22, marginRight: 20 }}>
-							<Text style={{ fontFamily: 'Poppins-Regular', fontSize: 20, color: 'white' }}>
+							<Text style={{ fontFamily: 'Poppins-Regular', fontSize: 20, color: 'white', marginBottom: 30 }}>
 								{content.long_text}
 							</Text>
-							<View
-								style={{
-									paddingTop: 20,
-									paddingBottom: 40,
-									paddingLeft: 30,
-									borderRadius: 30,
-									marginLeft: -22,
-									marginTop: 20,
-									backgroundColor: '#38304C',
-									width: '120%',
-								}}
-							>
-								{downloadsElements
-									? <View>
-											<Text style={{ fontFamily: 'Poppins-Bold', fontSize: 40, color: '#B3A9AF' }}>Dateien</Text>
-											{downloadsElements}
-										</View>
-									: void 0}
+							{downloadsElements || eventsElements
+								? <View
+										style={{
+											paddingTop: 20,
+											paddingBottom: 40,
+											paddingLeft: 30,
+											borderRadius: 30,
+											marginLeft: -22,
+											marginTop: 0,
+											backgroundColor: '#38304C',
+											width: '120%',
+										}}
+									>
+										{downloadsElements
+											? <View>
+													<Text style={{ fontFamily: 'Poppins-Bold', fontSize: 40, color: '#B3A9AF' }}>Dateien</Text>
+													{downloadsElements}
+												</View>
+											: void 0}
 
-								{eventsElements
-									? <View>
-											<Text style={{ fontFamily: 'Poppins-Bold', marginTop: 50, fontSize: 40, color: '#B3A9AF' }}>
-												Events
-											</Text>
-											<View style={{ marginTop: 20, marginRight: 55 }}>
-												{eventsElements}
-											</View>
-										</View>
-									: void 0}
-							</View>
+										{eventsElements
+											? <View>
+													<Text style={{ fontFamily: 'Poppins-Bold', marginTop: 50, fontSize: 40, color: '#B3A9AF' }}>
+														Events
+													</Text>
+													<View style={{ marginTop: 20, marginRight: 55 }}>
+														{eventsElements}
+													</View>
+												</View>
+											: void 0}
+									</View>
+								: void 0}
 						</View>
 					</View>
 				</Animated.ScrollView>
@@ -355,6 +398,9 @@ export default class MessageScreen extends React.Component {
 							position: 'absolute',
 							marginTop: backButtonMarginTop,
 							marginLeft: backButtonMarginLeft,
+							justifyContent: 'flex-start',
+							flexWrap: 'wrap',
+							flexDirection: 'row',
 						})
 					}
 					onLayout={event => {
@@ -365,6 +411,9 @@ export default class MessageScreen extends React.Component {
 				>
 					<TouchableOpacity onPress={() => this.props.navigation.navigate('ScreenHandler')}>
 						<FontAwesomeIcon style={{ zIndex: 0 }} size={29} color="#F5F5F5" icon={faChevronCircleLeft} />
+					</TouchableOpacity>
+					<TouchableOpacity onPress={() => this._openMessageModal()}>
+						<FontAwesomeIcon style={{ zIndex: 0, marginLeft: 285 }} size={25} color="#F5F5F5" icon={faEllipsisV} />
 					</TouchableOpacity>
 				</Animated.View>
 			</View>

@@ -50,6 +50,8 @@ import { ClubCard, ModalCard, EventCard, FileCard } from './../app/components.js
 import database from '@react-native-firebase/database';
 import { SafeAreaView } from 'react-navigation'; //added this import
 import DocumentPicker from 'react-native-document-picker';
+import ImagePicker from 'react-native-image-picker';
+
 import storage from '@react-native-firebase/storage';
 
 export default class NewMessageScreen extends React.Component {
@@ -62,6 +64,7 @@ export default class NewMessageScreen extends React.Component {
 			event_modal_visible: false,
 			events: [],
 			files: [],
+			picture: {},
 			group_serach: '',
 			long_text_input_has_focus: false,
 		};
@@ -84,7 +87,7 @@ export default class NewMessageScreen extends React.Component {
 								club.name = info.name;
 								club.logo = info.logo;
 								club.members = info.members;
-								club.card_color = '#38304C';
+								club.color = info.color;
 								club.selected = false;
 								club.groups = info.groups;
 
@@ -113,6 +116,7 @@ export default class NewMessageScreen extends React.Component {
 				);
 
 				if (!res.type) alert('Fehler: Unbekanntes Dateiformat');
+				else if (res.size > 3000000000) alert('Fehler: Datei größer als 3GB');
 				else this.addFile(res);
 			}
 		} catch (err) {
@@ -122,6 +126,76 @@ export default class NewMessageScreen extends React.Component {
 				throw err;
 			}
 		}
+	}
+
+	openUploadPictureModal() {
+		const options = {
+			title: 'Select Avatar',
+			customButtons: [ { name: 'fb', title: 'Choose Photo from Facebook' } ],
+			storageOptions: {
+				skipBackup: true,
+				path: 'images',
+			},
+		};
+
+		/**
+ * The first arg is the options object for customization (it can also be null or omitted for default options),
+ * The second arg is the callback which sends object: response (more info in the API Reference)
+ */
+		ImagePicker.showImagePicker(options, response => {
+			console.log('Response = ', response);
+
+			if (response.didCancel) {
+				console.log('User cancelled image picker');
+			} else if (response.error) {
+				console.log('ImagePicker Error: ', response.error);
+			} else if (response.customButton) {
+				console.log('User tapped custom button: ', response.customButton);
+			} else {
+				const source = { uri: response.uri };
+				response.name = 'image_' + new Date().getTime();
+				this.setPicture(response);
+			}
+		});
+	}
+
+	async setPicture(res) {
+		var file = {
+			name: res.name,
+			path: res.uri,
+			type: res.type,
+			width: res.width,
+			height: res.height,
+			data: 'data:' + res.type + ';base64,' + res.data,
+			uploading: true,
+			uploaded_percentage: 0,
+			storage_path: 'userfiles/default/' + res.name,
+		};
+
+		this.state.picture = file;
+		this.forceUpdate();
+
+		const reference = storage().ref(file.storage_path);
+		const pathToFile = file.path;
+		const task = reference.putFile(pathToFile);
+
+		task.on('state_changed', taskSnapshot => {
+			if (this.state.picture) {
+				if (this.state.picture.storage_path == taskSnapshot.metadata.name) {
+					this.state.picture.uploaded_percentage = taskSnapshot.bytesTransferred / taskSnapshot.totalBytes * 100;
+					this.forceUpdate();
+					return;
+				}
+			}
+			task.cancel();
+		});
+
+		task.then(async () => {
+			const url = await storage().ref(this.state.picture.storage_path).getDownloadURL();
+			this.state.picture.download_url = url;
+			this.state.picture.thumbnail_download_url = url;
+			this.state.picture.uploading = false;
+		});
 	}
 
 	async addFile(res) {
@@ -135,28 +209,6 @@ export default class NewMessageScreen extends React.Component {
 			storage_path: 'userfiles/default/' + res.name + '_' + new Date().getTime(),
 		};
 
-		var icon = '';
-
-		// dircet file types
-
-		if (res.type == 'application/pdf') icon = faFilePdf;
-		if (res.type == 'application/msword') icon = faFileWord;
-		if (res.type == 'application/mspowerpoint') icon = faFilePowerpoint;
-		if (res.type == 'application/msexcel') icon = faFileExcel;
-		if (res.type == 'application/pdf') icon = faFilePdf;
-		if (res.type == 'application/zip') icon = faFileArchive;
-		if (res.type == 'text/comma-separated-values	') icon = faFileCsv;
-
-		if (!icon) {
-			if (res.type.includes('audio')) icon = faFileAudio;
-			if (res.type.includes('video')) icon = faFileVideo;
-			if (res.type.includes('image')) icon = faFileImage;
-			if (res.type.includes('text')) icon = faFileAlt;
-
-			if (!icon) icon = faFile;
-		}
-		file.icon = icon;
-
 		var pos = this.state.files.length;
 		this.state.files[pos] = file;
 		this.forceUpdate();
@@ -166,10 +218,13 @@ export default class NewMessageScreen extends React.Component {
 
 		task.on('state_changed', taskSnapshot => {
 			if (this.state.files[pos]) {
-				if (this.state.files[pos].storage_path == taskSnapshot.metadata.name) {
-					this.state.files[pos].uploaded_percentage = taskSnapshot.bytesTransferred / taskSnapshot.totalBytes * 100;
-					this.forceUpdate();
-					return;
+				console.log(taskSnapshot);
+				if (taskSnapshot.metadata.name) {
+					if (this.state.files[pos].storage_path == taskSnapshot.metadata.name) {
+						this.state.files[pos].uploaded_percentage = taskSnapshot.bytesTransferred / taskSnapshot.totalBytes * 100;
+						this.forceUpdate();
+						return;
+					}
 				}
 			}
 			task.cancel();
@@ -322,12 +377,14 @@ export default class NewMessageScreen extends React.Component {
 				});
 
 				var mes = {
+					author: 'default',
 					club_id: club.club_id,
 					headline: this.state.headlineInputValue,
 					short_text: this.state.shortTextInputValue,
 					long_text: this.state.textInputValue,
 					send_at: new Date().getTime() / 1000,
-					img: 'https://www.cvjm-westbund.de/system/getthumb/images/__tn__ecics_6063_9187_600_9999.png',
+					img: this.state.picture.download_url,
+					img_thumbnail: this.state.picture.thumbnail_download_url,
 					files: files,
 				};
 
@@ -518,7 +575,10 @@ export default class NewMessageScreen extends React.Component {
 						<FileCard
 							key={key}
 							pos={key}
-							icon={file.icon}
+							editable={true}
+							downloadable={false}
+							type={file.type}
+							path={file.path}
 							name={file.name}
 							uploading={file.uploading}
 							uploaded_percentage={file.uploaded_percentage}
@@ -549,39 +609,77 @@ export default class NewMessageScreen extends React.Component {
 					</View>
 				);
 		} else if (this.state.curPageIndex == 4) {
+			pageHeadline = 'Beitragsbild hinzufügen';
+
+			if (this.state.picture.data) {
+				pageContent = (
+					<View>
+						{this.state.picture.uploaded_percentage < 100
+							? <Text style={{ color: 'white', fontFamily: 'Poppins-Bold', fontSize: 18 }}>
+									Hochgeladen: {Math.round(this.state.picture.uploaded_percentage)} %
+								</Text>
+							: void 0}
+
+						<AutoHeightImage width={335} source={{ uri: this.state.picture.data }} />
+					</View>
+				);
+			} else
+				pageContent = (
+					<View
+						style={{
+							justifyContent: 'center',
+							alignItems: 'center',
+							width: '100%',
+							height: '85%',
+						}}
+					>
+						<Text
+							style={{
+								fontFamily: 'Poppins-ExtraBold',
+								color: '#514D5D',
+								fontSize: 30,
+								alignSelf: 'center',
+							}}
+						>KEIN BILD</Text>
+					</View>
+				);
+		} else if (this.state.curPageIndex == 5) {
 			pageHeadline = 'Gruppen auswählen';
 			const groupsList = Object.keys(this.state.clubsList).map(key => {
-				return Object.keys(this.state.clubsList[key].groups).map(g_key => {
-					var group = this.state.clubsList[key].groups[g_key];
-					if (group.name.includes(this.state.group_serach)) {
-						var iconColor = group.selected ? 'red' : '#ADA4A9';
-						var icon = group.selected ? faTimesCircle : faPlusCircle;
+				var club = this.state.clubsList[key];
+				if (club.selected) {
+					return Object.keys(club.groups).map(g_key => {
+						var group = club.groups[g_key];
+						if (group.name.includes(this.state.group_serach)) {
+							var iconColor = group.selected ? club.color : '#ADA4A9';
+							var icon = group.selected ? faTimesCircle : faPlusCircle;
 
-						return (
-							<TouchableOpacity
-								onPress={() => this.addGroup(key, g_key)}
-								key={g_key}
-								style={{
-									marginTop: 10,
-									marginBottom: 10,
-									flexWrap: 'wrap',
-									alignItems: 'flex-start',
-									flexDirection: 'row',
-								}}
-							>
-								<FontAwesomeIcon style={{ marginTop: 7, marginLeft: 5 }} size={23} color={iconColor} icon={icon} />
-								<View style={{ marginLeft: 20 }}>
-									<Text style={{ fontSize: 17, fontFamily: 'Poppins-SemiBold', color: 'white' }}>
-										{group.name}
-									</Text>
-									<Text style={{ fontSize: 13, fontFamily: 'Poppins-SemiBold', color: 'rgba(255, 255, 255, 0.34)' }}>
-										{group.members.toLocaleString()} Mitglieder
-									</Text>
-								</View>
-							</TouchableOpacity>
-						);
-					}
-				});
+							return (
+								<TouchableOpacity
+									onPress={() => this.addGroup(key, g_key)}
+									key={g_key}
+									style={{
+										marginTop: 10,
+										marginBottom: 10,
+										flexWrap: 'wrap',
+										alignItems: 'flex-start',
+										flexDirection: 'row',
+									}}
+								>
+									<FontAwesomeIcon style={{ marginTop: 7, marginLeft: 5 }} size={23} color={iconColor} icon={icon} />
+									<View style={{ marginLeft: 20 }}>
+										<Text style={{ fontSize: 17, fontFamily: 'Poppins-SemiBold', color: club.color }}>
+											{group.name}
+										</Text>
+										<Text style={{ fontSize: 13, fontFamily: 'Poppins-SemiBold', color: club.color, opacity: 0.7 }}>
+											{group.members.toLocaleString()} Mitglieder
+										</Text>
+									</View>
+								</TouchableOpacity>
+							);
+						}
+					});
+				}
 			});
 
 			pageContent = (
@@ -607,7 +705,8 @@ export default class NewMessageScreen extends React.Component {
 								color: '#D5D3D9',
 							}}
 							value={this.state.group_serach}
-							Placeholder="NAME ODER CODE EINGEBEN"
+							placeholderTextColor="#665F75"
+							placeholder="Gruppe suchen ..."
 							onChangeText={text => this.onChangeText('group_serach', text)}
 						/>
 					</View>
@@ -735,7 +834,7 @@ export default class NewMessageScreen extends React.Component {
 								}}
 							/>}
 
-					{this.state.curPageIndex == 2 || this.state.curPageIndex == 3
+					{this.state.curPageIndex == 2 || this.state.curPageIndex == 3 || this.state.curPageIndex == 4
 						? <TouchableOpacity
 								style={{
 									justifyContent: 'center',
@@ -756,9 +855,11 @@ export default class NewMessageScreen extends React.Component {
 									shadowOpacity: 0.4,
 									shadowRadius: 15.00,
 								}}
-								onPress={
-									this.state.curPageIndex == 2 ? () => this.openAddEventModal() : () => this.openUploadFileModal()
-								}
+								onPress={() => {
+									if (this.state.curPageIndex == 2) this.openAddEventModal();
+									else if (this.state.curPageIndex == 3) this.openUploadFileModal();
+									else this.openUploadPictureModal();
+								}}
 							>
 								<FontAwesomeIcon
 									style={{
@@ -773,7 +874,7 @@ export default class NewMessageScreen extends React.Component {
 							</TouchableOpacity>
 						: void 0}
 
-					{this.state.curPageIndex < 4
+					{this.state.curPageIndex < 5
 						? <TouchableOpacity
 								style={{
 									justifyContent: 'center',
@@ -807,7 +908,7 @@ export default class NewMessageScreen extends React.Component {
 							</TouchableOpacity>
 						: void 0}
 
-					{this.state.curPageIndex == 4
+					{this.state.curPageIndex == 5
 						? <TouchableOpacity
 								style={{
 									alignSelf: 'center',

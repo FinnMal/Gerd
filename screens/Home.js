@@ -47,12 +47,13 @@ class HomeScreen extends React.Component {
 
 				this.state.unread_messages_count = 0;
 				Object.keys(messages).map(key => {
-					var message = messages[key];
-					if (message.read_by) {
-						if (message.read_by['default']) return;
-					}
-					this.state.unread_messages_count++;
-					this.forceUpdate();
+					database().ref('users/default/messages/' + key + '/read').once(
+						'value',
+						(function(snap) {
+							if (!snap.val()) this.state.unread_messages_count++;
+							this.forceUpdate();
+						}).bind(this)
+					);
 				});
 				this.forceUpdate();
 			}).bind(this)
@@ -72,40 +73,41 @@ class HomeScreen extends React.Component {
 					var message = messages[key];
 					message.id = key;
 
-					var read_by_user = false;
-					if (message.read_by) {
-						if (message.read_by['default']) read_by_user = true;
-					}
-
-					database().ref('clubs/' + message.club_id).once(
+					database().ref('users/default/messages/' + key + '/read').once(
 						'value',
 						(function(snap) {
-							var club = snap.val();
-							message.color = club.color;
-							message.club_name = club.name;
-							message.club_img = club.logo;
-							message.ago = utils.getAgoText(message.send_at);
-							message.ago_seconds = utils.getAgoSec(message.send_at);
+							var read_by_user = snap.val();
+							database().ref('clubs/' + message.club_id).once(
+								'value',
+								(function(snap) {
+									var club = snap.val();
+									message.color = club.color;
+									message.club_name = club.name;
+									message.club_img = club.logo;
+									message.ago = utils.getAgoText(message.send_at);
+									message.ago_seconds = utils.getAgoSec(message.send_at);
 
-							console.log(message.headline + ': ' + message.ago_seconds);
-							if (!read_by_user) this.state.newMesList[this.state.newMesList.length] = message;
-							else if (message.ago_seconds / 60 / 60 < 24)
-								this.state.todayMesList[this.state.todayMesList.length] = message;
-							else
-								this.state.olderMesList[this.state.olderMesList.length] = message;
-							checked++;
+									console.log(message.headline + ': ' + message.ago_seconds);
+									if (!read_by_user) this.state.newMesList[this.state.newMesList.length] = message;
+									else if (message.ago_seconds / 60 / 60 < 24)
+										this.state.todayMesList[this.state.todayMesList.length] = message;
+									else
+										this.state.olderMesList[this.state.olderMesList.length] = message;
+									checked++;
 
-							if (checked == total_messages) {
-								this.sortList('newMesList');
-								this.sortList('todayMesList');
-								this.sortList('olderMesList');
+									if (checked == total_messages) {
+										this.sortList('newMesList');
+										this.sortList('todayMesList');
+										this.sortList('olderMesList');
 
-								this.generateCards('newMesList');
-								this.generateCards('todayMesList');
-								this.generateCards('olderMesList');
+										this.generateCards('newMesList');
+										this.generateCards('todayMesList');
+										this.generateCards('olderMesList');
 
-								this.forceUpdate();
-							}
+										this.forceUpdate();
+									}
+								}).bind(this)
+							);
 						}).bind(this)
 					);
 				});
