@@ -32,6 +32,7 @@ class ChatScreen extends React.Component {
 
 		this.state = {
 			chat: '',
+			uid: utils.getUserID(),
 			cur_message: '',
 		};
 
@@ -44,7 +45,7 @@ class ChatScreen extends React.Component {
 
 				Object.keys(this.state.chat.messages).map(mes_key => {
 					var message = this.state.chat.messages[mes_key];
-					if (!message.read && message.receiver == 'default')
+					if (!message.read && message.receiver == this.state.uid)
 						database().ref('chats/' + chat.id + '/messages/' + mes_key + '/read').set(true);
 				});
 
@@ -71,8 +72,8 @@ class ChatScreen extends React.Component {
 			text: this.state.cur_message,
 			send_at: new Date().getTime() / 1000,
 			read: false,
-			sender: chat.user_id_1 != 'default' ? chat.user_id_2 : chat.user_id_1,
-			receiver: chat.user_id_1 != 'default' ? chat.user_id_1 : chat.user_id_2,
+			sender: chat.user_id_1 != this.state.uid ? chat.user_id_2 : chat.user_id_1,
+			receiver: chat.user_id_1 != this.state.uid ? chat.user_id_1 : chat.user_id_2,
 		};
 
 		this.state.cur_message = '';
@@ -251,14 +252,14 @@ class MessageCard extends React.Component {
 					marginBottom: 30,
 					borderTopLeftRadius: 20,
 					borderTopRightRadius: 20,
-					borderBottomLeftRadius: mes.sender == 'default' ? 20 : 0,
-					borderBottomRightRadius: mes.sender == 'default' ? 0 : 20,
+					borderBottomLeftRadius: mes.sender == this.state.uid ? 20 : 0,
+					borderBottomRightRadius: mes.sender == this.state.uid ? 0 : 20,
 					padding: 10,
 					paddingLeft: 20,
 					minWidth: 100,
 					maxWidth: 270,
-					marginLeft: mes.sender == 'default' ? 70 : 0,
-					backgroundColor: mes.sender == 'default' ? '#38304C' : '#3D384B',
+					marginLeft: mes.sender == this.state.uid ? 70 : 0,
+					backgroundColor: mes.sender == this.state.uid ? '#38304C' : '#3D384B',
 				}}
 			>
 				<Text style={{ color: 'white', fontFamily: 'Poppins-Medium', fontSize: 16 }}>{mes.text}</Text>

@@ -27,6 +27,7 @@ class HomeScreen extends React.Component {
 		super(props);
 
 		var utils = this.props.utilsObject;
+
 		//var uid = utils.USER_ID;
 		this.state = {
 			newMesList: [],
@@ -35,6 +36,7 @@ class HomeScreen extends React.Component {
 			clubs: {},
 			moveTo: 'none',
 			navPos: 0,
+			uid: utils.getUserID(),
 			unread_messages_count: 0,
 		};
 		this.margin = new Animated.Value(0);
@@ -47,7 +49,7 @@ class HomeScreen extends React.Component {
 
 				this.state.unread_messages_count = 0;
 				Object.keys(messages).map(key => {
-					database().ref('users/default/messages/' + key + '/read').once(
+					database().ref('users/' + this.state.uid + '/messages/' + key + '/read').once(
 						'value',
 						(function(snap) {
 							if (!snap.val()) this.state.unread_messages_count++;
@@ -75,7 +77,7 @@ class HomeScreen extends React.Component {
 					if (!message.invisible) {
 						message.id = key;
 
-						database().ref('users/default/messages/' + key + '/read').once(
+						database().ref('users/' + this.state.uid + '/messages/' + key + '/read').once(
 							'value',
 							(function(snap) {
 								var read_by_user = snap.val();
@@ -147,7 +149,7 @@ class HomeScreen extends React.Component {
 			.timing(this.navMarginLeft, {
 				useNativeDriver: false,
 				toValue: pos * 115 - 3,
-				duration: 140,
+				duration: 100,
 				easing: Easing.ease,
 			})
 			.start(() => {});

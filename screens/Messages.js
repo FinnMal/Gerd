@@ -28,10 +28,11 @@ class MessagesScreen extends React.Component {
 		this.state = {
 			moveTo: 'none',
 			chats: {},
+			uid: utils.getUserID(),
 		};
 		this.margin = new Animated.Value(0);
 
-		database().ref('users/default/chats').on(
+		database().ref('users/' + this.state.uid + '/chats').on(
 			'value',
 			(function(snapshot) {
 				var chats = snapshot.val();
@@ -50,7 +51,7 @@ class MessagesScreen extends React.Component {
 
 							Object.keys(chat.messages).map(mes_key => {
 								var message = chat.messages[mes_key];
-								if (!message.read && message.receiver == 'default') chat.unread_messages_count++;
+								if (!message.read && message.receiver == this.state.uid) chat.unread_messages_count++;
 
 								if (chat.last_message_id) {
 									if (chat.messages[chat.last_message_id]) {
@@ -70,7 +71,7 @@ class MessagesScreen extends React.Component {
 							});
 							chat.messages = list;
 
-							var reciver_user_id = chat.user_id_1 != 'default' ? chat.user_id_1 : chat.user_id_2;
+							var reciver_user_id = chat.user_id_1 != this.state.uid ? chat.user_id_1 : chat.user_id_2;
 							database().ref('users/' + reciver_user_id + '/img').once(
 								'value',
 								(function(snap) {
