@@ -362,18 +362,75 @@ export default class NewMessageScreen extends React.Component {
 		}
 	}
 
+	_showError(msg, page) {
+		const utils = this.props.navigation.getParam('utils', null);
+		return utils.showAlert(
+			msg,
+			'',
+			'Ok',
+			(function() {
+				this.state.curPageIndex = page;
+				this.forceUpdate();
+			}).bind(this)
+		);
+	}
+
 	sendMessage() {
+		// Check clubs and groups
+		var selected_clubs, selected_groups = 0;
+		this.state.clubsList.forEach((club, i) => {
+			if (club.selected) {
+				selected_clubs++;
+				return Object.keys(club.groups).map(key => {
+					if (club.groups[key].selected) selected_groups++;
+				});
+			}
+		});
+		if (selected_clubs == 0) return this._showError('Kein Verein ausgewählt', 0);
+		if (selected_groups == 0) return this._showError('Keine Gruppe ausgewählt', 5);
+
+		// Check texts
+		if (!this.state.headlineInputValue) return this._showError('Überschrift fehlt', 1);
+		if (!this.state.shortTextInputValue) return this._showError('Subtext fehlt', 1);
+		if (!this.state.textInputValue) return this._showError('Text fehlt', 1);
+
+		//Check events
+		this.state.events.forEach((event, i) => {
+			if (!event.name) return this._showError('Name des Events fehlt', 2);
+			if (!event.date) return this._showError('Datum des Events fehlt', 2);
+			if (!event.location) return this._showError('Location des Events fehlt', 2);
+		});
+
+		//Check files
+		this.state.files.forEach((file, i) => {
+			if (file.uploading)
+				return this._showError(
+					'Upload nicht abgeschlossen (Noch ' + Math.round(100 - file.uploaded_percentage) + '%)',
+					3
+				);
+			if (!file.path || !file.storage_path || !file.icon)
+				return this._showError('Fehler beim Upload. Bitte erneut versuchen', 3);
+		});
+
 		this.state.clubsList.forEach((club, i) => {
 			if (club.selected) {
 				var files = [];
-				this.state.files.forEach((pFile, i) => {
-					var file = pFile;
+				this.state.files.forEach((file, i) => {
 					file.path = null;
 					file.storage_path = null;
 					file.uploading = null;
 					file.uploaded_percentage = null;
 					file.icon = null;
 					files.push(file);
+				});
+
+				var events = [];
+				this.state.events.forEach((event, i) => {
+					events.push({
+						date: event.date,
+						name: event.name,
+						location: event.location,
+					});
 				});
 
 				var mes = {
@@ -386,6 +443,7 @@ export default class NewMessageScreen extends React.Component {
 					img: this.state.picture.download_url,
 					img_thumbnail: this.state.picture.thumbnail_download_url,
 					files: files,
+					events: events,
 				};
 
 				database()
@@ -645,7 +703,7 @@ export default class NewMessageScreen extends React.Component {
 				);
 		} else if (this.state.curPageIndex == 5) {
 			pageHeadline = 'Gruppen auswählen';
-			const groupsList = Object.keys(this.state.clubsList).map(key => {
+			var groupsList = Object.keys(this.state.clubsList).map(key => {
 				var club = this.state.clubsList[key];
 				if (club.selected) {
 					return Object.keys(club.groups).map(g_key => {
@@ -681,6 +739,13 @@ export default class NewMessageScreen extends React.Component {
 					});
 				}
 			});
+
+			if (!groupsList[0])
+				groupsList = (
+					<Text style={{ color: '#665F75', fontFamily: 'Poppins-Bold' }}>
+						{this.state.clubsList ? 'Kein Verein ausgewählt' : 'Keine Gruppen gefunden'}
+					</Text>
+				);
 
 			pageContent = (
 				<View style={{ marginBottom: 20 }}>
@@ -768,7 +833,7 @@ export default class NewMessageScreen extends React.Component {
 								flexDirection: 'row',
 							}}
 						>
-							<Text style={{ justifySelf: 'center', color: 'white', fontFamily: 'Poppins-Bold', fontSize: 27 }}>
+							<Text style={{ color: 'white', fontFamily: 'Poppins-Bold', fontSize: 27 }}>
 								{pageHeadline}
 							</Text>
 						</Animated.View>
@@ -816,6 +881,7 @@ export default class NewMessageScreen extends React.Component {
 							>
 								<FontAwesomeIcon
 									style={{
+										marginRight: 4,
 										alignSelf: 'center',
 										textAlign: 'center',
 										zIndex: 0,
@@ -897,6 +963,7 @@ export default class NewMessageScreen extends React.Component {
 							>
 								<FontAwesomeIcon
 									style={{
+										marginLeft: 4,
 										alignSelf: 'center',
 										textAlign: 'center',
 										zIndex: 0,
@@ -934,6 +1001,7 @@ export default class NewMessageScreen extends React.Component {
 							>
 								<FontAwesomeIcon
 									style={{
+										marginRight: 5,
 										alignSelf: 'center',
 										textAlign: 'center',
 										zIndex: 0,
