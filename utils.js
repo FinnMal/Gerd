@@ -117,7 +117,7 @@ export function format_int(num) {
 }
 
 //Shows an alert
-export function showAlert(title, msg, btnText = 'Try Again', callback = false, error = true, cancelable = true) {
+export function showAlert(title, msg, btnText = 'Ok', callback = false, error = true, cancelable = true) {
 	if (callback === false || isNull(callback))
 		callback = function() {
 			console.log(btnText + ' pressed');

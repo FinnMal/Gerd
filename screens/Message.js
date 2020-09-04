@@ -34,6 +34,7 @@ export default class MessageScreen extends React.Component {
 		const mes = this.props.navigation.getParam('content', null);
 
 		this.state = {
+			mes: mes,
 			scrollY: new Animated.Value(0),
 			headlineHeight: -1,
 			backBtnY: 0,
@@ -44,6 +45,7 @@ export default class MessageScreen extends React.Component {
 			send_at: mes.send_at,
 			ago_seconds: mes.ago_seconds,
 			agoTextInterval: null,
+			modal_visible: false,
 		};
 
 		if (mes.ago_seconds < 3600) {
@@ -179,8 +181,7 @@ export default class MessageScreen extends React.Component {
 				if (buttonIndex === 0) {
 				} else if (buttonIndex === 1) {
 					// edit uploaded file
-					this.state.modal_visible = true;
-					this.forceUpdate();
+					this._openModal();
 				} else if (buttonIndex === 2) {
 					this._deleteMessage();
 				}
@@ -188,15 +189,53 @@ export default class MessageScreen extends React.Component {
 		);
 	}
 
+	_openModal() {
+		if (this.state.modal_visible) {
+			this.state.modal_visible = false;
+			this.forceUpdate();
+			setTimeout(
+				(function() {
+					this.state.modal_visible = true;
+					this.forceUpdate();
+				}).bind(this),
+				0
+			);
+		} else {
+			this.state.modal_visible = true;
+			this.forceUpdate();
+		}
+	}
+
+	_closeModal() {
+		this.state.modal_visible = false;
+		this.forceUpdate();
+	}
+
 	_deleteMessage() {
-		const mes = this.props.navigation.getParam('content', null);
-		database().ref('messages/list/' + mes.id + '/invisible').set(true);
+		database().ref('messages/list/' + this.state.mes.id + '/invisible').set(true);
+		this.props.navigation.navigate('ScreenHandler');
 		// TODO: Alert to confirm delete
 		// -> navigate to ScreenHandler
 	}
 
+	_editMessage() {
+		const mes = this.state.mes;
+		this.state.headlineHeight = -1;
+		database().ref('messages/list/' + mes.id + '/invisible').set(false);
+		database().ref('messages/list/' + mes.id + '/headline').set(mes.headline);
+		database().ref('messages/list/' + mes.id + '/short_text').set(mes.short_text);
+		database().ref('messages/list/' + mes.id + '/long_text').set(mes.long_text);
+		this._closeModal();
+		this.forceUpdate();
+	}
+
+	_onChangeText(name, value) {
+		this.state.mes[name] = value;
+		this.forceUpdate();
+	}
+
 	render() {
-		const content = this.props.navigation.getParam('content', null);
+		const mes = this.state.mes;
 
 		const headlineFontScale = this._getHeadlineFontScale();
 		const headlineMaxWidth = this._getHeadlineMaxWidth();
@@ -209,9 +248,9 @@ export default class MessageScreen extends React.Component {
 		var s = require('./../app/style.js');
 
 		var downloadsElements = null;
-		if (content.files) {
-			downloadsElements = Object.keys(content.files).map(key => {
-				var file = content.files[key];
+		if (mes.files) {
+			downloadsElements = Object.keys(mes.files).map(key => {
+				var file = mes.files[key];
 				return (
 					<FileCard
 						key={key}
@@ -227,15 +266,121 @@ export default class MessageScreen extends React.Component {
 		}
 
 		var eventsElements = null;
-		if (content.events) {
-			eventsElements = Object.keys(content.events).map(key => {
-				var event = content.events[key];
+		if (mes.events) {
+			eventsElements = Object.keys(mes.events).map(key => {
+				var event = mes.events[key];
 				return <EventCard key={key} editable={false} name={event.name} date={event.date} location={event.location} />;
 			});
 		}
 
 		return (
 			<View>
+				<Modal animationType="slide" presentationStyle="formSheet" visible={this.state.modal_visible}>
+					<View
+						style={{
+							padding: 20,
+							backgroundColor: '#201A30',
+							height: '100%',
+						}}
+					>
+						<View
+							style={{
+								marginBottom: 10,
+								justifyContent: 'space-between',
+								flexWrap: 'wrap',
+								flexDirection: 'row',
+							}}
+						>
+							<Text
+								style={{ fontFamily: 'Poppins-Bold', color: 'white', fontSize: 25, width: '76%' }}
+								numberOfLines={1}
+							>
+								{this.state.mes.headline ? this.state.mes.headline : 'Mitteilung bearbeiten'}
+							</Text>
+							<TouchableOpacity
+								style={{
+									height: 30,
+									borderRadius: 10,
+									marginLeft: 10,
+									width: 70,
+									padding: 5,
+									paddingLeft: 10,
+									backgroundColor: '#0DF5E3',
+								}}
+								onPress={text => this._editMessage()}
+							>
+								<Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: '#38304C' }}>FERTIG</Text>
+							</TouchableOpacity>
+						</View>
+
+						<View
+							style={{ marginLeft: -20, height: 0.5, marginBottom: 40, backgroundColor: '#38304C', width: '140%' }}
+						/>
+
+						<ScrollView>
+							<View style={{ marginBottom: 20 }}>
+								<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>Überschrift</Text>
+								<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
+									<TextInput
+										multiline
+										autoCorrect={false}
+										keyboardType="default"
+										multiline={true}
+										style={{
+											fontFamily: 'Poppins-Medium',
+											marginTop: 8,
+											padding: 15,
+											fontSize: 17,
+											color: '#D5D3D9',
+										}}
+										value={this.state.mes.headline}
+										onChangeText={text => this._onChangeText('headline', text)}
+									/>
+								</View>
+							</View>
+							<View style={{ marginBottom: 20 }}>
+								<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>Subtext</Text>
+								<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
+									<TextInput
+										multiline
+										autoCorrect={false}
+										keyboardType="default"
+										multiline={true}
+										style={{
+											fontFamily: 'Poppins-Medium',
+											marginTop: 8,
+											padding: 15,
+											fontSize: 17,
+											color: '#D5D3D9',
+										}}
+										value={this.state.mes.short_text}
+										onChangeText={text => this._onChangeText('short_text', text)}
+									/>
+								</View>
+							</View>
+							<View style={{ marginBottom: 20 }}>
+								<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>Text</Text>
+								<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
+									<TextInput
+										multiline
+										autoCorrect={false}
+										keyboardType="default"
+										multiline={true}
+										style={{
+											fontFamily: 'Poppins-Medium',
+											marginTop: 8,
+											padding: 15,
+											fontSize: 17,
+											color: '#D5D3D9',
+										}}
+										value={this.state.mes.long_text}
+										onChangeText={text => this._onChangeText('text', text)}
+									/>
+								</View>
+							</View>
+						</ScrollView>
+					</View>
+				</Modal>
 				<View style={{ position: 'absolute' }}>
 					<View style={{ width: 400, marginLeft: 0, marginTop: -50, position: 'absolute' }}>
 						<View style={{ position: 'absolute' }}>
@@ -258,7 +403,7 @@ export default class MessageScreen extends React.Component {
 									}
 								}}
 							>
-								{content.headline}
+								{mes.headline}
 							</Animated.Text>
 							<View
 								style={{
@@ -280,12 +425,12 @@ export default class MessageScreen extends React.Component {
 								</Text>
 								<Image
 									style={{ opacity: 0.9, borderRadius: 14, marginLeft: 20, height: 13, width: 13 }}
-									source={{ uri: content.club_img }}
+									source={{ uri: mes.club_img }}
 								/>
 								<Text
 									style={{ fontFamily: 'Poppins-Medium', marginTop: -1, fontSize: 13, marginLeft: 10, color: 'white' }}
 								>
-									{content.club_name}
+									{mes.club_name}
 								</Text>
 							</View>
 						</View>
@@ -308,7 +453,7 @@ export default class MessageScreen extends React.Component {
 									resizeMode: 'cover',
 								}}
 								source={{
-									uri: content.img,
+									uri: mes.img,
 								}}
 							>
 								<Animated.View
@@ -354,7 +499,7 @@ export default class MessageScreen extends React.Component {
 					>
 						<View style={{ marginTop: 30, marginLeft: 22, marginRight: 20 }}>
 							<Text style={{ fontFamily: 'Poppins-Regular', fontSize: 20, color: 'white', marginBottom: 30 }}>
-								{content.long_text}
+								{mes.long_text}
 							</Text>
 							{downloadsElements || eventsElements
 								? <View
