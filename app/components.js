@@ -383,7 +383,7 @@ export class EventCard extends React.Component {
 	render() {
 		var s = require('./style.js');
 		return (
-			<View>
+			<View style={{ marginBottom: 20 }}>
 				{this.props.editable
 					? <ModalCard
 							visible={this.state.modal_visible}
@@ -394,7 +394,13 @@ export class EventCard extends React.Component {
 						/>
 					: void 0}
 
-				<View style={{ backgroundColor: this.props.editable ? '#38304C' : '#201A30', padding: 25, borderRadius: 15 }}>
+				<View
+					style={{
+						backgroundColor: this.props.card_type == 'new_message' ? '#38304C' : '#201A30',
+						padding: 25,
+						borderRadius: 15,
+					}}
+				>
 					<View
 						style={{
 							marginBottom: 25,
@@ -458,7 +464,7 @@ export class EventCard extends React.Component {
 						</Text>
 					</View>
 
-					{!this.props.editable
+					{!this.props.editable || this.props.card_type == 'message'
 						? <TouchableOpacity
 								style={{
 									backgroundColor: '#38304C',

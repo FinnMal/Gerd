@@ -23,6 +23,8 @@ import MessagesScreen from './Messages';
 import SettingsScreen from './Settings';
 import { ifIphoneX } from 'react-native-iphone-x-helper';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import auth from '@react-native-firebase/auth';
+import database from '@react-native-firebase/database';
 import { faHome, faUsers, faComment, faCog } from '@fortawesome/free-solid-svg-icons';
 
 export default class ScreenHandler extends React.Component {
@@ -34,16 +36,51 @@ export default class ScreenHandler extends React.Component {
 		this.animation_delay = 0;
 		this.last_nav_id = -1;
 		this.state = {
+			first_start_done: false,
 			scrollViewEnabled: true,
 			hole_margin: 0,
 			nav: [
-				{ x: 0, visible: true, moveTo: 'none', iconColor: 'white' },
+				{ x: 0, visible: false, moveTo: 'none', iconColor: 'white' },
 				{ x: 0, visible: false, moveTo: 'none', iconColor: 'white' },
 				{ x: 0, visible: false, moveTo: 'none', iconColor: 'white' },
 				{ x: 0, visible: false, moveTo: 'none', iconColor: 'white' },
 			],
 		};
 		this.holeMargin = new Animated.Value(40);
+
+		auth().onAuthStateChanged(
+			(function(user) {
+				database().ref('users/' + user.uid + '/account_type').once(
+					'value',
+					(function(snap) {
+						if (!snap.val()) {
+							// account does not exist
+							console.log('account does not exist');
+							this.props.navigation.navigate('FirstStartScreen', {
+								utils: utils,
+								uid: user.uid,
+								onDone: this._onAuthDone.bind(this),
+							});
+						} else {
+							// acount exists
+							console.log('acount exists');
+							this.state.nav[0].visible = true;
+							this.state.first_start_done = true;
+							utils.setUserID(user.uid);
+							this.forceUpdate();
+						}
+					}).bind(this)
+				);
+			}).bind(this)
+		);
+	}
+
+	_onAuthDone() {
+		console.log('onDone');
+		this.props.navigation.navigate('ScreenHandler');
+		this.state.nav[0].visible = true;
+		this.state.first_start_done = true;
+		this.forceUpdate();
 	}
 
 	setScrollViewEnabled = data => {
@@ -61,129 +98,133 @@ export default class ScreenHandler extends React.Component {
 			outputRange: [ 0, 2000 ],
 		});
 
-		return (
-			<View style={s.container}>
-				<StatusBar hidden={true} />
-				<ScrollView
-					style={{ marginTop: -44 }}
-					showsHorizontalScrollIndicator={false}
-					scrollEnabled={true}
-					ref={component => _scrollView = component}
-				>
-					<HomeScreen
-						utilsObject={utils}
-						setScrollViewEnabled={this.setScrollViewEnabled}
-						moveTo={this.state.nav[0].moveTo}
-						show={this.state.nav[0].visible}
-					/>
-					<ManagmentScreen
-						utilsObject={utils}
-						setScrollViewEnabled={this.setScrollViewEnabled}
-						moveTo={this.state.nav[1].moveTo}
-						show={this.state.nav[1].visible}
-					/>
-					<MessagesScreen
-						utilsObject={utils}
-						setScrollViewEnabled={this.setScrollViewEnabled}
-						moveTo={this.state.nav[2].moveTo}
-						show={this.state.nav[2].visible}
-					/>
-					<SettingsScreen
-						utilsObject={utils}
-						setScrollViewEnabled={this.setScrollViewEnabled}
-						moveTo={this.state.nav[3].moveTo}
-						show={this.state.nav[3].visible}
-					/>
-				</ScrollView>
-
-				<View style={styles.navigationBar}>
-					<View style={styles.navigationBarWhiteBackground} />
-
-					<Animated.View style={{ marginLeft }}>
-						<View
-							style={{
-								marginTop: 33,
-								backgroundColor: '#0DF5E3',
-								width: 44,
-								height: 44,
-								borderRadius: 44 / 2,
-								shadowColor: '#0DF5E3',
-								shadowOffset: {
-									width: 6,
-									height: 0,
-								},
-								shadowOpacity: 0.20,
-								shadowRadius: 20.00,
-
-								elevation: 10,
-							}}
+		if (this.state.first_start_done) {
+			return (
+				<View style={s.container}>
+					<StatusBar hidden={true} />
+					<ScrollView
+						style={{ marginTop: -44 }}
+						showsHorizontalScrollIndicator={false}
+						scrollEnabled={true}
+						ref={component => _scrollView = component}
+					>
+						<HomeScreen
+							utilsObject={utils}
+							setScrollViewEnabled={this.setScrollViewEnabled}
+							moveTo={this.state.nav[0].moveTo}
+							show={this.state.nav[0].visible}
 						/>
-					</Animated.View>
-					<View style={styles.navigationBarIcons}>
-						<TouchableOpacity
-							onLayout={event => {
-								const layout = event.nativeEvent.layout;
-								this.state.nav[0].x = layout.x;
-								if (this.state.nav[0].visible) this.navigate(0);
-							}}
-							onPress={() => this.navigate(0)}
-						>
-							<FontAwesomeIcon
-								style={styles.navigationBarIcon}
-								size={30}
-								color={this.state.nav[0].iconColor}
-								icon={faHome}
+						<ManagmentScreen
+							utilsObject={utils}
+							setScrollViewEnabled={this.setScrollViewEnabled}
+							moveTo={this.state.nav[1].moveTo}
+							show={this.state.nav[1].visible}
+						/>
+						<MessagesScreen
+							utilsObject={utils}
+							setScrollViewEnabled={this.setScrollViewEnabled}
+							moveTo={this.state.nav[2].moveTo}
+							show={this.state.nav[2].visible}
+						/>
+						<SettingsScreen
+							utilsObject={utils}
+							setScrollViewEnabled={this.setScrollViewEnabled}
+							moveTo={this.state.nav[3].moveTo}
+							show={this.state.nav[3].visible}
+						/>
+					</ScrollView>
+
+					<View style={styles.navigationBar}>
+						<View style={styles.navigationBarWhiteBackground} />
+
+						<Animated.View style={{ marginLeft }}>
+							<View
+								style={{
+									marginTop: 33,
+									backgroundColor: '#0DF5E3',
+									width: 44,
+									height: 44,
+									borderRadius: 44 / 2,
+									shadowColor: '#0DF5E3',
+									shadowOffset: {
+										width: 6,
+										height: 0,
+									},
+									shadowOpacity: 0.20,
+									shadowRadius: 20.00,
+
+									elevation: 10,
+								}}
 							/>
-						</TouchableOpacity>
-						<TouchableOpacity
-							onLayout={event => {
-								const layout = event.nativeEvent.layout;
-								this.state.nav[1].x = layout.x;
-								if (this.state.nav[1].visible) this.navigate(1);
-							}}
-							onPress={() => this.navigate(1)}
-						>
-							<FontAwesomeIcon
-								style={styles.navigationBarIcon}
-								size={30}
-								color={this.state.nav[1].iconColor}
-								icon={faUsers}
-							/>
-						</TouchableOpacity>
-						<TouchableOpacity
-							onLayout={event => {
-								const layout = event.nativeEvent.layout;
-								this.state.nav[2].x = layout.x;
-								if (this.state.nav[2].visible) this.navigate(2);
-							}}
-							onPress={() => this.navigate(2)}
-						>
-							<FontAwesomeIcon
-								style={styles.navigationBarIcon}
-								size={30}
-								color={this.state.nav[2].iconColor}
-								icon={faComment}
-							/>
-						</TouchableOpacity>
-						<TouchableOpacity
-							onLayout={event => {
-								const layout = event.nativeEvent.layout;
-								this.state.nav[3].x = layout.x;
-								if (this.state.nav[3].visible) this.navigate(3);
-							}}
-							onPress={() => this.navigate(3)}
-						>
-							<FontAwesomeIcon
-								style={styles.navigationBarIcon}
-								size={30}
-								color={this.state.nav[3].iconColor}
-								icon={faCog}
-							/>
-						</TouchableOpacity>
+						</Animated.View>
+						<View style={styles.navigationBarIcons}>
+							<TouchableOpacity
+								onLayout={event => {
+									const layout = event.nativeEvent.layout;
+									this.state.nav[0].x = layout.x;
+									if (this.state.nav[0].visible) this.navigate(0);
+								}}
+								onPress={() => this.navigate(0)}
+							>
+								<FontAwesomeIcon
+									style={styles.navigationBarIcon}
+									size={30}
+									color={this.state.nav[0].iconColor}
+									icon={faHome}
+								/>
+							</TouchableOpacity>
+							<TouchableOpacity
+								onLayout={event => {
+									const layout = event.nativeEvent.layout;
+									this.state.nav[1].x = layout.x;
+									if (this.state.nav[1].visible) this.navigate(1);
+								}}
+								onPress={() => this.navigate(1)}
+							>
+								<FontAwesomeIcon
+									style={styles.navigationBarIcon}
+									size={30}
+									color={this.state.nav[1].iconColor}
+									icon={faUsers}
+								/>
+							</TouchableOpacity>
+							<TouchableOpacity
+								onLayout={event => {
+									const layout = event.nativeEvent.layout;
+									this.state.nav[2].x = layout.x;
+									if (this.state.nav[2].visible) this.navigate(2);
+								}}
+								onPress={() => this.navigate(2)}
+							>
+								<FontAwesomeIcon
+									style={styles.navigationBarIcon}
+									size={30}
+									color={this.state.nav[2].iconColor}
+									icon={faComment}
+								/>
+							</TouchableOpacity>
+							<TouchableOpacity
+								onLayout={event => {
+									const layout = event.nativeEvent.layout;
+									this.state.nav[3].x = layout.x;
+									if (this.state.nav[3].visible) this.navigate(3);
+								}}
+								onPress={() => this.navigate(3)}
+							>
+								<FontAwesomeIcon
+									style={styles.navigationBarIcon}
+									size={30}
+									color={this.state.nav[3].iconColor}
+									icon={faCog}
+								/>
+							</TouchableOpacity>
+						</View>
 					</View>
 				</View>
-			</View>
-		);
+			);
+		} else {
+			return null;
+		}
 	}
 
 	navigate(id) {
@@ -202,7 +243,7 @@ export default class ScreenHandler extends React.Component {
 				.timing(this.holeMargin, {
 					useNativeDriver: false,
 					toValue: this.state.nav[id].x + 43,
-					duration: 220,
+					duration: 120,
 					easing: Easing.ease,
 				})
 				.start(() => {

@@ -1,32 +1,24 @@
 import React from 'react';
 import { Alert, AsyncStorage } from 'react-native';
+import auth from '@react-native-firebase/auth';
 
-const USER_ID = '0';
+var USER_ID = '0';
+this.state = {};
+
+auth().onAuthStateChanged(
+	(function(user) {
+		console.log('onAuthStateChanged utils: ' + user.uid);
+		USER_ID = user.uid;
+	}).bind(this)
+);
 
 //Reads the user ID
-export async function getUserID(cb) {
-	try {
-		const value = await AsyncStorage.getItem('USER_ID');
-		if (value == null) {
-			return cb(null, 'no_id_found');
-			//TODO: Show login or register screen
-			/*firebase.auth().createUserWithEmailAndPassword("admin5@example.com", "Test12345").then((res) => {
-        firebase.database().ref('user/' + res.user.uid).set({
-          email: "admin5@example.com"
-        })
-        saveUserID(function(error){
-            return cb(res.user.uid, error)
-          }, res.user.uid)
-      }).catch(function(e) {
-        return cb(null, e)
+export function getUserID() {
+	return USER_ID;
+}
 
-    });
-    */
-		} else
-			return cb(value, false);
-	} catch (e) {
-		return cb(null, e);
-	}
+export function setUserID(id) {
+	USER_ID = id;
 }
 
 export async function setMessageRead(mes_id, read = true) {
@@ -122,19 +114,32 @@ export function showAlert(title, msg, btnText = 'Ok', callback = false, error = 
 		callback = function() {
 			console.log(btnText + ' pressed');
 		};
-	if (error) {
-		btns = {
-			text: btnText,
-			onPress: callback,
-			style: 'cancel',
-		};
+	if (btnText.lenght == 0) {
+		if (error) {
+			btns = {
+				text: btnText,
+				onPress: callback,
+				style: 'cancel',
+			};
+		} else {
+			btns = {
+				text: btnText,
+				onPress: callback,
+			};
+		}
+		Alert.alert(title, msg, [ btns ], { cancelable: cancelable });
 	} else {
-		btns = {
-			text: btnText,
-			onPress: callback,
-		};
+		var btns = [];
+		btnText.forEach((text, i) => {
+			var btn = {
+				text: text,
+				onPress: () => callback(i),
+				style: i == 0 ? 'cancel' : '',
+			};
+			btns.push(btn);
+		});
+		Alert.alert(title, msg, btns, { cancelable: cancelable });
 	}
-	Alert.alert(title, msg, [ btns ], { cancelable: cancelable });
 }
 
 //Resets the CakeHype app

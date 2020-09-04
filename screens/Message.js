@@ -57,7 +57,16 @@ export default class MessageScreen extends React.Component {
 			);
 		}
 		//utils.setMessageRead(mes.id);
-		database().ref('users/default/messages/' + mes.id + '/read').set(true);
+		database().ref('users/' + utils.getUserID() + '/messages/' + mes.id + '/read').set(true);
+
+		database().ref('messages/list/' + mes.id).on(
+			'value',
+			(function(snapshot) {
+				this.state.mes = snapshot.val();
+				this.state.mes.id = mes.id;
+				this.forceUpdate();
+			}).bind(this)
+		);
 	}
 
 	componentWillUnmount() {
@@ -234,6 +243,41 @@ export default class MessageScreen extends React.Component {
 		this.forceUpdate();
 	}
 
+	_editEvent(key, name, date, location) {
+		const mes_id = this.state.mes.id;
+		const event = this.state.mes.events[key];
+		event.name = name;
+		event.date = date;
+		event.location = location;
+		this.state.mes.events[key] = event;
+		this.forceUpdate();
+		database().ref('messages/list/' + mes_id + '/events/' + key + '/name').set(name);
+		database().ref('messages/list/' + mes_id + '/events/' + key + '/date').set(date);
+		database().ref('messages/list/' + mes_id + '/events/' + key + '/location').set(location);
+	}
+
+	_deleteEvent(key) {
+		const utils = this.props.navigation.getParam('utils', null);
+		utils.showAlert(
+			'Event löschen?',
+			'',
+			[ 'Ja', 'Nein' ],
+			(function(btn_id) {
+				if (btn_id == 0) {
+					// delete event
+					const mes_id = this.state.mes.id;
+					var events = [ ...this.state.mes.events ];
+					events.splice(key, 1);
+					this.state.mes.events = events;
+					this.forceUpdate();
+					database().ref('messages/list/' + mes_id + '/events').set(this.state.mes.events);
+				}
+			}).bind(this),
+			true,
+			false
+		);
+	}
+
 	render() {
 		const mes = this.state.mes;
 
@@ -254,7 +298,7 @@ export default class MessageScreen extends React.Component {
 				return (
 					<FileCard
 						key={key}
-						editable={false}
+						editable={mes.author == this.state.uid}
 						downloadable={true}
 						name={file.name}
 						type={file.type}
@@ -269,118 +313,134 @@ export default class MessageScreen extends React.Component {
 		if (mes.events) {
 			eventsElements = Object.keys(mes.events).map(key => {
 				var event = mes.events[key];
-				return <EventCard key={key} editable={false} name={event.name} date={event.date} location={event.location} />;
+				if (event) {
+					return (
+						<EventCard
+							key={key}
+							pos={key}
+							card_type="message"
+							editable={mes.author == this.state.uid}
+							name={event.name}
+							date={event.date}
+							location={event.location}
+							onDelete={key => this._deleteEvent(key)}
+							onChange={(key, name, date, location) => this._editEvent(key, name, date, location)}
+						/>
+					);
+				}
 			});
 		}
 
 		return (
 			<View>
-				<Modal animationType="slide" presentationStyle="formSheet" visible={this.state.modal_visible}>
-					<View
-						style={{
-							padding: 20,
-							backgroundColor: '#201A30',
-							height: '100%',
-						}}
-					>
-						<View
-							style={{
-								marginBottom: 10,
-								justifyContent: 'space-between',
-								flexWrap: 'wrap',
-								flexDirection: 'row',
-							}}
-						>
-							<Text
-								style={{ fontFamily: 'Poppins-Bold', color: 'white', fontSize: 25, width: '76%' }}
-								numberOfLines={1}
-							>
-								{this.state.mes.headline ? this.state.mes.headline : 'Mitteilung bearbeiten'}
-							</Text>
-							<TouchableOpacity
+				{mes.author == this.state.uid
+					? <Modal animationType="slide" presentationStyle="formSheet" visible={this.state.modal_visible}>
+							<View
 								style={{
-									height: 30,
-									borderRadius: 10,
-									marginLeft: 10,
-									width: 70,
-									padding: 5,
-									paddingLeft: 10,
-									backgroundColor: '#0DF5E3',
+									padding: 20,
+									backgroundColor: '#201A30',
+									height: '100%',
 								}}
-								onPress={text => this._editMessage()}
 							>
-								<Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: '#38304C' }}>FERTIG</Text>
-							</TouchableOpacity>
-						</View>
+								<View
+									style={{
+										marginBottom: 10,
+										justifyContent: 'space-between',
+										flexWrap: 'wrap',
+										flexDirection: 'row',
+									}}
+								>
+									<Text
+										style={{ fontFamily: 'Poppins-Bold', color: 'white', fontSize: 25, width: '76%' }}
+										numberOfLines={1}
+									>
+										{this.state.mes.headline ? this.state.mes.headline : 'Mitteilung bearbeiten'}
+									</Text>
+									<TouchableOpacity
+										style={{
+											height: 30,
+											borderRadius: 10,
+											marginLeft: 10,
+											width: 70,
+											padding: 5,
+											paddingLeft: 10,
+											backgroundColor: '#0DF5E3',
+										}}
+										onPress={text => this._editMessage()}
+									>
+										<Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: '#38304C' }}>FERTIG</Text>
+									</TouchableOpacity>
+								</View>
 
-						<View
-							style={{ marginLeft: -20, height: 0.5, marginBottom: 40, backgroundColor: '#38304C', width: '140%' }}
-						/>
+								<View
+									style={{ marginLeft: -20, height: 0.5, marginBottom: 40, backgroundColor: '#38304C', width: '140%' }}
+								/>
 
-						<ScrollView>
-							<View style={{ marginBottom: 20 }}>
-								<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>Überschrift</Text>
-								<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
-									<TextInput
-										multiline
-										autoCorrect={false}
-										keyboardType="default"
-										multiline={true}
-										style={{
-											fontFamily: 'Poppins-Medium',
-											marginTop: 8,
-											padding: 15,
-											fontSize: 17,
-											color: '#D5D3D9',
-										}}
-										value={this.state.mes.headline}
-										onChangeText={text => this._onChangeText('headline', text)}
-									/>
-								</View>
+								<ScrollView>
+									<View style={{ marginBottom: 20 }}>
+										<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>Überschrift</Text>
+										<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
+											<TextInput
+												multiline
+												autoCorrect={false}
+												keyboardType="default"
+												multiline={true}
+												style={{
+													fontFamily: 'Poppins-Medium',
+													marginTop: 8,
+													padding: 15,
+													fontSize: 17,
+													color: '#D5D3D9',
+												}}
+												value={this.state.mes.headline}
+												onChangeText={text => this._onChangeText('headline', text)}
+											/>
+										</View>
+									</View>
+									<View style={{ marginBottom: 20 }}>
+										<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>Subtext</Text>
+										<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
+											<TextInput
+												multiline
+												autoCorrect={false}
+												keyboardType="default"
+												multiline={true}
+												style={{
+													fontFamily: 'Poppins-Medium',
+													marginTop: 8,
+													padding: 15,
+													fontSize: 17,
+													color: '#D5D3D9',
+												}}
+												value={this.state.mes.short_text}
+												onChangeText={text => this._onChangeText('short_text', text)}
+											/>
+										</View>
+									</View>
+									<View style={{ marginBottom: 20 }}>
+										<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>Text</Text>
+										<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
+											<TextInput
+												multiline
+												autoCorrect={false}
+												keyboardType="default"
+												multiline={true}
+												style={{
+													fontFamily: 'Poppins-Medium',
+													marginTop: 8,
+													padding: 15,
+													fontSize: 17,
+													color: '#D5D3D9',
+												}}
+												value={this.state.mes.long_text}
+												onChangeText={text => this._onChangeText('text', text)}
+											/>
+										</View>
+									</View>
+								</ScrollView>
 							</View>
-							<View style={{ marginBottom: 20 }}>
-								<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>Subtext</Text>
-								<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
-									<TextInput
-										multiline
-										autoCorrect={false}
-										keyboardType="default"
-										multiline={true}
-										style={{
-											fontFamily: 'Poppins-Medium',
-											marginTop: 8,
-											padding: 15,
-											fontSize: 17,
-											color: '#D5D3D9',
-										}}
-										value={this.state.mes.short_text}
-										onChangeText={text => this._onChangeText('short_text', text)}
-									/>
-								</View>
-							</View>
-							<View style={{ marginBottom: 20 }}>
-								<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>Text</Text>
-								<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
-									<TextInput
-										multiline
-										autoCorrect={false}
-										keyboardType="default"
-										multiline={true}
-										style={{
-											fontFamily: 'Poppins-Medium',
-											marginTop: 8,
-											padding: 15,
-											fontSize: 17,
-											color: '#D5D3D9',
-										}}
-										value={this.state.mes.long_text}
-										onChangeText={text => this._onChangeText('text', text)}
-									/>
-								</View>
-							</View>
-						</ScrollView>
-					</View>
-				</Modal>
+						</Modal>
+					: void 0}
 				<View style={{ position: 'absolute' }}>
 					<View style={{ width: 400, marginLeft: 0, marginTop: -50, position: 'absolute' }}>
 						<View style={{ position: 'absolute' }}>
@@ -557,9 +617,12 @@ export default class MessageScreen extends React.Component {
 					<TouchableOpacity onPress={() => this.props.navigation.navigate('ScreenHandler')}>
 						<FontAwesomeIcon style={{ zIndex: 0 }} size={29} color="#F5F5F5" icon={faChevronCircleLeft} />
 					</TouchableOpacity>
-					<TouchableOpacity onPress={() => this._openMessageModal()}>
-						<FontAwesomeIcon style={{ zIndex: 0, marginLeft: 285 }} size={25} color="#F5F5F5" icon={faEllipsisV} />
-					</TouchableOpacity>
+					{mes.author == this.state.uid
+						? <TouchableOpacity onPress={() => this._openMessageModal()}>
+								<FontAwesomeIcon style={{ zIndex: 0, marginLeft: 285 }} size={25} color="#F5F5F5" icon={faEllipsisV} />
+							</TouchableOpacity>
+						: void 0}
+
 				</Animated.View>
 			</View>
 		);

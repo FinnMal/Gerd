@@ -57,6 +57,7 @@ import storage from '@react-native-firebase/storage';
 export default class NewMessageScreen extends React.Component {
 	constructor(props) {
 		super(props);
+		const utils = this.props.navigation.getParam('utils', null);
 
 		this.state = {
 			curPageIndex: 0,
@@ -66,13 +67,14 @@ export default class NewMessageScreen extends React.Component {
 			files: [],
 			picture: {},
 			group_serach: '',
+			uid: utils.getUserID(),
 			long_text_input_has_focus: false,
 		};
 
 		this.headlineMarginLeft = new Animated.Value(40);
 		this.nextHeadlineMarginLeft = new Animated.Value(40);
 
-		database().ref('users/default/clubs').once(
+		database().ref('users/' + this.state.uid + '/clubs').once(
 			'value',
 			(function(snap) {
 				var clubs = snap.val();
@@ -169,7 +171,7 @@ export default class NewMessageScreen extends React.Component {
 			data: 'data:' + res.type + ';base64,' + res.data,
 			uploading: true,
 			uploaded_percentage: 0,
-			storage_path: 'userfiles/default/' + res.name,
+			storage_path: 'userfiles/' + this.state.uid + '/' + res.name,
 		};
 
 		this.state.picture = file;
@@ -206,7 +208,7 @@ export default class NewMessageScreen extends React.Component {
 			type: res.type,
 			uploading: true,
 			uploaded_percentage: 0,
-			storage_path: 'userfiles/default/' + res.name + '_' + new Date().getTime(),
+			storage_path: 'userfiles/' + this.state.uid + '/' + res.name + '_' + new Date().getTime(),
 		};
 
 		var pos = this.state.files.length;
@@ -434,7 +436,7 @@ export default class NewMessageScreen extends React.Component {
 				});
 
 				var mes = {
-					author: 'default',
+					author: this.state.uid,
 					club_id: club.club_id,
 					headline: this.state.headlineInputValue,
 					short_text: this.state.shortTextInputValue,
@@ -595,6 +597,7 @@ export default class NewMessageScreen extends React.Component {
 						<EventCard
 							key={key}
 							pos={key}
+							card_type="new_message"
 							editable={true}
 							name={event.name}
 							date={event.date}

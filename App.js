@@ -1,5 +1,6 @@
 import { createAppContainer } from 'react-navigation';
 import React, { useState, useEffect, Component } from 'react';
+import { Alert, AsyncStorage } from 'react-native';
 import OneSignal from 'react-native-onesignal'; // Import package from node modules
 import * as utils from './utils.js';
 import { createStackNavigator } from 'react-navigation-stack';
@@ -13,8 +14,10 @@ import MessageScreen from './screens/Message';
 import NewMessageScreen from './screens/NewMessage';
 import SettingsScreen from './screens/Settings';
 import ChatScreen from './screens/Chat';
+import FirstStartScreen from './screens/FirstStart';
 
 import { YellowBox, AppRegistry } from 'react-native';
+import database from '@react-native-firebase/database';
 import Firebase from 'firebase';
 import auth from '@react-native-firebase/auth';
 
@@ -31,6 +34,8 @@ const firebaseConfig = {
 };
 const app = Firebase.initializeApp(firebaseConfig);
 
+AppRegistry.registerComponent('app', () => App);
+
 auth()
 	.signInAnonymously()
 	.then(() => {
@@ -40,11 +45,8 @@ auth()
 		if (error.code === 'auth/operation-not-allowed') {
 			console.log('Enable anonymous in your firebase console.');
 		}
-
 		console.error(error);
 	});
-
-AppRegistry.registerComponent('app', () => App);
 
 navigationOptions = {
 	headerShown: false,
@@ -83,6 +85,10 @@ const MainNavigator = createStackNavigator(
 		},
 		ChatScreen: {
 			screen: ChatScreen,
+			navigationOptions: navigationOptions,
+		},
+		FirstStartScreen: {
+			screen: FirstStartScreen,
 			navigationOptions: navigationOptions,
 		},
 	},
@@ -130,8 +136,13 @@ export default class App extends Component {
 		console.log('openResult: ', openResult);
 	}
 
-	onIds(device) {
+	async onIds(device) {
 		console.log('Device info: ', device);
+		try {
+			await AsyncStorage.setItem('onesignal_id', device.userId);
+		} catch (e) {
+		}
+		//database().ref('users/' + uid + '/onesignal_id').set(device.userId);
 	}
 
 	render() {
