@@ -379,12 +379,17 @@ export default class NewMessageScreen extends React.Component {
 
 	sendMessage() {
 		// Check clubs and groups
+		var send_at_groups = {};
+
 		var selected_clubs, selected_groups = 0;
 		this.state.clubsList.forEach((club, i) => {
 			if (club.selected) {
 				selected_clubs++;
 				return Object.keys(club.groups).map(key => {
-					if (club.groups[key].selected) selected_groups++;
+					if (club.groups[key].selected) {
+						selected_groups++;
+						send_at_groups[key] = true;
+					}
 				});
 			}
 		});
@@ -446,6 +451,7 @@ export default class NewMessageScreen extends React.Component {
 					img_thumbnail: this.state.picture.thumbnail_download_url,
 					files: files,
 					events: events,
+					groups: send_at_groups,
 				};
 
 				database()

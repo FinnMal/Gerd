@@ -2,6 +2,8 @@ platform :ios, '10.0'
 require_relative '../node_modules/react-native-unimodules/cocoapods.rb'
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 
+permissions_path = '../node_modules/react-native-permissions/ios'
+pod 'Permission-Camera', :path => "#{permissions_path}/Camera.podspec"
 
 def add_flipper_pods!(versions = {})
   versions['Flipper'] ||= '~> 0.33.1'

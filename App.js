@@ -15,6 +15,7 @@ import NewMessageScreen from './screens/NewMessage';
 import SettingsScreen from './screens/Settings';
 import ChatScreen from './screens/Chat';
 import FirstStartScreen from './screens/FirstStart';
+import AddClubScreen from './screens/AddClub';
 
 import { YellowBox, AppRegistry } from 'react-native';
 import database from '@react-native-firebase/database';
@@ -89,6 +90,10 @@ const MainNavigator = createStackNavigator(
 		},
 		FirstStartScreen: {
 			screen: FirstStartScreen,
+			navigationOptions: navigationOptions,
+		},
+		AddClubScreen: {
+			screen: AddClubScreen,
 			navigationOptions: navigationOptions,
 		},
 	},
