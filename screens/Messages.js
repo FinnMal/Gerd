@@ -38,57 +38,59 @@ class MessagesScreen extends React.Component {
 				var chats = snapshot.val();
 				this.state.chats = {};
 
-				Object.keys(chats).map(chat_key => {
-					var chat_id = chats[chat_key].chat_id;
-					database().ref('chats/' + chat_id).on(
-						'value',
-						(function(snap) {
-							var chat = snap.val();
-							chat.id = chat_id;
-							chat.unread_messages_count = 0;
-							chat.last_message_send_at = 0;
-							chat.last_message_id = null;
+				if (chats) {
+					Object.keys(chats).map(chat_key => {
+						var chat_id = chats[chat_key].chat_id;
+						database().ref('chats/' + chat_id).on(
+							'value',
+							(function(snap) {
+								var chat = snap.val();
+								chat.id = chat_id;
+								chat.unread_messages_count = 0;
+								chat.last_message_send_at = 0;
+								chat.last_message_id = null;
 
-							Object.keys(chat.messages).map(mes_key => {
-								var message = chat.messages[mes_key];
-								if (!message.read && message.receiver == this.state.uid) chat.unread_messages_count++;
+								Object.keys(chat.messages).map(mes_key => {
+									var message = chat.messages[mes_key];
+									if (!message.read && message.receiver == this.state.uid) chat.unread_messages_count++;
 
-								if (chat.last_message_id) {
-									if (chat.messages[chat.last_message_id]) {
-										if (message.send_at > chat.messages[chat.last_message_id].send_at) chat.last_message_id = mes_key;
+									if (chat.last_message_id) {
+										if (chat.messages[chat.last_message_id]) {
+											if (message.send_at > chat.messages[chat.last_message_id].send_at) chat.last_message_id = mes_key;
+										} else
+											chat.last_message_id = mes_key;
 									} else
 										chat.last_message_id = mes_key;
-								} else
-									chat.last_message_id = mes_key;
-							});
-							chat.last_message = chat.messages[chat.last_message_id];
+								});
+								chat.last_message = chat.messages[chat.last_message_id];
 
-							chat.last_message.ago_text = utils.getAgoText(chat.last_message.send_at, false, false, true);
+								chat.last_message.ago_text = utils.getAgoText(chat.last_message.send_at, false, false, true);
 
-							var list = Object.values(chat.messages);
-							list.sort(function(a, b) {
-								return parseInt(a.send_at) - parseInt(b.send_at);
-							});
-							chat.messages = list;
+								var list = Object.values(chat.messages);
+								list.sort(function(a, b) {
+									return parseInt(a.send_at) - parseInt(b.send_at);
+								});
+								chat.messages = list;
 
-							var reciver_user_id = chat.user_id_1 != this.state.uid ? chat.user_id_1 : chat.user_id_2;
-							database().ref('users/' + reciver_user_id + '/img').once(
-								'value',
-								(function(snap) {
-									chat.user_img = snap.val();
-									database().ref('users/' + reciver_user_id + '/name').once(
-										'value',
-										(function(snap) {
-											chat.user_name = snap.val();
-											this.state.chats[chat.id] = chat;
-											this.forceUpdate();
-										}).bind(this)
-									);
-								}).bind(this)
-							);
-						}).bind(this)
-					);
-				});
+								var reciver_user_id = chat.user_id_1 != this.state.uid ? chat.user_id_1 : chat.user_id_2;
+								database().ref('users/' + reciver_user_id + '/img').once(
+									'value',
+									(function(snap) {
+										chat.user_img = snap.val();
+										database().ref('users/' + reciver_user_id + '/name').once(
+											'value',
+											(function(snap) {
+												chat.user_name = snap.val();
+												this.state.chats[chat.id] = chat;
+												this.forceUpdate();
+											}).bind(this)
+										);
+									}).bind(this)
+								);
+							}).bind(this)
+						);
+					});
+				}
 			}).bind(this)
 		);
 	}

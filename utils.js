@@ -3,6 +3,7 @@ import { Alert, AsyncStorage } from 'react-native';
 import auth from '@react-native-firebase/auth';
 
 var USER_ID = '0';
+var ACCOUNT_TYPE = '0';
 this.state = {};
 
 auth().onAuthStateChanged(
@@ -19,6 +20,14 @@ export function getUserID() {
 
 export function setUserID(id) {
 	USER_ID = id;
+}
+
+export function setAccountType(type) {
+	ACCOUNT_TYPE = type;
+}
+
+export function getAccountType(type) {
+	return ACCOUNT_TYPE;
 }
 
 export async function setMessageRead(mes_id, read = true) {

@@ -37,6 +37,7 @@ class HomeScreen extends React.Component {
 			moveTo: 'none',
 			navPos: 0,
 			uid: utils.getUserID(),
+			account_type: utils.getAccountType(),
 			unread_messages_count: 0,
 		};
 		this.margin = new Animated.Value(0);
@@ -45,80 +46,128 @@ class HomeScreen extends React.Component {
 		database().ref('messages/list').on(
 			'value',
 			(function(snapshot) {
-				var messages = snapshot.val();
-
-				this.state.unread_messages_count = 0;
-				Object.keys(messages).map(key => {
-					database().ref('users/' + this.state.uid + '/messages/' + key + '/read').once(
-						'value',
-						(function(snap) {
-							if (!snap.val()) this.state.unread_messages_count++;
-							this.forceUpdate();
-						}).bind(this)
-					);
-				});
-				this.forceUpdate();
+				this._filterMessages(
+					snapshot.val(),
+					(function(messages) {
+						this.state.unread_messages_count = 0;
+						Object.keys(messages).map(key => {
+							database().ref('users/' + this.state.uid + '/messages/' + key + '/read').once(
+								'value',
+								(function(snap) {
+									if (!snap.val()) this.state.unread_messages_count++;
+									this.forceUpdate();
+								}).bind(this)
+							);
+						});
+						this.forceUpdate();
+					}).bind(this)
+				);
 			}).bind(this)
 		);
 
 		database().ref('messages/list').on(
 			'value',
 			(function(snapshot) {
-				var messages = snapshot.val();
-				this.state.newMesList = [];
-				this.state.todayMesList = [];
-				this.state.olderMesList = [];
-				var total_messages = Object.keys(messages).length;
+				this._filterMessages(
+					snapshot.val(),
+					(function(messages) {
+						this.state.newMesList = [];
+						this.state.todayMesList = [];
+						this.state.olderMesList = [];
+						var total_messages = Object.keys(messages).length;
 
-				var checked = 0;
-				Object.keys(messages).map(key => {
-					var message = messages[key];
+						var checked = 0;
+						Object.keys(messages).map(key => {
+							var message = messages[key];
 
-					if (!message.invisible) {
-						message.id = key;
+							if (!message.invisible) {
+								message.id = key;
 
-						database().ref('users/' + this.state.uid + '/messages/' + key + '/read').once(
-							'value',
-							(function(snap) {
-								var read_by_user = snap.val();
-								database().ref('clubs/' + message.club_id).once(
+								database().ref('users/' + this.state.uid + '/messages/' + key + '/read').once(
 									'value',
 									(function(snap) {
-										var club = snap.val();
-										message.color = club.color;
-										message.club_name = club.name;
-										message.club_img = club.logo;
-										message.ago = utils.getAgoText(message.send_at);
-										message.ago_seconds = utils.getAgoSec(message.send_at);
+										var read_by_user = snap.val();
+										database().ref('clubs/' + message.club_id).once(
+											'value',
+											(function(snap) {
+												var club = snap.val();
+												message.color = club.color;
+												message.club_name = club.name;
+												message.club_img = club.logo;
+												message.ago = utils.getAgoText(message.send_at);
+												message.ago_seconds = utils.getAgoSec(message.send_at);
 
-										console.log(message.headline + ': ' + message.ago_seconds);
-										if (!read_by_user) this.state.newMesList[this.state.newMesList.length] = message;
-										else if (message.ago_seconds / 60 / 60 < 24)
-											this.state.todayMesList[this.state.todayMesList.length] = message;
-										else
-											this.state.olderMesList[this.state.olderMesList.length] = message;
+												if (!read_by_user) this.state.newMesList[this.state.newMesList.length] = message;
+												else if (message.ago_seconds / 60 / 60 < 24)
+													this.state.todayMesList[this.state.todayMesList.length] = message;
+												else
+													this.state.olderMesList[this.state.olderMesList.length] = message;
 
-										checked++;
-										if (checked == total_messages) {
-											this.sortList('newMesList');
-											this.sortList('todayMesList');
-											this.sortList('olderMesList');
+												checked++;
+												if (checked == total_messages) {
+													this.sortList('newMesList');
+													this.sortList('todayMesList');
+													this.sortList('olderMesList');
 
-											this.generateCards('newMesList');
-											this.generateCards('todayMesList');
-											this.generateCards('olderMesList');
+													this.generateCards('newMesList');
+													this.generateCards('todayMesList');
+													this.generateCards('olderMesList');
 
-											this.forceUpdate();
-										}
+													this.forceUpdate();
+												}
+											}).bind(this)
+										);
 									}).bind(this)
 								);
-							}).bind(this)
-						);
-					} else
-						checked++;
-				});
+							} else
+								checked++;
+						});
+					}).bind(this)
+				);
 			}).bind(this)
 		);
+	}
+
+	_filterMessages(data, cb) {
+		var c_mes = 0;
+		var messages = {};
+		const total_mes = Object.keys(data).length;
+		Object.keys(data).map(mes_id => {
+			var mes = data[mes_id];
+			mes.id = mes_id;
+
+			var c_group = 0;
+			const total_groups = Object.keys(mes.groups).length;
+			Object.keys(mes.groups).map(group_id => {
+				if (mes.groups[group_id]) {
+					database()
+						.ref('users/' + this.state.uid + '/clubs/' + mes.club_id + '/groups/' + group_id + '/subscribed')
+						.once(
+							'value',
+							(function(snap) {
+								if (snap.val() === true) messages[mes_id] = mes;
+								c_group++;
+								if (c_mes == total_mes && c_group == total_groups) {
+									cb(messages);
+								}
+							}).bind(this)
+						);
+				}
+			});
+			c_mes++;
+		});
+		/*
+		console.log(JSON.stringify(messages));
+		var ret = {};
+		Object.keys(messages).map(key => {
+			ret[messages[key].id] = messages[key];
+		});
+		console.log(JSON.stringify(ret));
+		Object.keys(ret).map(key => {
+			console.log('[mes_id]: ' + key);
+		});
+		return ret;
+		*/
 	}
 
 	sortList(listName) {
@@ -186,17 +235,20 @@ class HomeScreen extends React.Component {
 						}}
 					>
 						<Text style={s.pageHeadline}>Mitteilungen</Text>
-						<TouchableOpacity
-							style={
-								([ styles.headlineIcon ], {
-									marginTop: 55,
-									marginLeft: 30,
-								})
-							}
-							onPress={() => this.openAddMessage()}
-						>
-							<FontAwesomeIcon size={29} color="#F5F5F5" icon={faPlusCircle} />
-						</TouchableOpacity>
+						{this.state.account_type == 'manager'
+							? <TouchableOpacity
+									style={
+										([ styles.headlineIcon ], {
+											marginTop: 55,
+											marginLeft: 30,
+										})
+									}
+									onPress={() => this.openAddMessage()}
+								>
+									<FontAwesomeIcon size={29} color="#F5F5F5" icon={faPlusCircle} />
+								</TouchableOpacity>
+							: void 0}
+
 						<View
 							style={{
 								marginTop: 20,

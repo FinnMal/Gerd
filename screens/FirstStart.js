@@ -43,7 +43,7 @@ class FirstStartScreen extends React.Component {
 		const uid = this.props.navigation.getParam('uid', null);
 		this._saveUserID(uid);
 
-		database().ref('users/' + uid + '/account_type').set(this.state.profile_0_selected ? 'user' : 'manger');
+		database().ref('users/' + uid + '/account_type').set(this.state.profile_0_selected ? 'user' : 'manager');
 		database().ref('users/' + uid + '/name').set('User ' + (Math.floor(Math.random() * 999999) + 1));
 
 		try {
