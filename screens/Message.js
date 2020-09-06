@@ -46,6 +46,7 @@ export default class MessageScreen extends React.Component {
 			ago_seconds: mes.ago_seconds,
 			agoTextInterval: null,
 			modal_visible: false,
+			uid: utils.getUserID(),
 		};
 
 		if (mes.ago_seconds < 3600) {
@@ -180,21 +181,41 @@ export default class MessageScreen extends React.Component {
 	};
 
 	_openMessageModal() {
-		ActionSheetIOS.showActionSheetWithOptions(
-			{
-				options: [ 'Abbrechen', 'Bearbeiten', 'Löschen' ],
-				destructiveButtonIndex: 2,
-				cancelButtonIndex: 0,
-			},
-			buttonIndex => {
-				if (buttonIndex === 0) {
-				} else if (buttonIndex === 1) {
-					// edit uploaded file
-					this._openModal();
-				} else if (buttonIndex === 2) {
-					this._deleteMessage();
-				}
-			}
+		const mes = this.state.mes;
+		const utils = this.props.navigation.getParam('utils', null);
+
+		database().ref('users/' + mes.author + '/name').once(
+			'value',
+			(function(snapshot) {
+				console.log('AUTHOR: ' + mes.author);
+				console.log('UID: ' + this.state.uid);
+				if (mes.author == this.state.uid) var options = [ 'Abbrechen', 'Bearbeiten', 'Löschen' ];
+				else var options = [ 'Abbrechen', 'Nachricht an ' + snapshot.val() ];
+				ActionSheetIOS.showActionSheetWithOptions(
+					{
+						options: options,
+						destructiveButtonIndex: 2,
+						cancelButtonIndex: 0,
+					},
+					buttonIndex => {
+						if (buttonIndex === 0) {
+							// cancel
+						} else if (buttonIndex === 1) {
+							if (mes.author == this.state.uid)
+								this._openModal();
+							else
+								utils.startChat(
+									mes.author,
+									(function() {
+										this.props.navigation.navigate('ScreenHandler');
+									}).bind(this)
+								);
+						} else if (buttonIndex === 2) {
+							if (mes.author == this.state.uid) this._deleteMessage();
+						}
+					}
+				);
+			}).bind(this)
 		);
 	}
 
@@ -617,11 +638,9 @@ export default class MessageScreen extends React.Component {
 					<TouchableOpacity onPress={() => this.props.navigation.navigate('ScreenHandler')}>
 						<FontAwesomeIcon style={{ zIndex: 0 }} size={29} color="#F5F5F5" icon={faChevronCircleLeft} />
 					</TouchableOpacity>
-					{mes.author == this.state.uid
-						? <TouchableOpacity onPress={() => this._openMessageModal()}>
-								<FontAwesomeIcon style={{ zIndex: 0, marginLeft: 285 }} size={25} color="#F5F5F5" icon={faEllipsisV} />
-							</TouchableOpacity>
-						: void 0}
+					<TouchableOpacity onPress={() => this._openMessageModal()}>
+						<FontAwesomeIcon style={{ zIndex: 0, marginLeft: 285 }} size={25} color="#F5F5F5" icon={faEllipsisV} />
+					</TouchableOpacity>
 
 				</Animated.View>
 			</View>

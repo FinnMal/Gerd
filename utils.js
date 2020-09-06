@@ -1,6 +1,7 @@
 import React from 'react';
 import { Alert, AsyncStorage } from 'react-native';
 import auth from '@react-native-firebase/auth';
+import database from '@react-native-firebase/database';
 
 var USER_ID = '0';
 var ACCOUNT_TYPE = '0';
@@ -28,6 +29,22 @@ export function setAccountType(type) {
 
 export function getAccountType(type) {
 	return ACCOUNT_TYPE;
+}
+
+export function startChat(user_id, cb) {
+	//TODO: check if a chat with this user already exists
+	var new_chat = {
+		user_id_1: USER_ID,
+		user_id_2: user_id,
+	};
+
+	var chatRef = database().ref('chats').push(new_chat);
+	database().ref('chats/' + chatRef.key + '/id').set(chatRef.key);
+
+	database().ref('users/' + USER_ID + '/chats/' + chatRef.key + '/chat_id').set(chatRef.key);
+	database().ref('users/' + user_id + '/chats/' + chatRef.key + '/chat_id').set(chatRef.key);
+
+	if (cb) cb();
 }
 
 export async function setMessageRead(mes_id, read = true) {

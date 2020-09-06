@@ -47,6 +47,16 @@ export default class SettingsScreen extends React.Component {
 				>
 					<StatusBar hidden={true} />
 					<Text style={s.pageHeadline}>Einstellungen</Text>
+					<View>
+						<View>
+							<Text>Konto</Text>
+							<View>
+								<View><Text>Name</Text></View>
+								<View><Text>E-Mail</Text></View>
+								<View><Text>Passwort</Text></View>
+							</View>
+						</View>
+					</View>
 				</View>
 			);
 		}

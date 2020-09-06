@@ -29,6 +29,7 @@ class MessagesScreen extends React.Component {
 			moveTo: 'none',
 			chats: {},
 			uid: utils.getUserID(),
+			utils: utils,
 		};
 		this.margin = new Animated.Value(0);
 
@@ -50,6 +51,7 @@ class MessagesScreen extends React.Component {
 								chat.last_message_send_at = 0;
 								chat.last_message_id = null;
 
+								// TODO: debug if chat is empty
 								Object.keys(chat.messages).map(mes_key => {
 									var message = chat.messages[mes_key];
 									if (!message.read && message.receiver == this.state.uid) chat.unread_messages_count++;
@@ -106,7 +108,7 @@ class MessagesScreen extends React.Component {
 		if (this.state.chats) {
 			chatsElements = Object.keys(this.state.chats).map(key => {
 				var chat = this.state.chats[key];
-				return <ChatCard navigation={this.props.navigation} key={key} chat={chat} />;
+				return <ChatCard utils={this.state.utils} navigation={this.props.navigation} key={key} chat={chat} />;
 			});
 		}
 
@@ -170,6 +172,7 @@ class ChatCard extends React.Component {
 				onPress={() => {
 					this.props.navigation.navigate('ChatScreen', {
 						chat: chat,
+						utils: this.props.utils,
 					});
 				}}
 			>

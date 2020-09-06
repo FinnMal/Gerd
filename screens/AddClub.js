@@ -27,7 +27,9 @@ import {
 	faCamera,
 	faSearch,
 	faCheckCircle,
-	faChevronCircleRight
+	faChevronCircleRight,
+	faExclamationCircle,
+	faTimesCircle
 } from '@fortawesome/free-solid-svg-icons';
 import { NotificationCard } from './../app/components.js';
 import database from '@react-native-firebase/database';
@@ -47,11 +49,7 @@ class AddClubScreen extends React.Component {
 			search_value: '',
 			clubs: [],
 			joinable_groups: [],
-			search_results: [
-				{
-					name: 'Test',
-				},
-			],
+			search_results: [],
 			text_input_focused: false,
 			modal_visible: [ true, false ],
 			qr_code_result: null,
@@ -78,20 +76,43 @@ class AddClubScreen extends React.Component {
 				console.log(response.data);
 				this.state.search_results = response.data;
 				if (qrCodeResult > -1) {
-					this.margin.setValue(250);
-					Animated
-						.timing(this.margin, {
-							useNativeDriver: false,
-							toValue: -20,
-							duration: 250,
-							easing: Easing.ease,
-						})
-						.start(() => {});
-					this.state.qr_code_result = response.data[qrCodeResult];
+					if (this.state.qr_code_result == null)
+						this._fadeQrCodeResult('in', response.data[qrCodeResult]);
+					else
+						this._fadeQrCodeResult(
+							'out',
+							response.data[qrCodeResult],
+							(function() {
+								this._fadeQrCodeResult('in', response.data[qrCodeResult]);
+							}).bind(this)
+						);
 				}
 				this.forceUpdate();
 			});
 		}
+	}
+
+	_fadeQrCodeResult(dir, res, cb) {
+		if (!res)
+			this.state.qr_code_result = { ok: false, name: 'Verein nicht gefunden' };
+		else {
+			res.ok = true;
+			this.state.qr_code_result = res;
+		}
+		this.forceUpdate();
+		if (dir == 'in') var param = [ 250, -20, 250 ];
+		else var param = [ -20, 250, 100 ];
+		this.margin.setValue(param[0]);
+		Animated
+			.timing(this.margin, {
+				useNativeDriver: false,
+				toValue: param[1],
+				duration: param[2],
+				easing: Easing.ease,
+			})
+			.start(() => {
+				if (cb) cb();
+			});
 	}
 
 	_joinClub(id, state = 0, selected_groups = {}) {
@@ -108,8 +129,9 @@ class AddClubScreen extends React.Component {
 						var group = groups[key];
 						group.key = key;
 						group.members = null;
-						group.selected = selected_groups[key] === true;
-						joinable_groups.push(group);
+						group.preselected = selected_groups[key] === true;
+
+						if (group.public !== false || group.preselected) joinable_groups.push(group);
 						this.forceUpdate();
 					});
 					this.state.joinable_groups = joinable_groups;
@@ -125,7 +147,7 @@ class AddClubScreen extends React.Component {
 
 			var selected_groups = 0;
 			this.state.joinable_groups.forEach((group, i) => {
-				if (group.selected) selected_groups++;
+				if (group.selected || group.preselected) selected_groups++;
 			});
 			console.log(selected_groups);
 			if (selected_groups > 0) {
@@ -143,7 +165,7 @@ class AddClubScreen extends React.Component {
 								database().ref('users/' + uid + '/clubs/' + id + '/role').set('subscriber');
 
 								this.state.joinable_groups.forEach((group, i) => {
-									if (group.selected) {
+									if (group.selected || group.preselected) {
 										database().ref('users/' + uid + '/clubs/' + id + '/groups/' + group.key).set({
 											group_id: group.key,
 											subscribed: true,
@@ -164,10 +186,12 @@ class AddClubScreen extends React.Component {
 
 	_selectGroup(key, selected) {
 		this.state.joinable_groups[key].selected = selected;
+		if (!selected) this.state.joinable_groups[key].preselected = false;
 		this.forceUpdate();
 	}
 
 	_openModal(modal_id) {
+		this.state.qr_code_result = null;
 		if (this.state.modal_visible[modal_id]) {
 			this.state.modal_visible[modal_id] = false;
 			this.forceUpdate();
@@ -208,7 +232,7 @@ class AddClubScreen extends React.Component {
 
 		const ps0 = this.state.profile_0_selected;
 
-		const searchResults = Object.keys(this.state.search_results).map(key => {
+		var searchResults = Object.keys(this.state.search_results).map(key => {
 			var result = this.state.search_results[key];
 			return (
 				<SearchResult
@@ -221,21 +245,47 @@ class AddClubScreen extends React.Component {
 				/>
 			);
 		});
+		searchResults = searchResults.filter(function(e) {
+			return e !== undefined;
+		});
 
 		const groupsList = Object.keys(this.state.joinable_groups).map(key => {
 			var group = this.state.joinable_groups[key];
-			return (
-				<Group
-					key={key}
-					id={key}
-					name={group.name}
-					onSelect={(key, selected) => this._selectGroup(key, selected)}
-					selected={group.selected}
-				/>
-			);
+			if (!group.preselected) {
+				return (
+					<Group
+						key={key}
+						id={key}
+						name={group.name}
+						onSelect={(key, selected) => this._selectGroup(key, selected)}
+						selected={group.selected}
+					/>
+				);
+			}
+		});
+
+		var preSelectedGroupsList = Object.keys(this.state.joinable_groups).map(key => {
+			var group = this.state.joinable_groups[key];
+			if (group.preselected) {
+				return (
+					<Group
+						key={key}
+						id={key}
+						name={group.name}
+						onSelect={(key, selected) => this._selectGroup(key, selected)}
+						selected={group.selected || group.preselected}
+					/>
+				);
+			}
+		});
+
+		preSelectedGroupsList = preSelectedGroupsList.filter(function(e) {
+			return e !== undefined;
 		});
 
 		var s = require('./../app/style.js');
+
+		const qrc_r = this.state.qr_code_result;
 		if (this.props.show) {
 			return (
 				<View
@@ -254,10 +304,9 @@ class AddClubScreen extends React.Component {
 								alignItems: 'center',
 							}}
 						>
-
 							<QRCodeScanner
 								reactivate={true}
-								reactivateTimeout={3500}
+								reactivateTimeout={1700}
 								onRead={this._qrCodeScanned.bind(this)}
 								topContent={
 									(
@@ -280,19 +329,17 @@ class AddClubScreen extends React.Component {
 									)
 								}
 								bottomContent={
-									this.state.qr_code_result
+									qrc_r
 										? <Animated.View
 												style={{
 													marginTop: margin,
 													borderRadius: 13,
-													marginLeft: 50,
-													marginRight: 50,
 													//backgroundColor: '#34c759',
-													backgroundColor: '#0DF5E3',
+													backgroundColor: qrc_r.ok ? '#0DF5E3' : '#ff3d00',
 													justifyContent: 'center',
 													alignItems: 'center',
 
-													shadowColor: '#0DF5E3',
+													shadowColor: qrc_r.ok ? '#0DF5E3' : '#ff3d00',
 													shadowOffset: {
 														width: 0,
 														height: 0,
@@ -311,14 +358,25 @@ class AddClubScreen extends React.Component {
 														flexDirection: 'row',
 													}}
 													onPress={() => {
-														if (this.state.qr_code_result) {
+														if (qrc_r.ok) {
 															this.state.modal_visible[0] = false;
 															this.forceUpdate();
-															console.log(this.state.qr_code_result);
-															this._joinClub(this.state.qr_code_result.id, 0, this.state.qr_code_result.groups);
+															this._joinClub(qrc_r.id, 0, qrc_r.groups);
 														}
 													}}
 												>
+													{!qrc_r.ok
+														? <FontAwesomeIcon
+																style={{
+																	opacity: 0.95,
+																	marginTop: 3,
+																	marginRight: 15,
+																}}
+																size={25}
+																color="#201A30"
+																icon={faExclamationCircle}
+															/>
+														: void 0}
 													<Text
 														style={{
 															marginRight: 15,
@@ -327,18 +385,23 @@ class AddClubScreen extends React.Component {
 															fontFamily: 'Poppins-Bold',
 															fontSize: 26,
 														}}
+														numberOfLines={1}
 													>
-														{this.state.qr_code_result.name}
+														{qrc_r.name}
 													</Text>
-													<FontAwesomeIcon
-														style={{
-															opacity: 0.95,
-															marginTop: 3,
-														}}
-														size={25}
-														color="#201A30"
-														icon={faChevronCircleRight}
-													/>
+
+													{qrc_r.ok
+														? <FontAwesomeIcon
+																style={{
+																	opacity: 0.95,
+																	marginTop: 3,
+																}}
+																size={25}
+																color="#201A30"
+																icon={faChevronCircleRight}
+															/>
+														: void 0}
+
 												</TouchableOpacity>
 											</Animated.View>
 										: void 0
@@ -388,7 +451,13 @@ class AddClubScreen extends React.Component {
 								style={{ marginLeft: -20, height: 0.5, marginBottom: 20, backgroundColor: '#38304C', width: '140%' }}
 							/>
 
-							<ScrollView style={{ marginBottom: 20 }}>
+							<ScrollView showsVerticalScrollIndicator={false} style={{ marginBottom: 20 }}>
+								{preSelectedGroupsList.length > 0 ? <View
+											style={{
+												marginTop: 20,
+												marginBottom: 20,
+											}}
+										>{preSelectedGroupsList}</View> : void 0}
 								{groupsList}
 							</ScrollView>
 						</View>
@@ -424,9 +493,10 @@ class AddClubScreen extends React.Component {
 					>
 						<Text
 							style={{
-								color: '#635E6E',
-								fontSize: 18,
-								fontFamily: 'Poppins-SemiBold',
+								opacity: 0.6,
+								color: 'white',
+								fontFamily: 'Poppins-Regular',
+								fontSize: 19,
 							}}
 						>
 							Du kannst nach öffentlichen Vereinen suchen, oder einen Einladungcode eingeben.
@@ -435,9 +505,10 @@ class AddClubScreen extends React.Component {
 						<View
 							style={{
 								marginTop: 30,
-								borderRadius: 10,
-								borderBottomLeftRadius: this.state.search_results.length > 0 ? 0 : 10,
-								borderBottomRightRadius: this.state.search_results.length > 0 ? 0 : 10,
+								borderTopLeftRadius: 10,
+								borderTopRightRadius: 10,
+								borderBottomLeftRadius: searchResults.length > 0 ? 0 : 10,
+								borderBottomRightRadius: searchResults.length > 0 ? 0 : 10,
 								backgroundColor: '#38304C',
 							}}
 						>
@@ -473,7 +544,7 @@ class AddClubScreen extends React.Component {
 							</TouchableOpacity>
 						</View>
 					</View>
-					{this.state.search_results.length
+					{searchResults.length > 0
 						? <View
 								style={{
 									paddingBottom: 20,
@@ -493,7 +564,9 @@ class AddClubScreen extends React.Component {
 				</View>
 			);
 		} else
-			return null;
+			this.state.modal_visible[0] = false;
+		this.state.modal_visible[1] = false;
+		return null;
 	}
 }
 

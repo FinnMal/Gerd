@@ -27,7 +27,7 @@ import { faChevronCircleLeft, faChevronLeft, faChevronRight, faPaperPlane } from
 class ChatScreen extends React.Component {
 	constructor(props) {
 		super(props);
-		var utils = this.props.utilsObject;
+		const utils = this.props.navigation.getParam('utils', null);
 		const chat = this.props.navigation.getParam('chat', null);
 
 		this.state = {
@@ -124,7 +124,7 @@ class ChatScreen extends React.Component {
 		if (chat.messages) {
 			messageCards = Object.keys(chat.messages).map(key => {
 				var mes = chat.messages[key];
-				return <MessageCard message={mes} key={key} />;
+				return <MessageCard uid={this.state.uid} message={mes} key={key} />;
 			});
 		}
 
@@ -160,6 +160,7 @@ class ChatScreen extends React.Component {
 						</Text>
 					</View>
 					<Animated.ScrollView
+						showsVerticalScrollIndicator={false}
 						ref={ref => {
 							this.scrollView = ref;
 							if (this.scrollView) this.scrollView.scrollToEnd({ animated: true });
@@ -244,6 +245,7 @@ class MessageCard extends React.Component {
 	}
 
 	render() {
+		const uid = this.props.uid;
 		const mes = this.props.message;
 
 		return (
@@ -252,14 +254,14 @@ class MessageCard extends React.Component {
 					marginBottom: 30,
 					borderTopLeftRadius: 20,
 					borderTopRightRadius: 20,
-					borderBottomLeftRadius: mes.sender == this.state.uid ? 20 : 0,
-					borderBottomRightRadius: mes.sender == this.state.uid ? 0 : 20,
+					borderBottomLeftRadius: mes.sender == uid ? 20 : 0,
+					borderBottomRightRadius: mes.sender == uid ? 0 : 20,
 					padding: 10,
 					paddingLeft: 20,
 					minWidth: 100,
 					maxWidth: 270,
-					marginLeft: mes.sender == this.state.uid ? 70 : 0,
-					backgroundColor: mes.sender == this.state.uid ? '#38304C' : '#3D384B',
+					marginLeft: mes.sender == uid ? 70 : 0,
+					backgroundColor: mes.sender == uid ? '#38304C' : '#3D384B',
 				}}
 			>
 				<Text style={{ color: 'white', fontFamily: 'Poppins-Medium', fontSize: 16 }}>{mes.text}</Text>
