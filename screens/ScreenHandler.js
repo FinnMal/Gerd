@@ -148,24 +148,7 @@ export default class ScreenHandler extends React.Component {
 						<View style={styles.navigationBarWhiteBackground} />
 
 						<Animated.View style={{ marginLeft }}>
-							<View
-								style={{
-									marginTop: 33,
-									backgroundColor: '#0DF5E3',
-									width: 44,
-									height: 44,
-									borderRadius: 44 / 2,
-									shadowColor: '#0DF5E3',
-									shadowOffset: {
-										width: 6,
-										height: 0,
-									},
-									shadowOpacity: 0.20,
-									shadowRadius: 20.00,
-
-									elevation: 10,
-								}}
-							/>
+							<View style={styles.navigatonBarMarker} />
 						</Animated.View>
 						<View style={styles.navigationBarIcons}>
 							<TouchableOpacity
@@ -256,7 +239,7 @@ export default class ScreenHandler extends React.Component {
 
 	navigate(id) {
 		if (this.last_nav_id != id) {
-			for (var i = 0; i < 4; i++) {
+			for (var i = 0; i < 5; i++) {
 				if (id != i) {
 					this.state.nav[i].iconColor = 'white';
 					this.state.nav[i].visible = false;
@@ -274,7 +257,7 @@ export default class ScreenHandler extends React.Component {
 					easing: Easing.ease,
 				})
 				.start(() => {
-					for (var i = 0; i < 4; i++) {
+					for (var i = 0; i < 5; i++) {
 						if (id != i) {
 							this.state.nav[i].iconColor = 'white';
 						} else {
@@ -328,110 +311,29 @@ const styles = StyleSheet.create({
 
 		elevation: 30,
 	},
+	navigatonBarMarker: {
+		marginTop: 32,
+		backgroundColor: '#0DF5E3',
+		width: 44,
+		height: 44,
+		borderRadius: 22,
+	},
 	navigationBarWhiteBackground: {
-		borderTopLeftRadius: 40,
-		borderTopRightRadius: 40,
+		borderTopLeftRadius: 45,
+		borderTopRightRadius: 45,
 		position: 'absolute',
-		marginTop: 22,
-		height: 100,
+		marginTop: 15,
+		height: 95,
 		width: '100%',
 		backgroundColor: '#38304C',
-	},
-	navigationBarImage: {
-		position: 'absolute',
-		marginTop: 5,
-		height: 90,
-		width: '100%',
-	},
-	navigationBarHole: {
-		color: '#0DF5E3',
 	},
 	navigationBarIcons: {
 		flexDirection: 'row',
 		width: '100%',
-		marginTop: 40,
+		marginTop: 39,
 		position: 'absolute',
 	},
 	navigationBarIcon: {
 		marginLeft: 50,
-	},
-	logo: {
-		marginTop: 40,
-		marginLeft: 25,
-		height: 150,
-		width: 50,
-	},
-	backgroundIcons: {
-		position: 'absolute',
-		left: 0,
-		top: 0,
-		width: '100%',
-	},
-	donut: {
-		marginTop: 170,
-		marginLeft: -50,
-		opacity: 0.4,
-		height: 110,
-		width: 110,
-	},
-	cupcake: {
-		marginTop: -15,
-		alignSelf: 'flex-end',
-		marginRight: -50,
-		opacity: 0.4,
-		height: 110,
-		width: 110,
-	},
-	yourFactory: {
-		marginTop: 50,
-		fontWeight: '600',
-		fontSize: 14,
-		color: '#E62D48',
-	},
-	bakeryImage: {
-		marginTop: 75,
-		height: 220,
-		width: 270,
-	},
-	factoryStatsText: {
-		fontWeight: '600',
-		fontSize: 15,
-		marginTop: 50,
-		color: '#959FA6',
-	},
-	statCard: {
-		marginTop: 17,
-		width: 340,
-		minHeight: 50,
-		borderRadius: 5,
-		backgroundColor: '#ffffff',
-		shadowColor: '#E7E9EB',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.5,
-		shadowRadius: 2,
-		elevation: 2,
-	},
-	cardIcon: {
-		marginTop: 10,
-		marginBottom: 10,
-		marginLeft: 10,
-	},
-	cardText: {
-		flex: 1,
-		justifyContent: 'center',
-		alignItems: 'center',
-		position: 'absolute',
-		marginLeft: 58,
-		height: '100%',
-		flexDirection: 'row',
-		alignSelf: 'flex-start',
-	},
-	cardValueName: {
-		fontWeight: '700',
-		color: '#7D8A91',
-	},
-	cardValue: {
-		fontWeight: '700',
-		color: '#FF0000',
 	},
 });
