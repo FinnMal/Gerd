@@ -16,9 +16,12 @@ import {
 	Dimensions
 } from 'react-native';
 
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import { Headlines } from './../app/constants.js';
+import { withNavigation } from 'react-navigation';
 
-export default class ManagmentScreen extends React.Component {
+class ManagmentScreen extends React.Component {
 	constructor(props) {
 		super(props);
 		//var utils = this.props.utilsObject;
@@ -29,7 +32,16 @@ export default class ManagmentScreen extends React.Component {
 		this.margin = new Animated.Value(0);
 	}
 
+	_openAddClub() {
+		this.props.navigation.navigate('AddClubScreen', {
+			utils: this.props.utilsObject,
+			show: true,
+		});
+	}
+
 	render() {
+		const s_width = Dimensions.get('window').width;
+
 		var s = require('./../app/style.js');
 		const marginLeft = this.margin.interpolate({
 			inputRange: [ 0, 2000 ],
@@ -46,7 +58,24 @@ export default class ManagmentScreen extends React.Component {
 					}}
 				>
 					<StatusBar hidden={true} />
-					<Text style={s.pageHeadline}>Verwaltung</Text>
+					<View
+						style={{
+							flexWrap: 'wrap',
+							alignItems: 'flex-start',
+							flexDirection: 'row',
+						}}
+					>
+						<Text style={s.pageHeadline}>Verwaltung</Text>
+						<TouchableOpacity
+							style={{
+								marginTop: s_width * 0.15,
+								marginLeft: s_width * 0.1,
+							}}
+							onPress={() => this._openAddClub()}
+						>
+							<FontAwesomeIcon size={29} color="#F5F5F5" icon={faPlusCircle} />
+						</TouchableOpacity>
+					</View>
 				</View>
 			);
 		}
@@ -60,17 +89,6 @@ export default class ManagmentScreen extends React.Component {
 			this.props.setScrollViewEnabled(true);
 		}
 	}
-
-	animate() {
-		this.animatedValue.setValue(0);
-		Animated
-			.timing(this.animatedValue, {
-				toValue: 1,
-				duration: 2000,
-				easing: Easing.linear,
-			})
-			.start(() => this.animate());
-	}
 }
 
 //Styles
@@ -80,3 +98,5 @@ const styles = StyleSheet.create({
 		backgroundColor: 'transparent',
 	},
 });
+
+export default withNavigation(ManagmentScreen);

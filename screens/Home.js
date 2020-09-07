@@ -132,6 +132,8 @@ class HomeScreen extends React.Component {
 		var c_mes = 0;
 		var messages = {};
 		const total_mes = Object.keys(data).length;
+		cb(data);
+
 		Object.keys(data).map(mes_id => {
 			var mes = data[mes_id];
 			mes.id = mes_id;

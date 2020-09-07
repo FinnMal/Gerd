@@ -29,7 +29,8 @@ import {
 	faCheckCircle,
 	faChevronCircleRight,
 	faExclamationCircle,
-	faTimesCircle
+	faTimesCircle,
+	faChevronCircleLeft
 } from '@fortawesome/free-solid-svg-icons';
 import { NotificationCard } from './../app/components.js';
 import database from '@react-native-firebase/database';
@@ -43,8 +44,11 @@ import { RNCamera } from 'react-native-camera';
 class AddClubScreen extends React.Component {
 	constructor(props) {
 		super(props);
+
+		const utils = this.props.utilsObject || this.props.navigation.getParam('utils', null);
+
 		this.state = {
-			utils: this.props.utilsObject,
+			utils: utils,
 			selected_club: -1,
 			search_value: '',
 			clubs: [],
@@ -53,6 +57,7 @@ class AddClubScreen extends React.Component {
 			text_input_focused: false,
 			modal_visible: [ true, false ],
 			qr_code_result: null,
+			account_type: utils.getAccountType(),
 		};
 
 		this.margin = new Animated.Value(-20);
@@ -217,10 +222,12 @@ class AddClubScreen extends React.Component {
 	}
 
 	checkIfScrollViewIsNeeded(viewHeight) {
-		if (viewHeight < Dimensions.get('window').height) {
-			this.props.setScrollViewEnabled(false);
-		} else {
-			this.props.setScrollViewEnabled(true);
+		if (this.props.setScrollViewEnabled) {
+			if (viewHeight < Dimensions.get('window').height) {
+				this.props.setScrollViewEnabled(false);
+			} else {
+				this.props.setScrollViewEnabled(true);
+			}
 		}
 	}
 
@@ -286,7 +293,7 @@ class AddClubScreen extends React.Component {
 		var s = require('./../app/style.js');
 
 		const qrc_r = this.state.qr_code_result;
-		if (this.props.show) {
+		if (this.props.show || this.props.navigation.getParam('show', null)) {
 			return (
 				<View
 					style={s.container}
@@ -471,6 +478,19 @@ class AddClubScreen extends React.Component {
 							flexDirection: 'row',
 						}}
 					>
+						{this.state.account_type == 'manager'
+							? <TouchableOpacity
+									style={{
+										zIndex: 20,
+										marginTop: 52,
+										marginLeft: 20,
+										position: 'absolute',
+									}}
+									onPress={() => this.props.navigation.navigate('ScreenHandler')}
+								>
+									<FontAwesomeIcon style={{ zIndex: 0 }} size={29} color="#F5F5F5" icon={faChevronCircleLeft} />
+								</TouchableOpacity>
+							: void 0}
 						<Text style={s.pageHeadline}>Beitreten</Text>
 						<TouchableOpacity
 							style={
