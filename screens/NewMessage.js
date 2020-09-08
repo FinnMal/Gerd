@@ -442,7 +442,6 @@ export default class NewMessageScreen extends React.Component {
 
 				var mes = {
 					author: this.state.uid,
-					club_id: club.club_id,
 					headline: this.state.headlineInputValue,
 					short_text: this.state.shortTextInputValue,
 					long_text: this.state.textInputValue,
@@ -455,7 +454,7 @@ export default class NewMessageScreen extends React.Component {
 				};
 
 				database()
-					.ref('messages/list')
+					.ref('clubs/' + club.club_id + '/messages')
 					.push(mes)
 					.then(() => this.props.navigation.navigate('ScreenHandler').bind(this));
 			}

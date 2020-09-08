@@ -5,6 +5,7 @@ import database from '@react-native-firebase/database';
 
 var USER_ID = '0';
 var ACCOUNT_TYPE = '0';
+var NAVIGATION = null;
 this.state = {};
 
 auth().onAuthStateChanged(
@@ -27,8 +28,16 @@ export function setAccountType(type) {
 	ACCOUNT_TYPE = type;
 }
 
-export function getAccountType(type) {
+export function getAccountType() {
 	return ACCOUNT_TYPE;
+}
+
+export function setNavigation(nav) {
+	NAVIGATION = nav;
+}
+
+export function getNavigation() {
+	return NAVIGATION;
 }
 
 export function startChat(user_id, cb) {

@@ -30,11 +30,13 @@ export default class MessageScreen extends React.Component {
 		super(props);
 
 		var headlineHeight = 0;
+		const mes = this.props.navigation.getParam('mes', null);
+		const club = this.props.navigation.getParam('club', null);
 		const utils = this.props.navigation.getParam('utils', null);
-		const mes = this.props.navigation.getParam('content', null);
 
 		this.state = {
 			mes: mes,
+			club: club,
 			scrollY: new Animated.Value(0),
 			headlineHeight: -1,
 			backBtnY: 0,
@@ -59,15 +61,6 @@ export default class MessageScreen extends React.Component {
 		}
 		//utils.setMessageRead(mes.id);
 		database().ref('users/' + utils.getUserID() + '/messages/' + mes.id + '/read').set(true);
-
-		database().ref('messages/list/' + mes.id).on(
-			'value',
-			(function(snapshot) {
-				this.state.mes = snapshot.val();
-				this.state.mes.id = mes.id;
-				this.forceUpdate();
-			}).bind(this)
-		);
 	}
 
 	componentWillUnmount() {
@@ -182,6 +175,7 @@ export default class MessageScreen extends React.Component {
 
 	_openMessageModal() {
 		const mes = this.state.mes;
+		const club = this.state.club;
 		const utils = this.props.navigation.getParam('utils', null);
 
 		database().ref('users/' + mes.author + '/name').once(
@@ -301,6 +295,7 @@ export default class MessageScreen extends React.Component {
 
 	render() {
 		const mes = this.state.mes;
+		const club = this.state.club;
 
 		const headlineFontScale = this._getHeadlineFontScale();
 		const headlineMaxWidth = this._getHeadlineMaxWidth();
@@ -506,12 +501,12 @@ export default class MessageScreen extends React.Component {
 								</Text>
 								<Image
 									style={{ opacity: 0.9, borderRadius: 14, marginLeft: 20, height: 13, width: 13 }}
-									source={{ uri: mes.club_img }}
+									source={{ uri: club.logo }}
 								/>
 								<Text
 									style={{ fontFamily: 'Poppins-Medium', marginTop: -1, fontSize: 13, marginLeft: 10, color: 'white' }}
 								>
-									{mes.club_name}
+									{club.name}
 								</Text>
 							</View>
 						</View>

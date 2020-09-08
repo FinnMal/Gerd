@@ -55,7 +55,7 @@ class AddClubScreen extends React.Component {
 			joinable_groups: [],
 			search_results: [],
 			text_input_focused: false,
-			modal_visible: [ true, false ],
+			modal_visible: [ false, false ],
 			qr_code_result: null,
 			account_type: utils.getAccountType(),
 		};
@@ -232,6 +232,7 @@ class AddClubScreen extends React.Component {
 	}
 
 	render() {
+		const s_width = Dimensions.get('window').width;
 		const margin = this.margin.interpolate({
 			inputRange: [ 0, 2000 ],
 			outputRange: [ 0, 2000 ],
@@ -482,7 +483,7 @@ class AddClubScreen extends React.Component {
 							? <TouchableOpacity
 									style={{
 										zIndex: 20,
-										marginTop: 52,
+										marginTop: s_width * 0.14,
 										marginLeft: 20,
 										position: 'absolute',
 									}}
@@ -491,7 +492,14 @@ class AddClubScreen extends React.Component {
 									<FontAwesomeIcon style={{ zIndex: 0 }} size={29} color="#F5F5F5" icon={faChevronCircleLeft} />
 								</TouchableOpacity>
 							: void 0}
-						<Text style={s.pageHeadline}>Beitreten</Text>
+						<Text
+							style={[
+								s.pageHeadline,
+								{
+									marginLeft: s_width * 0.18,
+								},
+							]}
+						>Beitreten</Text>
 						<TouchableOpacity
 							style={
 								([ s.headlineIcon ], {
