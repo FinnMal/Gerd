@@ -68,6 +68,7 @@ export default class ScreenHandler extends React.Component {
 							// acount exists
 							utils.setUserID(user.uid);
 							utils.setAccountType(snap.val());
+							utils.setNavigation(this.props.navigation);
 							this.state.nav[0].visible = true;
 							this.state.first_start_done = true;
 							this.state.account_type = snap.val();
@@ -88,7 +89,7 @@ export default class ScreenHandler extends React.Component {
 	}
 
 	setScrollViewEnabled = data => {
-		console.log(data);
+		//console.log('scrollViewEnabled: ' + data);
 		_scrollView.setNativeProps({ scrollEnabled: data });
 	};
 

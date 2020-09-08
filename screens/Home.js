@@ -21,6 +21,8 @@ import { faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import { NotificationCard } from './../app/components.js';
 import database from '@react-native-firebase/database';
 import { withNavigation } from 'react-navigation';
+import { Message } from './../classes/Message.js';
+import { MessagesList } from './../classes/MessagesList.js';
 
 class HomeScreen extends React.Component {
 	constructor(props) {
@@ -36,13 +38,16 @@ class HomeScreen extends React.Component {
 			clubs: {},
 			moveTo: 'none',
 			navPos: 0,
+			utils: utils,
 			uid: utils.getUserID(),
 			account_type: utils.getAccountType(),
 			unread_messages_count: 0,
+			render_content: <Text>No html</Text>,
 		};
 		this.margin = new Animated.Value(0);
 		this.navMarginLeft = new Animated.Value(0);
 
+		/*
 		database().ref('messages/list').on(
 			'value',
 			(function(snapshot) {
@@ -126,6 +131,7 @@ class HomeScreen extends React.Component {
 				);
 			}).bind(this)
 		);
+*/
 	}
 
 	_filterMessages(data, cb) {
@@ -219,7 +225,7 @@ class HomeScreen extends React.Component {
 		});
 
 		if (this.props.show) {
-			if (this.state.newMesList.length == 0 && this.state.navPos == 0) this.navigateSection(1, false);
+			//if (this.state.newMesList.length == 0 && this.state.navPos == 0) this.navigateSection(1, false);
 			return (
 				<View
 					onLayout={event => {
@@ -305,7 +311,6 @@ class HomeScreen extends React.Component {
 							/>
 
 							<TouchableOpacity style={[ styles.navTouch ]} onPress={() => this.navigateSection(0)}>
-
 								<Text style={[ styles.navText, { color: this.state.navPos == 0 ? '#201A30' : '#ffffff' } ]}>
 									Neu
 								</Text>
@@ -322,11 +327,16 @@ class HomeScreen extends React.Component {
 							</TouchableOpacity>
 						</View>
 					</View>
-					<View style={{ marginBottom: 70 }}>
-						{this.state.navPos == 0 ? this.state.newMesList : void 0}
-						{this.state.navPos == 1 ? this.state.todayMesList : void 0}
-						{this.state.navPos == 2 ? this.state.olderMesList : void 0}
-					</View>
+					<MessagesList section="older" utils={this.state.utils} />
+					<Text>
+						/*
+						<View style={{ marginBottom: 70 }}>
+							{this.state.navPos == 0 ? this.state.newMesList : void 0}
+							{this.state.navPos == 1 ? this.state.todayMesList : void 0}
+							{this.state.navPos == 2 ? this.state.olderMesList : void 0}
+						</View>
+						*/
+					</Text>
 				</View>
 			);
 		}
