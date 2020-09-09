@@ -42,7 +42,6 @@ class HomeScreen extends React.Component {
 			uid: utils.getUserID(),
 			account_type: utils.getAccountType(),
 			unread_messages_count: 0,
-			render_content: <Text>No html</Text>,
 		};
 		this.margin = new Animated.Value(0);
 		this.navMarginLeft = new Animated.Value(0);
@@ -327,16 +326,7 @@ class HomeScreen extends React.Component {
 							</TouchableOpacity>
 						</View>
 					</View>
-					<MessagesList section="older" utils={this.state.utils} />
-					<Text>
-						/*
-						<View style={{ marginBottom: 70 }}>
-							{this.state.navPos == 0 ? this.state.newMesList : void 0}
-							{this.state.navPos == 1 ? this.state.todayMesList : void 0}
-							{this.state.navPos == 2 ? this.state.olderMesList : void 0}
-						</View>
-						*/
-					</Text>
+					<MessagesList section={this.state.navPos} utils={this.state.utils} />
 				</View>
 			);
 		}

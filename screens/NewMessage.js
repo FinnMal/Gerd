@@ -10,12 +10,14 @@ import {
 	Image,
 	Button,
 	TouchableOpacity,
+	ActionSheetIOS,
 	ScrollView,
 	Animated,
 	Easing,
 	Dimensions,
 	TouchableWithoutFeedback,
 	Keyboard,
+	Modal,
 	KeyboardAvoidingView
 } from 'react-native';
 
@@ -44,13 +46,15 @@ import {
 	faTimesCircle,
 	faCheck,
 	faPaperPlane,
-	faFilePdf
+	faFilePdf,
+	faLink
 } from '@fortawesome/free-solid-svg-icons';
 import { ClubCard, ModalCard, EventCard, FileCard } from './../app/components.js';
 import database from '@react-native-firebase/database';
 import { SafeAreaView } from 'react-navigation'; //added this import
 import DocumentPicker from 'react-native-document-picker';
 import ImagePicker from 'react-native-image-picker';
+import CheckBox from '@react-native-community/checkbox';
 
 import storage from '@react-native-firebase/storage';
 
@@ -69,6 +73,7 @@ export default class NewMessageScreen extends React.Component {
 			group_serach: '',
 			uid: utils.getUserID(),
 			long_text_input_has_focus: false,
+			link_modal_visible: false,
 		};
 
 		this.headlineMarginLeft = new Animated.Value(40);
@@ -312,6 +317,27 @@ export default class NewMessageScreen extends React.Component {
 		if (!this.state.clubsList[key].groups[g_key].selected) this.state.clubsList[key].groups[g_key].selected = true;
 		else this.state.clubsList[key].groups[g_key].selected = false;
 		this.forceUpdate();
+	}
+
+	linkGroup(key, g_key, state) {
+		this._openModal();
+	}
+
+	_openModal() {
+		if (this.state.link_modal_visible) {
+			this.state.link_modal_visible = false;
+			this.forceUpdate();
+			setTimeout(
+				(function() {
+					this.state.link_modal_visible = true;
+					this.forceUpdate();
+				}).bind(this),
+				0
+			);
+		} else {
+			this.state.link_modal_visible = true;
+			this.forceUpdate();
+		}
 	}
 
 	nextPage() {
@@ -725,22 +751,57 @@ export default class NewMessageScreen extends React.Component {
 									onPress={() => this.addGroup(key, g_key)}
 									key={g_key}
 									style={{
-										marginTop: 10,
-										marginBottom: 10,
+										borderRadius: 5,
+										paddingTop: 5,
+										paddingBottom: 5,
+										backgroundColor: group.selected ? '#615384' : '#38304C',
+										marginTop: 5,
+										marginBottom: 5,
 										flexWrap: 'wrap',
 										alignItems: 'flex-start',
 										flexDirection: 'row',
 									}}
 								>
-									<FontAwesomeIcon style={{ marginTop: 7, marginLeft: 5 }} size={23} color={iconColor} icon={icon} />
-									<View style={{ marginLeft: 20 }}>
-										<Text style={{ fontSize: 17, fontFamily: 'Poppins-SemiBold', color: club.color }}>
+									<View
+										style={{
+											marginLeft: 8,
+											marginTop: 5,
+											zIndex: 100,
+											height: 30,
+											width: 30,
+											justifyContent: 'center',
+											alignItems: 'center',
+										}}
+									>
+										<CheckBox
+											lineWidth={2}
+											animationDuration={0.15}
+											onCheckColor="#0DF5E3"
+											onTintColor="#0DF5E3"
+											value={group.selected}
+											onValueChange={() => this.addGroup(key, g_key)}
+											style={{
+												height: 20,
+												width: 20,
+											}}
+										/>
+									</View>
+									<View style={{ marginLeft: 18 }}>
+										<Text style={{ fontSize: 18, fontFamily: 'Poppins-SemiBold', color: 'white', opacity: 0.85 }}>
 											{group.name}
 										</Text>
-										<Text style={{ fontSize: 13, fontFamily: 'Poppins-SemiBold', color: club.color, opacity: 0.7 }}>
+										<Text style={{ fontSize: 15, fontFamily: 'Poppins-SemiBold', color: 'white', opacity: 0.6 }}>
 											{group.members.toLocaleString()} Mitglieder
 										</Text>
 									</View>
+									{group.selected
+										? <TouchableOpacity
+												style={{ opacity: 0.6, position: 'absolute', marginTop: 15, marginLeft: 275 }}
+												onPress={() => this.linkGroup(key, g_key, 0)}
+											>
+												<FontAwesomeIcon size={20} color={'white'} icon={faLink} />
+											</TouchableOpacity>
+										: void 0}
 								</TouchableOpacity>
 							);
 						}
@@ -757,6 +818,51 @@ export default class NewMessageScreen extends React.Component {
 
 			pageContent = (
 				<View style={{ marginBottom: 20 }}>
+					<Modal animationType="slide" presentationStyle="formSheet" visible={this.state.link_modal_visible}>
+						<View
+							style={{
+								padding: 20,
+								backgroundColor: '#201A30',
+								height: '100%',
+							}}
+						>
+							<View
+								style={{
+									marginBottom: 10,
+									justifyContent: 'space-between',
+									flexWrap: 'wrap',
+									flexDirection: 'row',
+								}}
+							>
+								<Text
+									style={{ fontFamily: 'Poppins-Bold', color: 'white', fontSize: 25, width: '76%' }}
+									numberOfLines={1}
+								>
+									Gruppe verlinken
+								</Text>
+								<TouchableOpacity
+									style={{
+										height: 30,
+										borderRadius: 10,
+										marginLeft: 10,
+										width: 70,
+										padding: 5,
+										paddingLeft: 10,
+										backgroundColor: '#0DF5E3',
+									}}
+									onPress={text => this._editMessage()}
+								>
+									<Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: '#38304C' }}>FERTIG</Text>
+								</TouchableOpacity>
+							</View>
+
+							<View
+								style={{ marginLeft: -20, height: 0.5, marginBottom: 40, backgroundColor: '#38304C', width: '140%' }}
+							/>
+
+							<ScrollView />
+						</View>
+					</Modal>
 					<View
 						style={{
 							borderRadius: 10,
@@ -796,7 +902,7 @@ export default class NewMessageScreen extends React.Component {
 							maxHeight: 550,
 						}}
 					>
-						<ScrollView>
+						<ScrollView showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false}>
 							{groupsList}
 						</ScrollView>
 					</View>

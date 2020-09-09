@@ -89,7 +89,6 @@ export default class ScreenHandler extends React.Component {
 	}
 
 	setScrollViewEnabled = data => {
-		//console.log('scrollViewEnabled: ' + data);
 		_scrollView.setNativeProps({ scrollEnabled: data });
 	};
 
