@@ -23,7 +23,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faChevronCircleLeft, faClock, faArrowAltCircleDown, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import { NotificationCard, FileCard, EventCard } from './../app/components.js';
 import database from '@react-native-firebase/database';
-import { SafeAreaView } from 'react-navigation'; //added this import
+import { SafeAreaView } from 'react-navigation';
+import GestureRecognizer, { swipeDirections } from 'react-native-swipe-gestures';
 
 export default class MessageScreen extends React.Component {
 	constructor(props) {
@@ -347,6 +348,11 @@ export default class MessageScreen extends React.Component {
 			});
 		}
 
+		const config = {
+			velocityThreshold: 0.3,
+			directionalOffsetThreshold: 80,
+		};
+
 		return (
 			<View>
 				{mes.author == this.state.uid
@@ -612,6 +618,7 @@ export default class MessageScreen extends React.Component {
 						</View>
 					</View>
 				</Animated.ScrollView>
+
 				<Animated.View
 					style={
 						([ s.headlineIcon ], {
