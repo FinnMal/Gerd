@@ -49,6 +49,7 @@ export class MessagesList extends React.Component {
 		this.state.refs[club_id].on(
 			'value',
 			(function(snap) {
+				console.log('_startClubListener triggerd: ' + club_id);
 				var messages = snap.val();
 				if (messages) {
 					Object.keys(messages).map(mes_id => {
@@ -120,6 +121,6 @@ export class MessagesList extends React.Component {
 
 		this.state.last_section = this.props.section;
 
-		return messagesList;
+		return <View style={{ marginBottom: 80 }}>{messagesList}</View>;
 	}
 }

@@ -73,7 +73,14 @@ export default class NewMessageScreen extends React.Component {
 			group_serach: '',
 			uid: utils.getUserID(),
 			long_text_input_has_focus: false,
-			link_modal_visible: false,
+			link_modal: {
+				visible: false,
+				club_key: '',
+				group_key: '',
+			},
+			headlineInputValue: 'Lorem ipsum dolor sit',
+			shortTextInputValue: 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et',
+			textInputValue: 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. ipsum dolor sit amet,',
 		};
 
 		this.headlineMarginLeft = new Animated.Value(40);
@@ -314,28 +321,48 @@ export default class NewMessageScreen extends React.Component {
 	}
 
 	addGroup(key, g_key) {
-		if (!this.state.clubsList[key].groups[g_key].selected) this.state.clubsList[key].groups[g_key].selected = true;
-		else this.state.clubsList[key].groups[g_key].selected = false;
+		this.state.clubsList[key].groups[g_key].selected = !this.state.clubsList[key].groups[g_key].selected;
 		this.forceUpdate();
 	}
 
-	linkGroup(key, g_key, state) {
-		this._openModal();
+	linkGroup(key, g_key, state = 2, with_group = false, isLinked = true) {
+		if (state == 0) {
+			this.state.link_modal.club_key = key;
+			this.state.link_modal.group_key = g_key;
+			this._openModal();
+		} else if (state == 1) {
+			if (with_group) {
+				var group = this.state.clubsList[key].groups[g_key];
+				if (!group.linked_to) group.linked_to = {};
+				group.linked_to[with_group] = isLinked;
+				this.state.clubsList[key].groups[g_key] = group;
+
+				group = this.state.clubsList[key].groups[with_group];
+				if (!group.linked_to) group.linked_to = {};
+				group.linked_to[g_key] = isLinked;
+				this.state.clubsList[key].groups[with_group] = group;
+				this.forceUpdate();
+			} else
+				alert('with_group is null');
+		} else {
+			this.state.link_modal.visible = false;
+			this.forceUpdate();
+		}
 	}
 
 	_openModal() {
-		if (this.state.link_modal_visible) {
-			this.state.link_modal_visible = false;
+		if (this.state.link_modal.visible) {
+			this.state.link_modal.visible = false;
 			this.forceUpdate();
 			setTimeout(
 				(function() {
-					this.state.link_modal_visible = true;
+					this.state.link_modal.visible = true;
 					this.forceUpdate();
 				}).bind(this),
 				0
 			);
 		} else {
-			this.state.link_modal_visible = true;
+			this.state.link_modal.visible = true;
 			this.forceUpdate();
 		}
 	}
@@ -395,7 +422,7 @@ export default class NewMessageScreen extends React.Component {
 		return utils.showAlert(
 			msg,
 			'',
-			'Ok',
+			[ 'Ok' ],
 			(function() {
 				this.state.curPageIndex = page;
 				this.forceUpdate();
@@ -414,7 +441,11 @@ export default class NewMessageScreen extends React.Component {
 				return Object.keys(club.groups).map(key => {
 					if (club.groups[key].selected) {
 						selected_groups++;
-						send_at_groups[key] = true;
+
+						if (club.groups[key].linked_to) {
+							send_at_groups[key] = { linked_to: club.groups[key].linked_to };
+						} else
+							send_at_groups[key] = true;
 					}
 				});
 			}
@@ -809,6 +840,79 @@ export default class NewMessageScreen extends React.Component {
 				}
 			});
 
+			const modal_club_key = this.state.link_modal.club_key;
+			const modal_group_key = this.state.link_modal.group_key;
+
+			var linkingGroupsList = null;
+			const club = this.state.clubsList[modal_club_key];
+
+			if (modal_club_key && modal_group_key) {
+				linkingGroupsList = Object.keys(club.groups).map(g_key => {
+					console.log('group_key: ' + g_key);
+					if (g_key != modal_group_key) {
+						var group = club.groups[g_key];
+
+						var is_linked = false;
+						if (group.linked_to) {
+							if (group.linked_to[modal_group_key]) is_linked = true;
+						}
+						var iconColor = is_linked ? club.color : '#ADA4A9';
+						var icon = is_linked ? faTimesCircle : faPlusCircle;
+
+						return (
+							<TouchableOpacity
+								onPress={() => this.linkGroup(modal_club_key, modal_group_key, 1, g_key, !is_linked)}
+								key={g_key}
+								style={{
+									borderRadius: 5,
+									paddingTop: 5,
+									paddingBottom: 5,
+									backgroundColor: is_linked ? '#615384' : '#201A30',
+									marginTop: 5,
+									marginBottom: 5,
+									flexWrap: 'wrap',
+									alignItems: 'flex-start',
+									flexDirection: 'row',
+								}}
+							>
+								<View
+									style={{
+										marginLeft: 8,
+										marginTop: 5,
+										zIndex: 100,
+										height: 30,
+										width: 30,
+										justifyContent: 'center',
+										alignItems: 'center',
+									}}
+								>
+									<CheckBox
+										lineWidth={2}
+										animationDuration={0.15}
+										onCheckColor="#0DF5E3"
+										onTintColor="#0DF5E3"
+										value={is_linked}
+										onValueChange={() => this.linkGroup(modal_club_key, modal_group_key, 1, g_key, !is_linked)}
+										style={{
+											height: 20,
+											width: 20,
+										}}
+									/>
+								</View>
+								<View style={{ marginLeft: 18 }}>
+									<Text style={{ fontSize: 18, fontFamily: 'Poppins-SemiBold', color: 'white', opacity: 0.85 }}>
+										{group.name}
+									</Text>
+									<Text style={{ fontSize: 15, fontFamily: 'Poppins-SemiBold', color: 'white', opacity: 0.6 }}>
+										{group.members.toLocaleString()} Mitglieder
+									</Text>
+								</View>
+							</TouchableOpacity>
+						);
+					}
+				});
+			}
+
 			if (!groupsList[0])
 				groupsList = (
 					<Text style={{ color: '#665F75', fontFamily: 'Poppins-Bold' }}>
@@ -818,7 +922,7 @@ export default class NewMessageScreen extends React.Component {
 
 			pageContent = (
 				<View style={{ marginBottom: 20 }}>
-					<Modal animationType="slide" presentationStyle="formSheet" visible={this.state.link_modal_visible}>
+					<Modal animationType="slide" presentationStyle="formSheet" visible={this.state.link_modal.visible}>
 						<View
 							style={{
 								padding: 20,
@@ -850,17 +954,31 @@ export default class NewMessageScreen extends React.Component {
 										paddingLeft: 10,
 										backgroundColor: '#0DF5E3',
 									}}
-									onPress={text => this._editMessage()}
+									onPress={text => this.linkGroup()}
 								>
 									<Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: '#38304C' }}>FERTIG</Text>
 								</TouchableOpacity>
 							</View>
 
 							<View
-								style={{ marginLeft: -20, height: 0.5, marginBottom: 40, backgroundColor: '#38304C', width: '140%' }}
+								style={{ marginLeft: -20, height: 0.5, marginBottom: 20, backgroundColor: '#38304C', width: '140%' }}
 							/>
 
-							<ScrollView />
+							<ScrollView showsVerticalScrollIndicator={false}>
+								<Text
+									style={{
+										opacity: 0.6,
+										color: 'white',
+										fontFamily: 'Poppins-Medium',
+										fontSize: 18,
+										marginBottom: 30,
+									}}
+								>
+									In verlinkten Gruppen erhalten nur die Mitglieder eine Mitteilung, die sich allen verlinkten Gruppen gleichzeitig befinden. Verlinkungen werden nicht für den gesamten Verein übernommen.
+								</Text>
+
+								{linkingGroupsList}
+							</ScrollView>
 						</View>
 					</Modal>
 					<View

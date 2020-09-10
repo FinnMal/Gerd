@@ -8,7 +8,8 @@ import {
 	StyleSheet,
 	ActivityIndicator,
 	Modal,
-	Platform
+	Platform,
+	Dimensions
 } from 'react-native';
 import AutoHeightImage from 'react-native-auto-height-image';
 import FileViewer from 'react-native-file-viewer';
@@ -79,6 +80,7 @@ export class Message extends React.Component {
 		database().ref('clubs/' + this.state.club_id + '/color').on(
 			'value',
 			(function(snap) {
+				console.log('club color triggered: ' + this.state.mes_id);
 				this.state.club.color = snap.val();
 				this.forceUpdate();
 			}).bind(this)
@@ -87,6 +89,7 @@ export class Message extends React.Component {
 		database().ref('clubs/' + this.state.club_id + '/logo').on(
 			'value',
 			(function(snap) {
+				console.log('club logo triggered: ' + this.state.mes_id);
 				this.state.club.logo = snap.val();
 				this.forceUpdate();
 			}).bind(this)
@@ -95,6 +98,7 @@ export class Message extends React.Component {
 		database().ref('clubs/' + this.state.club_id + '/name').on(
 			'value',
 			(function(snap) {
+				console.log('club name triggered: ' + this.state.mes_id);
 				this.state.club.name = snap.val();
 				this.forceUpdate();
 			}).bind(this)
@@ -103,7 +107,8 @@ export class Message extends React.Component {
 		database().ref('users/' + this.state.uid + '/messages/' + this.state.mes_id + '/read').once(
 			'value',
 			(function(snap) {
-				this.state.read = snap.val();
+				console.log('message read triggered: ' + this.state.mes_id);
+				this.state.read = snap.val() === true;
 				this.forceUpdate();
 			}).bind(this)
 		);
@@ -111,6 +116,7 @@ export class Message extends React.Component {
 		this.state.ref.on(
 			'value',
 			(function(snap) {
+				console.log('message triggered: ' + this.state.mes_id);
 				var message = snap.val();
 				message.id = this.state.mes_id;
 
@@ -130,11 +136,14 @@ export class Message extends React.Component {
 	}
 
 	render() {
+		console.log('render triggered');
 		const club = this.state.club;
 		const mes = this.state.data;
+		const s_width = Dimensions.get('window').width;
 		var s = require('./../app/style.js');
 
 		if (this.state.read != null) {
+			console.log('render triggered 1');
 			mes.section = 2;
 			if (!this.state.read) mes.section = 0;
 			else if (mes.ago_seconds / 60 / 60 < 24) mes.section = 1;
@@ -146,23 +155,23 @@ export class Message extends React.Component {
 						return (
 							<TouchableOpacity
 								style={{
+									width: s_width * 0.875,
 									height: 'auto',
-									width: '86%',
 									backgroundColor: club.color,
 									alignSelf: 'flex-start',
 									marginTop: 40,
-									marginLeft: 21,
-									marginRight: 21,
+									marginLeft: 23,
+									marginRight: 23,
 
-									borderRadius: 13,
+									borderRadius: 10,
 
 									shadowColor: club.color,
 									shadowOffset: {
-										width: 6,
-										height: 6,
+										width: 0,
+										height: 0,
 									},
 									shadowOpacity: 0.5,
-									shadowRadius: 20.00,
+									shadowRadius: 14.00,
 								}}
 								onPress={() => {
 									this.state.nav.navigate('MessageScreen', {
@@ -174,7 +183,6 @@ export class Message extends React.Component {
 							>
 								<View
 									style={{
-										width: '90%',
 										marginTop: 13,
 										marginLeft: 15,
 										display: 'flex',
@@ -194,7 +202,7 @@ export class Message extends React.Component {
 									/>
 									<Text
 										style={{
-											marginRight: 23,
+											marginRight: 42,
 											alignSelf: 'flex-start',
 											fontFamily: 'Poppins-Bold',
 											fontSize: 30,
@@ -210,13 +218,12 @@ export class Message extends React.Component {
 										color: 'white',
 										marginTop: 5,
 										marginLeft: 15,
-										marginRight: 15,
+										marginRight: 35,
 									}}
 								>{mes.short_text}</Text>
 
 								<View
 									style={{
-										width: '90%',
 										marginBottom: 20,
 										marginTop: 20,
 										marginLeft: 15,
@@ -245,8 +252,10 @@ export class Message extends React.Component {
 
 							</TouchableOpacity>
 						);
-					}
-				}
+					} else
+						console.log('Missing value');
+				} else
+					console.log('mes is null');
 			}
 		}
 
