@@ -974,7 +974,7 @@ export default class NewMessageScreen extends React.Component {
 										marginBottom: 30,
 									}}
 								>
-									In verlinkten Gruppen erhalten nur die Mitglieder eine Mitteilung, die sich allen verlinkten Gruppen gleichzeitig befinden. Verlinkungen werden nicht für den gesamten Verein übernommen.
+									In verlinkten Gruppen erhalten nur die Mitglieder eine Mitteilung, die sich in jeder verlinkten Gruppen befinden. Verlinkungen werden nicht für den gesamten Verein übernommen.
 								</Text>
 
 								{linkingGroupsList}

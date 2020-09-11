@@ -50,14 +50,13 @@ class ManagmentScreen extends React.Component {
 
 		if (this.props.show) {
 			return (
-				<View
-					style={s.container}
+				<ScrollView
+					style={[ { marginTop: -44, height: '100%' } ]}
 					onLayout={event => {
 						var { x, y, width, height } = event.nativeEvent.layout;
-						this.checkIfScrollViewIsNeeded(height);
+						//this.checkIfScrollViewIsNeeded(height);
 					}}
 				>
-					<StatusBar hidden={true} />
 					<View
 						style={{
 							flexWrap: 'wrap',
@@ -76,7 +75,7 @@ class ManagmentScreen extends React.Component {
 							<FontAwesomeIcon size={29} color="#F5F5F5" icon={faPlusCircle} />
 						</TouchableOpacity>
 					</View>
-				</View>
+				</ScrollView>
 			);
 		}
 		return null;

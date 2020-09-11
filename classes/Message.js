@@ -135,15 +135,57 @@ export class Message extends React.Component {
 		this.state.ref.off();
 	}
 
+	set(values) {
+		Object.keys(values).map(key => {
+			this.state.ref.child(key).set(values[key]);
+		});
+	}
+
+	setHeadline(value) {
+		this.state.ref.child('headline').set(value);
+	}
+
+	setLongText(value) {
+		this.state.ref.child('long_text').set(value);
+	}
+
+	setShortText(value) {
+		this.state.ref.child('short_text').set(value);
+	}
+
+	_getDifference(o1, o2) {
+		var diff = {};
+		var tmp = null;
+		if (JSON.stringify(o1) === JSON.stringify(o2)) return;
+
+		for (var k in o1) {
+			if (Array.isArray(o1[k]) && Array.isArray(o2[k])) {
+				tmp = o1[k].reduce(
+					function(p, c, i) {
+						var _t = this._getDifference(c, o2[k][i]);
+						if (_t) p.push(_t);
+						return p;
+					},
+					[]
+				);
+				if (Object.keys(tmp).length > 0) diff[k] = tmp;
+			} else if (typeof o1[k] === 'object' && typeof o2[k] === 'object') {
+				tmp = this._getDifference(o1[k], o2[k]);
+				if (tmp && Object.keys(tmp) > 0) diff[k] = tmp;
+			} else if (o1[k] !== o2[k]) {
+				diff[k] = o2[k];
+			}
+		}
+		return diff;
+	}
+
 	render() {
-		console.log('render triggered');
 		const club = this.state.club;
 		const mes = this.state.data;
 		const s_width = Dimensions.get('window').width;
 		var s = require('./../app/style.js');
 
 		if (this.state.read != null) {
-			console.log('render triggered 1');
 			mes.section = 2;
 			if (!this.state.read) mes.section = 0;
 			else if (mes.ago_seconds / 60 / 60 < 24) mes.section = 1;
@@ -177,6 +219,7 @@ export class Message extends React.Component {
 									this.state.nav.navigate('MessageScreen', {
 										club: club,
 										mes: mes,
+										mesObj: this,
 										utils: this.state.utils,
 									});
 								}}
@@ -222,10 +265,11 @@ export class Message extends React.Component {
 									}}
 								>{mes.short_text}</Text>
 
+								<View style={{ height: 0.5, marginTop: 20, marginBottom: 12, backgroundColor: '#38304C' }} />
+
 								<View
 									style={{
-										marginBottom: 20,
-										marginTop: 20,
+										marginBottom: 12,
 										marginLeft: 15,
 										display: 'flex',
 										flexDirection: 'row',

@@ -114,19 +114,18 @@ class MessagesScreen extends React.Component {
 
 		if (this.props.show) {
 			return (
-				<View
-					style={s.container}
+				<ScrollView
+					style={[ { marginTop: -44, height: '100%' } ]}
 					onLayout={event => {
 						var { x, y, width, height } = event.nativeEvent.layout;
 						this.checkIfScrollViewIsNeeded(height);
 					}}
 				>
-					<StatusBar hidden={true} />
 					<Text style={s.pageHeadline}>Nachrichten</Text>
 					<View style={{ marginTop: 30 }}>
 						{chatsElements}
 					</View>
-				</View>
+				</ScrollView>
 			);
 		}
 		return null;

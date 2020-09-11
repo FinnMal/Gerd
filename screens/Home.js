@@ -13,7 +13,8 @@ import {
 	ScrollView,
 	Animated,
 	Easing,
-	Dimensions
+	Dimensions,
+	RefreshControl
 } from 'react-native';
 import { Headlines } from './../app/constants.js';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
@@ -25,6 +26,9 @@ import { Message } from './../classes/Message.js';
 import { MessagesList } from './../classes/MessagesList.js';
 
 class HomeScreen extends React.Component {
+	scrollOffset: 0;
+	navVisible: true;
+
 	constructor(props) {
 		super(props);
 
@@ -133,6 +137,18 @@ class HomeScreen extends React.Component {
 */
 	}
 
+	doRefresh() {
+		this.state.refreshing = true;
+		this.forceUpdate();
+		setTimeout(
+			(function() {
+				this.state.refreshing = false;
+				this.forceUpdate();
+			}).bind(this),
+			2000
+		);
+	}
+
 	_filterMessages(data, cb) {
 		var c_mes = 0;
 		var messages = {};
@@ -226,10 +242,34 @@ class HomeScreen extends React.Component {
 		if (this.props.show) {
 			//if (this.state.newMesList.length == 0 && this.state.navPos == 0) this.navigateSection(1, false);
 			return (
-				<View
+				<ScrollView
+					scrollEventThrottle={3000}
+					onScroll={event => {
+						var currentOffset = event.nativeEvent.contentOffset.y;
+						var state = currentOffset > this.offset ? 'hide' : 'show';
+						this.offset = currentOffset;
+						if (state == 'show' && !this.navVisible) {
+							this.navVisible = true;
+							this.props.startNavbarAnimation(state);
+						} else if (state == 'hide' && this.navVisible) {
+							this.navVisible = false;
+							this.props.startNavbarAnimation(state);
+						}
+						console.log(state);
+					}}
+					style={{ marginTop: 0 }}
+					refreshControl={
+						(
+							<RefreshControl
+								style={{ marginTop: -44 }}
+								refreshing={this.state.refreshing}
+								onRefresh={this.doRefresh.bind(this)}
+							/>
+						)
+					}
 					onLayout={event => {
 						var { x, y, width, height } = event.nativeEvent.layout;
-						this.checkIfScrollViewIsNeeded(height);
+						//this.checkIfScrollViewIsNeeded(height);
 					}}
 				>
 					<StatusBar hidden={true} />
@@ -327,7 +367,7 @@ class HomeScreen extends React.Component {
 						</View>
 					</View>
 					<MessagesList section={this.state.navPos} utils={this.state.utils} />
-				</View>
+				</ScrollView>
 			);
 		}
 		return null;
