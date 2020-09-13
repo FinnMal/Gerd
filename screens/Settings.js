@@ -45,7 +45,7 @@ export default class SettingsScreen extends React.Component {
 						this.checkIfScrollViewIsNeeded(height);
 					}}
 				>
-					<StatusBar hidden={true} />
+					 
 					<Text style={s.pageHeadline}>Einstellungen</Text>
 					<View>
 						<View>

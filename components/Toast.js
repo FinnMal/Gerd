@@ -27,6 +27,7 @@ import { AnimatedCircularProgress } from 'react-native-circular-progress';
 export default class Toast extends React.Component {
 	constructor(props) {
 		super(props);
+		this.visible = false;
 		this.marginTop = new Animated.Value(725);
 		this.reamingBarWidth = new Animated.Value(100);
 	}
@@ -65,7 +66,7 @@ export default class Toast extends React.Component {
 			.timing(this.marginTop, {
 				useNativeDriver: false,
 				toValue: 850,
-				duration: 3000,
+				duration: 250,
 				easing: Easing.ease,
 			})
 			.start(() => {
@@ -84,7 +85,10 @@ export default class Toast extends React.Component {
 
 	render() {
 		if (this.props.visible) {
-			this.show();
+			if (!this.visible) {
+				this.visible = true;
+				this.show();
+			}
 			const barWidth = this.reamingBarWidth.interpolate({
 				inputRange: [ 0, 100 ],
 				outputRange: [ '0%', '100%' ],
@@ -199,6 +203,9 @@ export default class Toast extends React.Component {
 					</View>
 				</Animated.View>
 			);
+		} else {
+			this.visible = false;
+			console.log('TOAST: not visible');
 		}
 		return null;
 	}

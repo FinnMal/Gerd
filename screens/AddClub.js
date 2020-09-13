@@ -123,28 +123,33 @@ class AddClubScreen extends React.Component {
 	_joinClub(id, state = 0, selected_groups = {}) {
 		if (state == 0) {
 			this.state.selected_club = id;
-			console.log('clubs/' + id + '/groups');
 			database().ref('clubs/' + id + '/groups').once(
 				'value',
 				(function(snapshot) {
 					var groups = snapshot.val();
+					database().ref('users/' + this.state.utils.getUserID() + '/clubs/' + id + '/groups').once(
+						'value',
+						(function(snap) {
+							var joined_groups = snap.val();
 
-					var joinable_groups = [];
-					Object.keys(groups).map(key => {
-						var group = groups[key];
-						group.key = key;
-						group.members = null;
-						group.preselected = selected_groups[key] === true;
+							var joinable_groups = [];
+							Object.keys(groups).map(key => {
+								var group = groups[key];
+								group.key = key;
+								group.members = null;
+								group.preselected = selected_groups[key] === true || joined_groups[key] === true;
 
-						if (group.public !== false || group.preselected) joinable_groups.push(group);
-						this.forceUpdate();
-					});
-					this.state.joinable_groups = joinable_groups;
-					console.log(this.state.joinable_groups);
+								if (group.public !== false || group.preselected) joinable_groups.push(group);
+								this.forceUpdate();
+							});
+							this.state.joinable_groups = joinable_groups;
+							console.log(this.state.joinable_groups);
 
-					this._openModal(1);
+							this._openModal(1);
 
-					this.forceUpdate();
+							this.forceUpdate();
+						}).bind(this)
+					);
 				}).bind(this)
 			);
 		} else if (state == 1) {
@@ -159,28 +164,46 @@ class AddClubScreen extends React.Component {
 				database().ref('clubs/' + id + '/name').once(
 					'value',
 					(function(snapshot) {
-						const uid = utils.getUserID();
 						var club_name = snapshot.val();
-						this.state.modal_visible[1] = false;
-						this.forceUpdate();
-						setTimeout(
-							(function() {
-								database().ref('users/' + uid + '/clubs/' + id + '/club_id').set(id);
-								database().ref('users/' + uid + '/clubs/' + id + '/notifications').set(true);
-								database().ref('users/' + uid + '/clubs/' + id + '/role').set('subscriber');
 
-								this.state.joinable_groups.forEach((group, i) => {
-									if (group.selected || group.preselected) {
-										database().ref('users/' + uid + '/clubs/' + id + '/groups/' + group.key).set({
-											group_id: group.key,
-											subscribed: true,
+						database().ref('clubs/' + id + '/members').once(
+							'value',
+							(function(snapshot) {
+								const uid = utils.getUserID();
+								var club_members = snapshot.val();
+								this.state.modal_visible[1] = false;
+								this.forceUpdate();
+								setTimeout(
+									(function() {
+										var joined_groups = [];
+
+										database().ref('clubs/' + id + '/members').set(club_members + 1);
+										database().ref('users/' + uid + '/clubs/' + id + '/club_id').set(id);
+										database().ref('users/' + uid + '/clubs/' + id + '/notifications').set(true);
+
+										var is_admin = false;
+										this.state.joinable_groups.forEach((group, i) => {
+											if (group.selected || group.preselected) {
+												if (group.has_admin_rights) is_admin = true;
+												joined_groups.push(group.name);
+												database().ref('clubs/' + id + '/groups/' + group.key + '/members').set(group.members + 1);
+												database().ref('users/' + uid + '/clubs/' + id + '/groups/' + group.key).set(true);
+											}
 										});
-									}
-								});
 
-								utils.showAlert('Du bist jetzt Mitglied von ' + club_name, '', [ 'Ok' ], false, false);
-							}).bind(this),
-							500
+										database().ref('users/' + uid + '/clubs/' + id + '/role').set(is_admin ? 'admin' : 'subscriber');
+
+										utils.showAlert(
+											'Du bist jetzt ' + (is_admin ? 'Administrator' : 'Mitglied') + ' von ' + club_name,
+											'',
+											[ 'Ok' ],
+											false,
+											false
+										);
+									}).bind(this),
+									500
+								);
+							}).bind(this)
 						);
 					}).bind(this)
 				);
@@ -470,7 +493,7 @@ class AddClubScreen extends React.Component {
 							</ScrollView>
 						</View>
 					</Modal>
-					<StatusBar hidden={true} />
+
 					<View
 						style={{
 							width: '100%',
@@ -504,7 +527,7 @@ class AddClubScreen extends React.Component {
 							style={
 								([ s.headlineIcon ], {
 									marginTop: 55,
-									marginLeft: 110,
+									marginLeft: this.state.account_type == 'manager' ? 70 : 110,
 								})
 							}
 							onPress={() => this._openModal(0)}

@@ -31,6 +31,7 @@ import database from '@react-native-firebase/database';
 import { faHome, faUsers, faComment, faCog, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 
 export default class ScreenHandler extends React.Component {
+	navVisible: true;
 	constructor() {
 		super();
 		this.animation_pos = 0;
@@ -53,7 +54,7 @@ export default class ScreenHandler extends React.Component {
 			],
 		};
 		this.holeMargin = new Animated.Value(40);
-		this.navbarMarginBottom = new Animated.Value(-100);
+		this.navbarMarginBottom = new Animated.Value(0);
 		auth().onAuthStateChanged(
 			(function(user) {
 				database().ref('users/' + user.uid + '/account_type').once(
@@ -95,29 +96,33 @@ export default class ScreenHandler extends React.Component {
 		//_scrollView.setNativeProps({ scrollEnabled: data });
 	};
 
-	startNavbarAnimation = dir => {
-		if (dir == 'show') {
+	startNavbarAnimation = (dir, moved) => {
+		if (dir == 'show' && !this.navVisible) {
 			console.log('startNavbarAnimation show');
 			this.navbarMarginBottom.setValue(-100);
 			Animated
 				.timing(this.navbarMarginBottom, {
 					useNativeDriver: false,
 					toValue: 0,
-					duration: 300,
+					duration: 250,
 					easing: Easing.ease,
 				})
-				.start();
-		} else if (dir == 'hide') {
+				.start(() => {
+					this.navVisible = true;
+				});
+		} else if (dir == 'hide' && this.navVisible) {
 			console.log('startNavbarAnimation hide');
 			this.navbarMarginBottom.setValue(0);
 			Animated
 				.timing(this.navbarMarginBottom, {
 					useNativeDriver: false,
 					toValue: -100,
-					duration: 300,
+					duration: 200,
 					easing: Easing.ease,
 				})
-				.start();
+				.start(() => {
+					this.navVisible = false;
+				});
 		}
 	};
 

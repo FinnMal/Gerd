@@ -70,7 +70,7 @@ class FirstStartScreen extends React.Component {
 		var s = require('./../app/style.js');
 		return (
 			<View style={s.container}>
-				<StatusBar hidden={true} />
+				 
 				<View
 					style={{ justifyContent: 'center', alignItems: 'center', marginTop: 50, marginLeft: 20, marginRight: 20 }}
 				>

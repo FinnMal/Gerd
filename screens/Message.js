@@ -22,11 +22,13 @@ import {
 import { Headlines } from './../app/constants.js';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faChevronCircleLeft, faClock, faArrowAltCircleDown, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
-import { NotificationCard, FileCard, EventCard } from './../app/components.js';
+import { NotificationCard } from './../app/components.js';
 import database from '@react-native-firebase/database';
 import { SafeAreaView } from 'react-navigation';
 import GestureRecognizer, { swipeDirections } from 'react-native-swipe-gestures';
 import Toast from './../components/Toast.js';
+import File from './../components/File.js';
+import EventCard from './../components/EventCard.js';
 import cloneDeep from 'lodash/cloneDeep';
 
 export default class MessageScreen extends React.Component {
@@ -132,7 +134,6 @@ export default class MessageScreen extends React.Component {
 
 	_getHeadlineFontScale = () => {
 		const { scrollY, shortInputRange, inputRange, headlineHeight } = this.state;
-		console.log(scrollY);
 		return scrollY.interpolate({
 			inputRange: shortInputRange,
 			outputRange: [ 1, 0.65 ],
@@ -194,8 +195,6 @@ export default class MessageScreen extends React.Component {
 		database().ref('users/' + mes.author + '/name').once(
 			'value',
 			(function(snapshot) {
-				console.log('AUTHOR: ' + mes.author);
-				console.log('UID: ' + this.state.uid);
 				if (mes.author == this.state.uid) var options = [ 'Abbrechen', 'Bearbeiten', 'Löschen' ];
 				else var options = [ 'Abbrechen', 'Nachricht an ' + snapshot.val() ];
 				ActionSheetIOS.showActionSheetWithOptions(
@@ -250,10 +249,13 @@ export default class MessageScreen extends React.Component {
 	}
 
 	_deleteMessage() {
-		database().ref('messages/list/' + this.state.mes.id + '/invisible').set(true);
-		this.props.navigation.navigate('ScreenHandler');
-		// TODO: Alert to confirm delete
-		// -> navigate to ScreenHandler
+		const message = this.state.mesObj;
+		message.delete(
+			(function(deleted) {
+				if (deleted) this.props.navigation.navigate('ScreenHandler');
+			}).bind(this)
+		);
+		//database().ref('messages/list/' + this.state.mes.id + '/invisible').set(true);
 	}
 
 	_editMessage() {
@@ -261,7 +263,14 @@ export default class MessageScreen extends React.Component {
 		const message = this.state.mesObj;
 		this.state.headlineHeight = -1;
 
-		this.state.toast.visible = true;
+		setTimeout(
+			(function() {
+				this.state.toast.visible = true;
+				this.forceUpdate();
+			}).bind(this),
+			500
+		);
+
 		this.state.toast.pressed = false;
 		this.state.toast.text = 'Beitrag bearbeitet';
 		this.state.toast.action = 'Rückgängig';
@@ -328,6 +337,39 @@ export default class MessageScreen extends React.Component {
 		);
 	}
 
+	_editFile(pos, name, old_name) {
+		const file = this.state.mes.files[pos];
+		const message = this.state.mesObj;
+
+		file.name = name;
+
+		setTimeout(
+			(function() {
+				this.state.toast.visible = true;
+				this.forceUpdate();
+			}).bind(this),
+			500
+		);
+
+		this.state.toast.pressed = false;
+		this.state.toast.text = 'Datei bearbeitet';
+		this.state.toast.action = 'Rückgängig';
+		this.state.toast.callback = (function() {
+			const message = this.state.mesObj;
+
+			message.setFileName(pos, old_name);
+			this.state.mes.files[pos].name = old_name;
+			this.forceUpdate();
+		}).bind(this);
+
+		message.setFileName(pos, name);
+
+		this._closeModal();
+		this.forceUpdate();
+	}
+
+	_deleteFile(pos) {}
+
 	render() {
 		const mes = this.state.mes;
 		const club = this.state.club;
@@ -347,14 +389,18 @@ export default class MessageScreen extends React.Component {
 			downloadsElements = Object.keys(mes.files).map(key => {
 				var file = mes.files[key];
 				return (
-					<FileCard
+					<File
 						key={key}
+						pos={key}
+						card_type="normal"
 						editable={mes.author == this.state.uid}
 						downloadable={true}
 						name={file.name}
 						type={file.type}
 						size={file.size}
 						download_url={file.download_url}
+						onEdit={(pos, name, old_value) => this._editFile(pos, name, old_value)}
+						onDelete={pos => this._deleteFile(pos)}
 					/>
 				);
 			});
@@ -690,7 +736,6 @@ export default class MessageScreen extends React.Component {
 					}
 					onLayout={event => {
 						var { x, y, width, height } = event.nativeEvent.layout;
-						console.log(y);
 						this.setState({ backBtnY: y });
 					}}
 				>

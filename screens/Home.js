@@ -27,7 +27,6 @@ import { MessagesList } from './../classes/MessagesList.js';
 
 class HomeScreen extends React.Component {
 	scrollOffset: 0;
-	navVisible: true;
 
 	constructor(props) {
 		super(props);
@@ -140,12 +139,11 @@ class HomeScreen extends React.Component {
 	doRefresh() {
 		this.state.refreshing = true;
 		this.forceUpdate();
-		setTimeout(
+		this.refs.messagesList.refresh(
 			(function() {
 				this.state.refreshing = false;
 				this.forceUpdate();
-			}).bind(this),
-			2000
+			}).bind(this)
 		);
 	}
 
@@ -243,19 +241,16 @@ class HomeScreen extends React.Component {
 			//if (this.state.newMesList.length == 0 && this.state.navPos == 0) this.navigateSection(1, false);
 			return (
 				<ScrollView
-					scrollEventThrottle={3000}
+					scrollEventThrottle={260}
 					onScroll={event => {
 						var currentOffset = event.nativeEvent.contentOffset.y;
 						var state = currentOffset > this.offset ? 'hide' : 'show';
+						var moved = currentOffset - this.offset;
 						this.offset = currentOffset;
-						if (state == 'show' && !this.navVisible) {
-							this.navVisible = true;
-							this.props.startNavbarAnimation(state);
-						} else if (state == 'hide' && this.navVisible) {
-							this.navVisible = false;
-							this.props.startNavbarAnimation(state);
+						if (moved > 200 || moved < -1) {
+							console.log(state);
+							this.props.startNavbarAnimation(state, 0);
 						}
-						console.log(state);
 					}}
 					style={{ marginTop: 0 }}
 					refreshControl={
@@ -272,7 +267,7 @@ class HomeScreen extends React.Component {
 						//this.checkIfScrollViewIsNeeded(height);
 					}}
 				>
-					<StatusBar hidden={true} />
+
 					<View
 						style={{
 							width: '100%',
@@ -366,7 +361,7 @@ class HomeScreen extends React.Component {
 							</TouchableOpacity>
 						</View>
 					</View>
-					<MessagesList section={this.state.navPos} utils={this.state.utils} />
+					<MessagesList ref="messagesList" section={this.state.navPos} utils={this.state.utils} />
 				</ScrollView>
 			);
 		}
