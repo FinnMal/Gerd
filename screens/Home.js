@@ -13,7 +13,8 @@ import {
 	ScrollView,
 	Animated,
 	Easing,
-	Dimensions
+	Dimensions,
+	RefreshControl
 } from 'react-native';
 import { Headlines } from './../app/constants.js';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
@@ -25,6 +26,8 @@ import { Message } from './../classes/Message.js';
 import { MessagesList } from './../classes/MessagesList.js';
 
 class HomeScreen extends React.Component {
+	scrollOffset: 0;
+
 	constructor(props) {
 		super(props);
 
@@ -133,6 +136,17 @@ class HomeScreen extends React.Component {
 */
 	}
 
+	doRefresh() {
+		this.state.refreshing = true;
+		this.forceUpdate();
+		this.refs.messagesList.refresh(
+			(function() {
+				this.state.refreshing = false;
+				this.forceUpdate();
+			}).bind(this)
+		);
+	}
+
 	_filterMessages(data, cb) {
 		var c_mes = 0;
 		var messages = {};
@@ -226,13 +240,34 @@ class HomeScreen extends React.Component {
 		if (this.props.show) {
 			//if (this.state.newMesList.length == 0 && this.state.navPos == 0) this.navigateSection(1, false);
 			return (
-				<View
+				<ScrollView
+					scrollEventThrottle={260}
+					onScroll={event => {
+						var currentOffset = event.nativeEvent.contentOffset.y;
+						var state = currentOffset > this.offset ? 'hide' : 'show';
+						var moved = currentOffset - this.offset;
+						this.offset = currentOffset;
+						if (moved > 200 || moved < -1) {
+							console.log(state);
+							this.props.startNavbarAnimation(state, 0);
+						}
+					}}
+					style={{ marginTop: 0 }}
+					refreshControl={
+						(
+							<RefreshControl
+								style={{ marginTop: -44 }}
+								refreshing={this.state.refreshing}
+								onRefresh={this.doRefresh.bind(this)}
+							/>
+						)
+					}
 					onLayout={event => {
 						var { x, y, width, height } = event.nativeEvent.layout;
-						this.checkIfScrollViewIsNeeded(height);
+						//this.checkIfScrollViewIsNeeded(height);
 					}}
 				>
-					<StatusBar hidden={true} />
+
 					<View
 						style={{
 							width: '100%',
@@ -326,8 +361,8 @@ class HomeScreen extends React.Component {
 							</TouchableOpacity>
 						</View>
 					</View>
-					<MessagesList section={this.state.navPos} utils={this.state.utils} />
-				</View>
+					<MessagesList ref="messagesList" section={this.state.navPos} utils={this.state.utils} />
+				</ScrollView>
 			);
 		}
 		return null;

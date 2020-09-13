@@ -15,7 +15,8 @@ import {
 	ScrollView,
 	Animated,
 	Easing,
-	Dimensions
+	Dimensions,
+	RefreshControl
 } from 'react-native';
 import HomeScreen from './Home';
 import ManagmentScreen from './Managment';
@@ -30,6 +31,7 @@ import database from '@react-native-firebase/database';
 import { faHome, faUsers, faComment, faCog, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 
 export default class ScreenHandler extends React.Component {
+	navVisible: true;
 	constructor() {
 		super();
 		this.animation_pos = 0;
@@ -38,6 +40,7 @@ export default class ScreenHandler extends React.Component {
 		this.animation_delay = 0;
 		this.last_nav_id = -1;
 		this.state = {
+			refreshing: false,
 			account_type: '',
 			first_start_done: false,
 			scrollViewEnabled: true,
@@ -51,6 +54,7 @@ export default class ScreenHandler extends React.Component {
 			],
 		};
 		this.holeMargin = new Animated.Value(40);
+		this.navbarMarginBottom = new Animated.Value(0);
 		auth().onAuthStateChanged(
 			(function(user) {
 				database().ref('users/' + user.uid + '/account_type').once(
@@ -89,14 +93,53 @@ export default class ScreenHandler extends React.Component {
 	}
 
 	setScrollViewEnabled = data => {
-		_scrollView.setNativeProps({ scrollEnabled: data });
+		//_scrollView.setNativeProps({ scrollEnabled: data });
 	};
+
+	startNavbarAnimation = (dir, moved) => {
+		if (dir == 'show' && !this.navVisible) {
+			console.log('startNavbarAnimation show');
+			this.navbarMarginBottom.setValue(-100);
+			Animated
+				.timing(this.navbarMarginBottom, {
+					useNativeDriver: false,
+					toValue: 0,
+					duration: 250,
+					easing: Easing.ease,
+				})
+				.start(() => {
+					this.navVisible = true;
+				});
+		} else if (dir == 'hide' && this.navVisible) {
+			console.log('startNavbarAnimation hide');
+			this.navbarMarginBottom.setValue(0);
+			Animated
+				.timing(this.navbarMarginBottom, {
+					useNativeDriver: false,
+					toValue: -100,
+					duration: 200,
+					easing: Easing.ease,
+				})
+				.start(() => {
+					this.navVisible = false;
+				});
+		}
+	};
+
+	_onRefresh() {
+		this.state.home_screen.doRefresh();
+	}
 
 	render() {
 		var s = require('./../app/style');
 		const numbers = [ 1, 2, 3, 4, 5 ];
 		const { navigate } = this.props.navigation;
 		const { goBack } = this.props.navigation;
+		const navbarMarginBottom = this.navbarMarginBottom.interpolate({
+			inputRange: [ -100, 0 ],
+			outputRange: [ -100, 0 ],
+		});
+		console.log(navbarMarginBottom);
 		const marginLeft = this.holeMargin.interpolate({
 			inputRange: [ 0, 2000 ],
 			outputRange: [ 0, 2000 ],
@@ -106,14 +149,15 @@ export default class ScreenHandler extends React.Component {
 			return (
 				<View style={s.container}>
 					<StatusBar hidden={true} />
-					<ScrollView
-						style={{ marginTop: -44 }}
+					<View
+						style={{ marginTop: 0 }}
 						showsHorizontalScrollIndicator={false}
 						scrollEnabled={true}
 						ref={component => _scrollView = component}
 					>
 						<HomeScreen
 							utilsObject={utils}
+							startNavbarAnimation={this.startNavbarAnimation}
 							setScrollViewEnabled={this.setScrollViewEnabled}
 							moveTo={this.state.nav[0].moveTo}
 							show={this.state.nav[0].visible}
@@ -142,9 +186,9 @@ export default class ScreenHandler extends React.Component {
 							moveTo={this.state.nav[4].moveTo}
 							show={this.state.nav[4].visible}
 						/>
-					</ScrollView>
+					</View>
 
-					<View style={styles.navigationBar}>
+					<Animated.View style={[ styles.navigationBar, { bottom: navbarMarginBottom } ]}>
 						<View style={styles.navigationBarWhiteBackground} />
 
 						<Animated.View style={{ marginLeft }}>
@@ -161,7 +205,7 @@ export default class ScreenHandler extends React.Component {
 							>
 								<FontAwesomeIcon
 									style={styles.navigationBarIcon}
-									size={30}
+									size={29}
 									color={this.state.nav[0].iconColor}
 									icon={faHome}
 								/>
@@ -177,7 +221,7 @@ export default class ScreenHandler extends React.Component {
 									>
 										<FontAwesomeIcon
 											style={styles.navigationBarIcon}
-											size={30}
+											size={29}
 											color={this.state.nav[1].iconColor}
 											icon={faUsers}
 										/>
@@ -192,7 +236,7 @@ export default class ScreenHandler extends React.Component {
 									>
 										<FontAwesomeIcon
 											style={styles.navigationBarIcon}
-											size={30}
+											size={29}
 											color={this.state.nav[2].iconColor}
 											icon={faPlusCircle}
 										/>
@@ -208,7 +252,7 @@ export default class ScreenHandler extends React.Component {
 							>
 								<FontAwesomeIcon
 									style={styles.navigationBarIcon}
-									size={30}
+									size={28}
 									color={this.state.nav[3].iconColor}
 									icon={faComment}
 								/>
@@ -223,13 +267,13 @@ export default class ScreenHandler extends React.Component {
 							>
 								<FontAwesomeIcon
 									style={styles.navigationBarIcon}
-									size={30}
+									size={28}
 									color={this.state.nav[4].iconColor}
 									icon={faCog}
 								/>
 							</TouchableOpacity>
 						</View>
-					</View>
+					</Animated.View>
 				</View>
 			);
 		} else {
@@ -252,7 +296,7 @@ export default class ScreenHandler extends React.Component {
 			Animated
 				.timing(this.holeMargin, {
 					useNativeDriver: false,
-					toValue: this.state.nav[id].x + 43,
+					toValue: this.state.nav[id].x + 44,
 					duration: 120,
 					easing: Easing.ease,
 				})
@@ -270,7 +314,7 @@ export default class ScreenHandler extends React.Component {
 
 			//if(this.last_nav_id > id) this.state.nav[id].moveTo = "left"
 			//else this.state.nav[id].moveTo = "right"
-			this.state.hole_margin = this.state.nav[id].x + 43;
+			this.state.hole_margin = this.state.nav[id].x + 44;
 			this.forceUpdate();
 			this.last_nav_id = id;
 		}
@@ -290,16 +334,14 @@ const styles = StyleSheet.create({
 	navigationBar: {
 		...ifIphoneX(
 			{
-				height: 107,
+				height: 105,
 			},
 			{
 				height: 94,
 			}
 		),
-		bottom: 0,
 		position: 'absolute',
 		width: '100%',
-		opacity: 1.0,
 
 		shadowColor: '#38304C',
 		shadowOffset: {
@@ -312,17 +354,17 @@ const styles = StyleSheet.create({
 		elevation: 30,
 	},
 	navigatonBarMarker: {
-		marginTop: 32,
+		marginTop: 33,
 		backgroundColor: '#0DF5E3',
-		width: 44,
-		height: 44,
+		width: 40,
+		height: 40,
 		borderRadius: 22,
 	},
 	navigationBarWhiteBackground: {
 		borderTopLeftRadius: 45,
 		borderTopRightRadius: 45,
 		position: 'absolute',
-		marginTop: 15,
+		marginTop: 20,
 		height: 95,
 		width: '100%',
 		backgroundColor: '#38304C',

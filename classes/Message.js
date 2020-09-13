@@ -53,12 +53,15 @@ import RNFS from 'react-native-fs';
 import CameraRoll from '@react-native-community/cameraroll';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import database from '@react-native-firebase/database';
+import EventCard from './../components/EventCard.js';
 
 export class Message extends React.Component {
+	utils: null;
 	constructor(props) {
 		super(props);
 
 		const utils = this.props.utils;
+		this.utils = utils;
 
 		this.state = {
 			read: null,
@@ -80,8 +83,17 @@ export class Message extends React.Component {
 		database().ref('clubs/' + this.state.club_id + '/color').on(
 			'value',
 			(function(snap) {
-				console.log('club color triggered: ' + this.state.mes_id);
-				this.state.club.color = snap.val();
+				database().ref('colors/' + snap.val()).on(
+					'value',
+					(function(snap) {
+						var color = snap.val();
+						console.log('club color triggered: ' + this.state.mes_id);
+						this.state.club.color = '#' + color.hex;
+						this.state.club.text_color = '#' + color.font_hex;
+						this.forceUpdate();
+					}).bind(this)
+				);
+
 				this.forceUpdate();
 			}).bind(this)
 		);
@@ -113,37 +125,108 @@ export class Message extends React.Component {
 			}).bind(this)
 		);
 
-		this.state.ref.on(
-			'value',
-			(function(snap) {
-				console.log('message triggered: ' + this.state.mes_id);
-				var message = snap.val();
-				message.id = this.state.mes_id;
-
-				message.ago = utils.getAgoText(message.send_at);
-				message.ago_seconds = utils.getAgoSec(message.send_at);
-
-				message.read = this.state.read;
-
-				this.state.data = message;
-				this.forceUpdate();
-			}).bind(this)
-		);
+		this.refresh();
 	}
 
 	_stopListener() {
 		this.state.ref.off();
 	}
 
+	_onDataChange(message, cb) {
+		const utils = this.state.utils;
+		console.log('message triggered: ' + this.state.mes_id);
+		message.id = this.state.mes_id;
+
+		message.ago = utils.getAgoText(message.send_at);
+		message.ago_seconds = utils.getAgoSec(message.send_at);
+
+		message.read = this.state.read;
+
+		this.state.data = message;
+		if (cb) cb();
+		this.forceUpdate();
+	}
+
+	delete(cb) {
+		this.utils.showAlert(
+			'Mitteilung löschen?',
+			'',
+			[ 'Ja', 'Nein' ],
+			(function(btn_id) {
+				if (cb) cb(btn_id == 0);
+				if (btn_id == 0) {
+					this.state.ref.child('visible').set(false);
+				}
+			}).bind(this),
+			true,
+			false
+		);
+	}
+
+	set(values) {
+		Object.keys(values).map(key => {
+			this.state.ref.child(key).set(values[key]);
+		});
+	}
+
+	setHeadline(value) {
+		this.state.ref.child('headline').set(value);
+	}
+
+	setLongText(value) {
+		this.state.ref.child('long_text').set(value);
+	}
+
+	setShortText(value) {
+		this.state.ref.child('short_text').set(value);
+	}
+
+	setFileName(pos, name) {
+		this.state.ref.child('files/' + pos + '/name').set(name);
+	}
+
+	_getDifference(o1, o2) {
+		var diff = {};
+		var tmp = null;
+		if (JSON.stringify(o1) === JSON.stringify(o2)) return;
+
+		for (var k in o1) {
+			if (Array.isArray(o1[k]) && Array.isArray(o2[k])) {
+				tmp = o1[k].reduce(
+					function(p, c, i) {
+						var _t = this._getDifference(c, o2[k][i]);
+						if (_t) p.push(_t);
+						return p;
+					},
+					[]
+				);
+				if (Object.keys(tmp).length > 0) diff[k] = tmp;
+			} else if (typeof o1[k] === 'object' && typeof o2[k] === 'object') {
+				tmp = this._getDifference(o1[k], o2[k]);
+				if (tmp && Object.keys(tmp) > 0) diff[k] = tmp;
+			} else if (o1[k] !== o2[k]) {
+				diff[k] = o2[k];
+			}
+		}
+		return diff;
+	}
+
+	refresh(cb) {
+		this.state.ref.once(
+			'value',
+			(function(snap) {
+				this._onDataChange(snap.val(), cb);
+			}).bind(this)
+		);
+	}
+
 	render() {
-		console.log('render triggered');
 		const club = this.state.club;
 		const mes = this.state.data;
 		const s_width = Dimensions.get('window').width;
 		var s = require('./../app/style.js');
 
-		if (this.state.read != null) {
-			console.log('render triggered 1');
+		if (this.state.read != null && mes.visible !== false) {
 			mes.section = 2;
 			if (!this.state.read) mes.section = 0;
 			else if (mes.ago_seconds / 60 / 60 < 24) mes.section = 1;
@@ -177,6 +260,7 @@ export class Message extends React.Component {
 									this.state.nav.navigate('MessageScreen', {
 										club: club,
 										mes: mes,
+										mesObj: this,
 										utils: this.state.utils,
 									});
 								}}
@@ -197,7 +281,7 @@ export class Message extends React.Component {
 											marginBottom: 7,
 										}}
 										size={25}
-										color="#E9E9E9"
+										color={club.text_color}
 										icon={faChevronCircleRight}
 									/>
 									<Text
@@ -206,7 +290,7 @@ export class Message extends React.Component {
 											alignSelf: 'flex-start',
 											fontFamily: 'Poppins-Bold',
 											fontSize: 30,
-											color: '#FFFFFF',
+											color: club.text_color,
 										}}
 									>{mes.headline}</Text>
 
@@ -215,7 +299,7 @@ export class Message extends React.Component {
 									style={{
 										fontSize: 20,
 										fontFamily: 'Poppins-Regular',
-										color: 'white',
+										color: club.text_color,
 										marginTop: 5,
 										marginLeft: 15,
 										marginRight: 35,
@@ -224,8 +308,8 @@ export class Message extends React.Component {
 
 								<View
 									style={{
-										marginBottom: 20,
 										marginTop: 20,
+										marginBottom: 20,
 										marginLeft: 15,
 										display: 'flex',
 										flexDirection: 'row',
@@ -243,12 +327,35 @@ export class Message extends React.Component {
 											marginLeft: 15,
 										}}
 									>
-										<Text style={{ marginTop: 4, fontSize: 13, color: 'white' }}>{mes.ago}</Text>
-										<Text style={{ marginTop: -2, fontSize: 16, fontFamily: 'Poppins-SemiBold', color: 'white' }}>
+										<Text style={{ marginTop: 4, fontSize: 13, color: club.text_color }}>{mes.ago}</Text>
+										<Text
+											style={{ marginTop: -2, fontSize: 16, fontFamily: 'Poppins-SemiBold', color: club.text_color }}
+										>
 											{club.name}
 										</Text>
 									</View>
 								</View>
+								{mes.events
+									? <View
+											style={{
+												width: '100%',
+												backgroundColor: 'rgba(255, 255,255,0.25)',
+												opacity: 0.9,
+												borderBottomLeftRadius: 10,
+												borderBottomRightRadius: 10,
+											}}
+										>
+											<EventCard
+												key={1}
+												pos={1}
+												color={club.text_color}
+												card_type="preview"
+												editable={false}
+												date={mes.events[0].date}
+												location={mes.events[0].location}
+											/>
+										</View>
+									: void 0}
 
 							</TouchableOpacity>
 						);

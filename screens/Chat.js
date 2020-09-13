@@ -135,7 +135,7 @@ class ChatScreen extends React.Component {
 
 		return (
 			<View style={s.container}>
-				<StatusBar hidden={true} />
+
 				<View style={{ paddingLeft: 20, paddingRight: 20, marginTop: 45 }}>
 					<TouchableOpacity
 						style={{

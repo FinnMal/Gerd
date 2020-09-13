@@ -104,6 +104,16 @@ export function getAgoText(time, with_ago_pre = true, with_in_pre = true, small_
 	return ago_pre + ago;
 }
 
+export function generate_invite_code(length = 6) {
+	var result = '';
+	var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+	var charactersLength = characters.length;
+	for (var i = 0; i < length; i++) {
+		result += characters.charAt(Math.floor(Math.random() * charactersLength));
+	}
+	return result;
+}
+
 export function msToHMS(duration) {
 	var milliseconds = parseInt(duration % 1000 / 100),
 		seconds = parseInt(duration / 1000 % 60),

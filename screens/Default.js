@@ -46,7 +46,7 @@ export default class HomeScreen extends React.Component {
 						this.checkIfScrollViewIsNeeded(height);
 					}}
 				>
-					<StatusBar hidden={true} />
+					 
 				</View>
 			);
 		}

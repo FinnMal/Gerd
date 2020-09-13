@@ -5,7 +5,17 @@ import OneSignal from 'react-native-onesignal'; // Import package from node modu
 import * as utils from './utils.js';
 import { createStackNavigator } from 'react-navigation-stack';
 import { fadeIn } from 'react-navigation-transitions';
-import { StyleSheet, Text, View, StatusBar, Image, Button, TouchableOpacity } from 'react-native';
+import {
+	StyleSheet,
+	Text,
+	View,
+	StatusBar,
+	Image,
+	Button,
+	TouchableOpacity,
+	TransitionConfig,
+	CardStackStyleInterpolator
+} from 'react-native';
 import ScreenHandler from './screens/ScreenHandler';
 import HomeScreen from './screens/Home';
 import ManagmentScreen from './screens/Managment';
@@ -16,6 +26,8 @@ import SettingsScreen from './screens/Settings';
 import ChatScreen from './screens/Chat';
 import FirstStartScreen from './screens/FirstStart';
 import AddClubScreen from './screens/AddClub';
+import ClubSettingsScreen from './screens/ClubSettings';
+import SettingScreen from './screens/Setting';
 
 import { YellowBox, AppRegistry } from 'react-native';
 import database from '@react-native-firebase/database';
@@ -51,7 +63,7 @@ auth()
 
 navigationOptions = {
 	headerShown: false,
-	gestureEnabled: false,
+	gestureEnabled: true,
 };
 
 const MainNavigator = createStackNavigator(
@@ -96,8 +108,21 @@ const MainNavigator = createStackNavigator(
 			screen: AddClubScreen,
 			navigationOptions: navigationOptions,
 		},
+		ClubSettingsScreen: {
+			screen: ClubSettingsScreen,
+			navigationOptions: navigationOptions,
+		},
+		SettingScreen: {
+			screen: SettingScreen,
+			navigationOptions: navigationOptions,
+		},
 	},
-	{ headerMode: 'screen', initialRouteName: 'ScreenHandler' }
+	{ headerMode: 'screen', initialRouteName: 'ScreenHandler' },
+	{
+		transitionConfig: () => ({
+			screenInterpolator: CardStackStyleInterpolator.forVertical,
+		}),
+	}
 );
 
 const AppContainer = createAppContainer(MainNavigator);

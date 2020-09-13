@@ -90,26 +90,29 @@ export default class NewMessageScreen extends React.Component {
 			'value',
 			(function(snap) {
 				var clubs = snap.val();
+				console.log(clubs);
 				var i = 0;
 				Object.keys(clubs).map(key => {
 					var club = clubs[key];
-					if (club.role == 'admin') {
-						database().ref('clubs/' + club.club_id).once(
-							'value',
-							(function(snap) {
-								var info = snap.val();
-								club.name = info.name;
-								club.logo = info.logo;
-								club.members = info.members;
-								club.color = info.color;
-								club.selected = false;
-								club.groups = info.groups;
+					if (club) {
+						if (club.role == 'admin') {
+							database().ref('clubs/' + club.club_id).once(
+								'value',
+								(function(snap) {
+									var info = snap.val();
+									club.name = info.name;
+									club.logo = info.logo;
+									club.members = info.members;
+									club.color = info.color;
+									club.selected = false;
+									club.groups = info.groups;
 
-								this.state.clubsList[i] = club;
-								this.forceUpdate();
-								i++;
-							}).bind(this)
-						);
+									this.state.clubsList[i] = club;
+									this.forceUpdate();
+									i++;
+								}).bind(this)
+							);
+						}
 					}
 				});
 			}).bind(this)
@@ -144,8 +147,8 @@ export default class NewMessageScreen extends React.Component {
 
 	openUploadPictureModal() {
 		const options = {
-			title: 'Select Avatar',
-			customButtons: [ { name: 'fb', title: 'Choose Photo from Facebook' } ],
+			title: 'Bild auswählen',
+			customButtons: [],
 			storageOptions: {
 				skipBackup: true,
 				path: 'images',
@@ -974,7 +977,7 @@ export default class NewMessageScreen extends React.Component {
 										marginBottom: 30,
 									}}
 								>
-									In verlinkten Gruppen erhalten nur die Mitglieder eine Mitteilung, die sich allen verlinkten Gruppen gleichzeitig befinden. Verlinkungen werden nicht für den gesamten Verein übernommen.
+									In verlinkten Gruppen erhalten nur die Mitglieder eine Mitteilung, die sich in jeder verlinkten Gruppen befinden. Verlinkungen werden nicht für den gesamten Verein übernommen.
 								</Text>
 
 								{linkingGroupsList}
@@ -1031,7 +1034,7 @@ export default class NewMessageScreen extends React.Component {
 
 		return (
 			<View style={[ s.container ]} keyboardShouldPersistTaps="always">
-				<StatusBar hidden={true} />
+
 				<ModalCard
 					visible={this.state.event_modal_visible}
 					name="Neue Veranstaltung"

@@ -19,24 +19,31 @@ export class MessagesList extends React.Component {
 			refs: {},
 			last_section: null,
 			shows_messages: true,
+			user_clubs_ref: database().ref('users/' + utils.getUserID() + '/clubs'),
 		};
 
-		console.log('users/' + this.state.uid + '/clubs');
-		database().ref('users/' + this.state.uid + '/clubs').on(
+		this._startUserClubsListener();
+	}
+
+	_startUserClubsListener() {
+		this.state.user_clubs_ref.on(
 			'value',
 			(function(snap) {
 				console.log('user clubs changed');
 				const clubs = snap.val();
-				this._stopAllClubListener();
+				this._stopAllClubsListener();
 				Object.keys(clubs).map(key => {
-					const club = clubs[key];
-					this._startClubListener(club.club_id);
+					this._startClubListener(key);
 				});
 			}).bind(this)
 		);
 	}
 
-	_stopAllClubListener() {
+	_stopUserClubsListener() {
+		this.state.user_clubs_ref.off();
+	}
+
+	_stopAllClubsListener() {
 		Object.keys(this.state.refs).map(key => {
 			var ref = this.state.refs[key];
 			ref.off();
@@ -65,6 +72,34 @@ export class MessagesList extends React.Component {
 		);
 	}
 
+	refresh(cb) {
+		Object.keys(this.state.messages).map(mes_id => {
+			var mes = this.state.messages[mes_id];
+			if (mes) {
+				if (mes.object) {
+					this.state.messages[mes_id].refreshing = true;
+					mes.object.refresh(
+						(function() {
+							this.state.messages[mes_id].refreshing = false;
+						}).bind(this)
+					);
+				}
+			}
+		});
+
+		var total_refreshing = this.state.messages.length;
+		while (total_refreshing > 0) {
+			Object.keys(this.state.messages).map(mes_id => {
+				var mes = this.state.messages[mes_id];
+				if (mes) {
+					console.log(mes.refreshing);
+					if (!mes.refreshing) total_refreshing--;
+				}
+			});
+		}
+		if (cb) cb();
+	}
+
 	onVisibilityChange(mes_id, visible) {
 		var total_visible = 0;
 		this.state.messages[mes_id].visible = visible;
@@ -85,6 +120,9 @@ export class MessagesList extends React.Component {
 			this.state.messages[mes_id].visible = true;
 			return (
 				<Message
+					ref={component => {
+						this.state.messages[mes_id].object = component;
+					}}
 					showIfSectionIs={this.props.section}
 					onVisibilityChange={(id, visible) => this.onVisibilityChange(id, visible)}
 					club_id={club_id}

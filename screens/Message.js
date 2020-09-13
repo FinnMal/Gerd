@@ -16,15 +16,20 @@ import {
 	Easing,
 	Dimensions,
 	Modal,
-	ImageBackground
+	ImageBackground,
+	RefreshControl
 } from 'react-native';
 import { Headlines } from './../app/constants.js';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faChevronCircleLeft, faClock, faArrowAltCircleDown, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
-import { NotificationCard, FileCard, EventCard } from './../app/components.js';
+import { NotificationCard } from './../app/components.js';
 import database from '@react-native-firebase/database';
 import { SafeAreaView } from 'react-navigation';
 import GestureRecognizer, { swipeDirections } from 'react-native-swipe-gestures';
+import Toast from './../components/Toast.js';
+import File from './../components/File.js';
+import EventCard from './../components/EventCard.js';
+import cloneDeep from 'lodash/cloneDeep';
 
 export default class MessageScreen extends React.Component {
 	constructor(props) {
@@ -34,9 +39,12 @@ export default class MessageScreen extends React.Component {
 		const mes = this.props.navigation.getParam('mes', null);
 		const club = this.props.navigation.getParam('club', null);
 		const utils = this.props.navigation.getParam('utils', null);
+		const mesObj = this.props.navigation.getParam('mesObj', null);
 
 		this.state = {
+			mesObj: mesObj,
 			mes: mes,
+			mes_before_edit: null,
 			club: club,
 			scrollY: new Animated.Value(0),
 			headlineHeight: -1,
@@ -50,6 +58,12 @@ export default class MessageScreen extends React.Component {
 			agoTextInterval: null,
 			modal_visible: false,
 			uid: utils.getUserID(),
+			toast: {
+				pressed: false,
+				visible: false,
+				text: '',
+				action: '',
+			},
 		};
 
 		if (mes.ago_seconds < 3600) {
@@ -120,7 +134,6 @@ export default class MessageScreen extends React.Component {
 
 	_getHeadlineFontScale = () => {
 		const { scrollY, shortInputRange, inputRange, headlineHeight } = this.state;
-		console.log(scrollY);
 		return scrollY.interpolate({
 			inputRange: shortInputRange,
 			outputRange: [ 1, 0.65 ],
@@ -156,7 +169,7 @@ export default class MessageScreen extends React.Component {
 
 		return scrollY.interpolate({
 			inputRange: shortInputRange,
-			outputRange: [ 1, 1.5 ],
+			outputRange: [ 1, 1.4 ],
 			extrapolate: 'clamp',
 			useNativeDriver: true,
 		});
@@ -167,8 +180,8 @@ export default class MessageScreen extends React.Component {
 
 		return scrollY.interpolate({
 			inputRange: shortInputRange,
-			//outputRange: [ 'rgba(0, 0, 0, 0.3)', 'rgba(32, 26, 48, 0.6)' ],
-			outputRange: [ 'rgba(0, 0, 0, 0.3)', 'rgba(32, 26, 48, 0.5)' ],
+			outputRange: [ 'rgba(0, 0, 0, 0.3)', 'rgba(0, 0, 0, 0.6)' ],
+			//outputRange: [ 'rgba(0, 0, 0, 0.3)', 'rgba(32, 26, 48, 0.5)' ],
 			extrapolate: 'clamp',
 			useNativeDriver: true,
 		});
@@ -182,8 +195,6 @@ export default class MessageScreen extends React.Component {
 		database().ref('users/' + mes.author + '/name').once(
 			'value',
 			(function(snapshot) {
-				console.log('AUTHOR: ' + mes.author);
-				console.log('UID: ' + this.state.uid);
 				if (mes.author == this.state.uid) var options = [ 'Abbrechen', 'Bearbeiten', 'Löschen' ];
 				else var options = [ 'Abbrechen', 'Nachricht an ' + snapshot.val() ];
 				ActionSheetIOS.showActionSheetWithOptions(
@@ -196,9 +207,10 @@ export default class MessageScreen extends React.Component {
 						if (buttonIndex === 0) {
 							// cancel
 						} else if (buttonIndex === 1) {
-							if (mes.author == this.state.uid)
+							if (mes.author == this.state.uid) {
+								this.state.mes_before_edit = cloneDeep(this.state.mes);
 								this._openModal();
-							else
+							} else
 								utils.startChat(
 									mes.author,
 									(function() {
@@ -237,19 +249,50 @@ export default class MessageScreen extends React.Component {
 	}
 
 	_deleteMessage() {
-		database().ref('messages/list/' + this.state.mes.id + '/invisible').set(true);
-		this.props.navigation.navigate('ScreenHandler');
-		// TODO: Alert to confirm delete
-		// -> navigate to ScreenHandler
+		const message = this.state.mesObj;
+		message.delete(
+			(function(deleted) {
+				if (deleted) this.props.navigation.navigate('ScreenHandler');
+			}).bind(this)
+		);
+		//database().ref('messages/list/' + this.state.mes.id + '/invisible').set(true);
 	}
 
 	_editMessage() {
 		const mes = this.state.mes;
+		const message = this.state.mesObj;
 		this.state.headlineHeight = -1;
-		database().ref('messages/list/' + mes.id + '/invisible').set(false);
-		database().ref('messages/list/' + mes.id + '/headline').set(mes.headline);
-		database().ref('messages/list/' + mes.id + '/short_text').set(mes.short_text);
-		database().ref('messages/list/' + mes.id + '/long_text').set(mes.long_text);
+
+		setTimeout(
+			(function() {
+				this.state.toast.visible = true;
+				this.forceUpdate();
+			}).bind(this),
+			500
+		);
+
+		this.state.toast.pressed = false;
+		this.state.toast.text = 'Beitrag bearbeitet';
+		this.state.toast.action = 'Rückgängig';
+		this.state.toast.callback = (function() {
+			const message = this.state.mesObj;
+			const mbe = this.state.mes_before_edit;
+			message.set({
+				headline: mbe.headline,
+				short_text: mbe.short_text,
+				long_text: mbe.long_text,
+			});
+			this.state.headlineHeight = -1;
+			this.state.mes = mbe;
+			this.forceUpdate();
+		}).bind(this);
+
+		message.set({
+			headline: mes.headline,
+			short_text: mes.short_text,
+			long_text: mes.long_text,
+		});
+
 		this._closeModal();
 		this.forceUpdate();
 	}
@@ -294,6 +337,39 @@ export default class MessageScreen extends React.Component {
 		);
 	}
 
+	_editFile(pos, name, old_name) {
+		const file = this.state.mes.files[pos];
+		const message = this.state.mesObj;
+
+		file.name = name;
+
+		setTimeout(
+			(function() {
+				this.state.toast.visible = true;
+				this.forceUpdate();
+			}).bind(this),
+			500
+		);
+
+		this.state.toast.pressed = false;
+		this.state.toast.text = 'Datei bearbeitet';
+		this.state.toast.action = 'Rückgängig';
+		this.state.toast.callback = (function() {
+			const message = this.state.mesObj;
+
+			message.setFileName(pos, old_name);
+			this.state.mes.files[pos].name = old_name;
+			this.forceUpdate();
+		}).bind(this);
+
+		message.setFileName(pos, name);
+
+		this._closeModal();
+		this.forceUpdate();
+	}
+
+	_deleteFile(pos) {}
+
 	render() {
 		const mes = this.state.mes;
 		const club = this.state.club;
@@ -313,14 +389,18 @@ export default class MessageScreen extends React.Component {
 			downloadsElements = Object.keys(mes.files).map(key => {
 				var file = mes.files[key];
 				return (
-					<FileCard
+					<File
 						key={key}
+						pos={key}
+						card_type="normal"
 						editable={mes.author == this.state.uid}
 						downloadable={true}
 						name={file.name}
 						type={file.type}
 						size={file.size}
 						download_url={file.download_url}
+						onEdit={(pos, name, old_value) => this._editFile(pos, name, old_value)}
+						onDelete={pos => this._deleteFile(pos)}
 					/>
 				);
 			});
@@ -355,6 +435,21 @@ export default class MessageScreen extends React.Component {
 
 		return (
 			<View>
+				<Toast
+					visible={this.state.toast.visible}
+					text={this.state.toast.text}
+					action={this.state.toast.action}
+					callback={(function(action) {
+						console.log('CALLBACK: ' + action);
+						if (action == 'button_pressed')
+							this.state.toast.pressed = true;
+						else if (action == 'toast_invisible') {
+							if (this.state.toast.pressed) this.state.toast.callback();
+							this.state.toast.visible = false;
+							this.forceUpdate();
+						}
+					}).bind(this)}
+				/>
 				{mes.author == this.state.uid
 					? <Modal animationType="slide" presentationStyle="formSheet" visible={this.state.modal_visible}>
 							<View
@@ -401,7 +496,7 @@ export default class MessageScreen extends React.Component {
 								<ScrollView>
 									<View style={{ marginBottom: 20 }}>
 										<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>Überschrift</Text>
-										<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
+										<View style={{ borderRadius: 20, backgroundColor: '#38304C' }}>
 											<TextInput
 												multiline
 												autoCorrect={false}
@@ -527,7 +622,7 @@ export default class MessageScreen extends React.Component {
 							}}
 						>
 							<ImageBackground
-								blurRadius={20}
+								blurRadius={15}
 								style={{
 									flex: 1,
 									zIndex: -1,
@@ -575,8 +670,8 @@ export default class MessageScreen extends React.Component {
 							minHeight: 615,
 							marginTop: 240 + this.state.headlineHeight - 90,
 							backgroundColor: '#201A30',
-							borderTopLeftRadius: 30,
-							borderTopRightRadius: 30,
+							borderTopLeftRadius: 37,
+							borderTopRightRadius: 37,
 						}}
 					>
 						<View style={{ marginTop: 30, marginLeft: 22, marginRight: 20 }}>
@@ -605,7 +700,15 @@ export default class MessageScreen extends React.Component {
 
 										{eventsElements
 											? <View>
-													<Text style={{ fontFamily: 'Poppins-Bold', marginTop: 50, fontSize: 40, color: '#B3A9AF' }}>
+													<Text
+														style={{
+															opacity: 0.4,
+															fontFamily: 'Poppins-ExtraBold',
+															marginTop: 20,
+															fontSize: 40,
+															color: '#FFFFFF',
+														}}
+													>
 														Events
 													</Text>
 													<View style={{ marginTop: 20, marginRight: 55 }}>
@@ -633,7 +736,6 @@ export default class MessageScreen extends React.Component {
 					}
 					onLayout={event => {
 						var { x, y, width, height } = event.nativeEvent.layout;
-						console.log(y);
 						this.setState({ backBtnY: y });
 					}}
 				>
@@ -643,7 +745,6 @@ export default class MessageScreen extends React.Component {
 					<TouchableOpacity onPress={() => this._openMessageModal()}>
 						<FontAwesomeIcon style={{ zIndex: 0, marginLeft: 285 }} size={25} color="#F5F5F5" icon={faEllipsisV} />
 					</TouchableOpacity>
-
 				</Animated.View>
 			</View>
 		);
