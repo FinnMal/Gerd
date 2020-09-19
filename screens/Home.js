@@ -24,10 +24,9 @@ import database from '@react-native-firebase/database';
 import { withNavigation } from 'react-navigation';
 import { Message } from './../classes/Message.js';
 import { MessagesList } from './../classes/MessagesList.js';
+import HeaderScrollView from './../components/HeaderScrollView.js';
 
 class HomeScreen extends React.Component {
-	scrollOffset: 0;
-
 	constructor(props) {
 		super(props);
 
@@ -213,6 +212,8 @@ class HomeScreen extends React.Component {
 		this.navMarginLeft.setValue(this.state.navPos * 115 - 3);
 
 		this.state.navPos = pos;
+
+		this.props.startNavbarAnimation('show', false);
 		if (forceUpdate) this.forceUpdate();
 
 		Animated
@@ -239,62 +240,164 @@ class HomeScreen extends React.Component {
 
 		if (this.props.show) {
 			//if (this.state.newMesList.length == 0 && this.state.navPos == 0) this.navigateSection(1, false);
-			return (
-				<ScrollView
-					scrollEventThrottle={260}
-					onScroll={event => {
-						var currentOffset = event.nativeEvent.contentOffset.y;
-						var state = currentOffset > this.offset ? 'hide' : 'show';
-						var moved = currentOffset - this.offset;
-						this.offset = currentOffset;
-						if (moved > 200 || moved < -1) {
-							console.log(state);
-							this.props.startNavbarAnimation(state, 0);
-						}
-					}}
-					style={{ marginTop: 0 }}
-					refreshControl={
-						(
-							<RefreshControl
-								style={{ marginTop: -44 }}
-								refreshing={this.state.refreshing}
-								onRefresh={this.doRefresh.bind(this)}
-							/>
-						)
+			/*<ScrollView
+				scrollEventThrottle={260}
+				onScroll={event => {
+					var currentOffset = event.nativeEvent.contentOffset.y;
+					var state = currentOffset > this.offset ? 'hide' : 'show';
+					var moved = currentOffset - this.offset;
+					this.offset = currentOffset;
+					if (moved > 200 || moved < -1) {
+						console.log(state);
+						this.props.startNavbarAnimation(state, 0);
 					}
-					onLayout={event => {
-						var { x, y, width, height } = event.nativeEvent.layout;
-						//this.checkIfScrollViewIsNeeded(height);
+				}}
+				style={{ marginTop: 0 }}
+				refreshControl={
+					(
+						<RefreshControl
+							style={{ marginTop: -44 }}
+							refreshing={this.state.refreshing}
+							onRefresh={this.doRefresh.bind(this)}
+						/>
+					)
+				}
+				onLayout={event => {
+					var { x, y, width, height } = event.nativeEvent.layout;
+					//this.checkIfScrollViewIsNeeded(height);
+				}}
+			>
+				<View
+					style={{
+						width: '100%',
+						flexWrap: 'wrap',
+						alignItems: 'flex-start',
+						flexDirection: 'row',
 					}}
 				>
+					<Text style={s.pageHeadline}>Mitteilungen</Text>
+					{this.state.account_type == 'manager'
+						? <TouchableOpacity
+								style={
+									([ styles.headlineIcon ], {
+										marginTop: 55,
+										marginLeft: 30,
+									})
+								}
+								onPress={() => this.openAddMessage()}
+							>
+								<FontAwesomeIcon size={29} color="#F5F5F5" icon={faPlusCircle} />
+							</TouchableOpacity>
+						: void 0}
 
 					<View
 						style={{
-							width: '100%',
+							marginTop: 20,
+							marginLeft: 21,
 							flexWrap: 'wrap',
 							alignItems: 'flex-start',
 							flexDirection: 'row',
 						}}
 					>
-						<Text style={s.pageHeadline}>Mitteilungen</Text>
-						{this.state.account_type == 'manager'
-							? <TouchableOpacity
-									style={
-										([ styles.headlineIcon ], {
-											marginTop: 55,
-											marginLeft: 30,
-										})
-									}
-									onPress={() => this.openAddMessage()}
+						{this.state.unread_messages_count
+							? <View
+									style={{
+										minHeight: 20,
+										minWidth: 20,
+										zIndex: 100,
+										position: 'absolute',
+										marginTop: -10,
+										marginLeft: 50,
+										borderRadius: 40,
+										paddingLeft: 5,
+										paddingRight: 5,
+										paddingTop: 2,
+										paddingBottom: 1,
+										backgroundColor: 'red',
+										justifyContent: 'center',
+										alignItems: 'center',
+									}}
 								>
+									<Text style={{ fontFamily: 'Poppins-SemiBold', color: 'white' }}>
+										{this.state.unread_messages_count}
+									</Text>
+								</View>
+							: void 0}
+
+						<Animated.View
+							style={{
+								borderRadius: 16,
+								marginTop: -2.5,
+								position: 'absolute',
+								width: 76,
+								backgroundColor: '#0DF5E3',
+								height: 31,
+								shadowColor: '#0DF5E3',
+								shadowOffset: {
+									width: 6,
+									height: 0,
+								},
+								marginLeft: nav_margin_left,
+								shadowOpacity: 0.20,
+								shadowRadius: 20.00,
+							}}
+						/>
+
+						<TouchableOpacity style={[ styles.navTouch ]} onPress={() => this.navigateSection(0)}>
+							<Text style={[ styles.navText, { color: this.state.navPos == 0 ? '#201A30' : '#ffffff' } ]}>
+								Neu
+							</Text>
+						</TouchableOpacity>
+						<TouchableOpacity style={styles.navTouch} onPress={() => this.navigateSection(1)}>
+							<Text style={[ styles.navText, { color: this.state.navPos == 1 ? '#201A30' : '#ffffff' } ]}>
+								Heute
+							</Text>
+						</TouchableOpacity>
+						<TouchableOpacity style={styles.navTouch} onPress={() => this.navigateSection(2)}>
+							<Text style={[ styles.navText, { color: this.state.navPos == 2 ? '#201A30' : '#ffffff' } ]}>
+								Älter
+							</Text>
+						</TouchableOpacity>
+					</View>
+				</View>
+				<MessagesList ref="messagesList" section={this.state.navPos} utils={this.state.utils} />
+			</ScrollView>
+			*/
+			return (
+				<HeaderScrollView
+					headline="Mitteilungen"
+					marginTop={100}
+					headlineFontSize={47}
+					backButton={false}
+					showHeadline={false}
+					setNavbarPos={pos => {
+						this.props.startNavbarAnimation(pos);
+					}}
+					actionButton={
+						this.state.account_type == 'manager'
+							? <TouchableOpacity onPress={() => this.openAddMessage()}>
 									<FontAwesomeIcon size={29} color="#F5F5F5" icon={faPlusCircle} />
 								</TouchableOpacity>
-							: void 0}
+							: void 0
+					}
+					refreshControl={
+						<RefreshControl style={{}} refreshing={this.state.refreshing} onRefresh={this.doRefresh.bind(this)} />
+					}
+				>
+					<View
+						style={{
+							marginTop: -30,
+							marginRight: -20,
+							marginLeft: 0,
+							flexWrap: 'wrap',
+							alignItems: 'flex-start',
+							flexDirection: 'row',
+						}}
+					>
 
 						<View
 							style={{
 								marginTop: 20,
-								marginLeft: 21,
 								flexWrap: 'wrap',
 								alignItems: 'flex-start',
 								flexDirection: 'row',
@@ -361,8 +464,10 @@ class HomeScreen extends React.Component {
 							</TouchableOpacity>
 						</View>
 					</View>
-					<MessagesList ref="messagesList" section={this.state.navPos} utils={this.state.utils} />
-				</ScrollView>
+					<View style={{ marginLeft: -20 }}>
+						<MessagesList ref="messagesList" section={this.state.navPos} utils={this.state.utils} />
+					</View>
+				</HeaderScrollView>
 			);
 		}
 		return null;

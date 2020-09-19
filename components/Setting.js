@@ -15,8 +15,6 @@ import AutoHeightImage from 'react-native-auto-height-image';
 import FileViewer from 'react-native-file-viewer';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faPlusCircle, faChevronCircleLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
-import storage from '@react-native-firebase/storage';
-import ImagePicker from 'react-native-image-crop-picker';
 
 import database from '@react-native-firebase/database';
 
@@ -31,49 +29,7 @@ export default class Setting extends React.Component {
 
 	_onPress() {
 		if (this.props.setting == 'logo') {
-			const options = {
-				title: 'Bild auswählen',
-				customButtons: [],
-				storageOptions: {
-					skipBackup: true,
-					path: 'images',
-				},
-			};
-
-			ImagePicker
-				.openPicker({
-					cropperToolbarTitle: 'Logo zuschneiden',
-					width: 400,
-					height: 400,
-					cropping: true,
-					avoidEmptySpaceAroundImage: true,
-					mediaType: 'photo',
-					cropperCircleOverlay: true,
-					cropperChooseText: 'Fertig',
-					cropperCancelText: 'Abbrechen',
-				})
-				.then(image => {
-					console.log(image.path);
-					var response = { uri: `data:image/jpg;base64,${image.data}` };
-					response.name = 'image_' + new Date().getTime() + '.jpg';
-
-					var storage_path = 'userfiles/' + this.props.utils.getUserID() + '/' + response.name;
-
-					const reference = storage().ref(storage_path);
-					const pathToFile = response.uri;
-					const task = reference.putFile(image.path);
-
-					task.on('state_changed', taskSnapshot => {
-						console.log(taskSnapshot.bytesTransferred / taskSnapshot.totalBytes * 100);
-					});
-
-					task.then(async () => {
-						const url = await storage().ref(storage_path).getDownloadURL();
-						alert('done');
-						console.log(url);
-						database().ref('clubs/' + this.props.club.id + '/logo').set(url);
-					});
-				});
+			this.props.imagePicker();
 		} else if (this.props.setting != 'switch') {
 			this.props.utils.getNavigation().navigate('SettingScreen', {
 				type: this.props.setting,

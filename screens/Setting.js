@@ -16,8 +16,10 @@ import {
 	Dimensions,
 	ActionSheetIOS,
 	Switch,
-	ActivityIndicator
+	ActivityIndicator,
+	ImageBackground
 } from 'react-native';
+import { BlurView, VibrancyView } from '@react-native-community/blur';
 
 import RNFetchBlob from 'rn-fetch-blob';
 import FileViewer from 'react-native-file-viewer';
@@ -34,13 +36,15 @@ import {
 	faTimesCircle,
 	faPlusCircle,
 	faInfoCircle,
-	faCheck
+	faCheck,
+	faChevronLeft
 } from '@fortawesome/free-solid-svg-icons';
 import { Headlines } from './../app/constants.js';
 import { withNavigation } from 'react-navigation';
 import ClubCard from './../components/ClubCard.js';
 
 import { default as Modal } from './../components/Modal.js';
+import HeaderScrollView from './../components/HeaderScrollView.js';
 import database from '@react-native-firebase/database';
 
 export default class Setting extends React.Component {
@@ -514,12 +518,13 @@ export default class Setting extends React.Component {
 					<TouchableOpacity
 						style={{
 							marginTop: 20,
-							marginLeft: 20,
+							marginLeft: 10,
+							marginRight: 10,
 							justifyContent: 'center',
 							alignItems: 'center',
 							borderRadius: 65,
-							height: 62,
-							width: 62,
+							height: 55,
+							width: 55,
 							backgroundColor: '#' + color.hex,
 						}}
 						onPress={() => {
@@ -530,7 +535,7 @@ export default class Setting extends React.Component {
 							this.forceUpdate();
 						}}
 					>
-						{color.selected ? <FontAwesomeIcon size={25} color={'#' + color.font_hex} icon={faCheck} /> : void 0}
+						{color.selected ? <FontAwesomeIcon size={22} color={'#' + color.font_hex} icon={faCheck} /> : void 0}
 					</TouchableOpacity>
 				);
 			});
@@ -660,55 +665,8 @@ export default class Setting extends React.Component {
 						</View>
 					</View>
 				</Modal>
-				<View
-					style={{
-						zIndex: 100,
-						marginTop: s_width * 0.13,
-						flexWrap: 'wrap',
-						alignItems: 'flex-start',
-						flexDirection: 'row',
-					}}
-				>
-					<TouchableOpacity
-						style={{
-							zIndex: 100,
-							marginLeft: s_width * 0.06,
-						}}
-						onPress={() => this.props.navigation.goBack()}
-					>
-						<FontAwesomeIcon size={29} color="#F5F5F5" icon={faChevronCircleLeft} />
-					</TouchableOpacity>
-					<View
-						style={{
-							justifyContent: 'center',
-							alignItems: 'center',
-							position: 'absolute',
-							width: '100%',
-						}}
-					>
-						<Text style={{ marginTop: -3, fontSize: 28, fontFamily: 'Poppins-Bold', color: 'white', opacity: 0.93 }}>
-							{pageHeadline}
-						</Text>
-					</View>
-				</View>
-				<ScrollView
-					showsVerticalScrollIndicator={false}
-					style={[
-						{
-							marginTop: 10,
-							height: '100%',
-							backgroundColor: '#201A30',
-						},
-					]}
-					onLayout={event => {
-						var { x, y, width, height } = event.nativeEvent.layout;
-						//this.checkIfScrollViewIsNeeded(height);
-					}}
-				>
-					<View style={{ marginBottom: 60, marginTop: 30, marginLeft: 20, marginRight: 20 }}>
-						{pageContent}
-					</View>
-				</ScrollView>
+
+				<HeaderScrollView headline={pageHeadline}>{pageContent}</HeaderScrollView>
 				{this.state.type == 'groups' || this.state.type == 'qrcodes'
 					? <TouchableOpacity
 							style={{

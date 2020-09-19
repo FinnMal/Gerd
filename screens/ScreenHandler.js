@@ -32,6 +32,7 @@ import { faHome, faUsers, faComment, faCog, faPlusCircle } from '@fortawesome/fr
 
 export default class ScreenHandler extends React.Component {
 	navVisible: true;
+	lastScrollPos: 0;
 	constructor() {
 		super();
 		this.animation_pos = 0;
@@ -96,7 +97,19 @@ export default class ScreenHandler extends React.Component {
 		//_scrollView.setNativeProps({ scrollEnabled: data });
 	};
 
-	startNavbarAnimation = (dir, moved) => {
+	startNavbarAnimation = (pos, is_pos = true) => {
+		var dir = '';
+		if (is_pos && pos > 0) {
+			if (this.lastScrollPos > pos) {
+				dir = 'show';
+			} else if (this.lastScrollPos < pos) {
+				dir = 'hide';
+			}
+		} else
+			dir = pos;
+		console.log(this.lastScrollPos + ' > ' + pos + ' > ' + dir);
+		this.lastScrollPos = pos;
+
 		if (dir == 'show' && !this.navVisible) {
 			console.log('startNavbarAnimation show');
 			this.navbarMarginBottom.setValue(-100);
@@ -148,13 +161,8 @@ export default class ScreenHandler extends React.Component {
 		if (this.state.first_start_done) {
 			return (
 				<View style={s.container}>
-					<StatusBar hidden={true} />
-					<View
-						style={{ marginTop: 0 }}
-						showsHorizontalScrollIndicator={false}
-						scrollEnabled={true}
-						ref={component => _scrollView = component}
-					>
+					<StatusBar hidden={false} barStyle="light-content" />
+					<View style={{ marginTop: 0 }} showsHorizontalScrollIndicator={false} scrollEnabled={true}>
 						<HomeScreen
 							utilsObject={utils}
 							startNavbarAnimation={this.startNavbarAnimation}

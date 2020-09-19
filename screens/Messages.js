@@ -19,6 +19,7 @@ import {
 import { Headlines } from './../app/constants.js';
 import database from '@react-native-firebase/database';
 import { withNavigation } from 'react-navigation';
+import HeaderScrollView from './../components/HeaderScrollView.js';
 
 class MessagesScreen extends React.Component {
 	constructor(props) {
@@ -114,18 +115,17 @@ class MessagesScreen extends React.Component {
 
 		if (this.props.show) {
 			return (
-				<ScrollView
-					style={[ { marginTop: -44, height: '100%' } ]}
-					onLayout={event => {
-						var { x, y, width, height } = event.nativeEvent.layout;
-						this.checkIfScrollViewIsNeeded(height);
-					}}
+				<HeaderScrollView
+					headline="Nachrichten"
+					marginTop={100}
+					headlineFontSize={47}
+					backButton={false}
+					showHeadline={false}
 				>
-					<Text style={s.pageHeadline}>Nachrichten</Text>
-					<View style={{ marginTop: 30 }}>
+					<View style={{ marginLeft: -20 }}>
 						{chatsElements}
 					</View>
-				</ScrollView>
+				</HeaderScrollView>
 			);
 		}
 		return null;
@@ -209,7 +209,6 @@ class ChatCard extends React.Component {
 					{chat.unread_messages_count
 						? <View
 								style={{
-									marginLeft: 5,
 									minWidth: 21,
 									minHeight: 20,
 									position: 'absolute',

@@ -19,6 +19,7 @@ import {
 	ImageBackground,
 	RefreshControl
 } from 'react-native';
+import { BlurView } from '@react-native-community/blur';
 import { Headlines } from './../app/constants.js';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faChevronCircleLeft, faClock, faArrowAltCircleDown, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
@@ -96,7 +97,7 @@ export default class MessageScreen extends React.Component {
 		const { scrollY, shortInputRange, inputRange, headlineHeight } = this.state;
 		return scrollY.interpolate({
 			inputRange: inputRange,
-			outputRange: [ 165, headlineHeight + 33, headlineHeight - 40 ],
+			outputRange: [ 165, headlineHeight + 42, headlineHeight - 40 ],
 			extrapolate: 'clamp',
 			useNativeDriver: true,
 		});
@@ -158,7 +159,7 @@ export default class MessageScreen extends React.Component {
 
 		return scrollY.interpolate({
 			inputRange: inputRange,
-			outputRange: [ 40, 40, -29 ],
+			outputRange: [ 55, 40, -29 ],
 			extrapolate: 'clamp',
 			useNativeDriver: true,
 		});
@@ -169,7 +170,7 @@ export default class MessageScreen extends React.Component {
 
 		return scrollY.interpolate({
 			inputRange: shortInputRange,
-			outputRange: [ 1, 1.4 ],
+			outputRange: [ 1, 1.3 ],
 			extrapolate: 'clamp',
 			useNativeDriver: true,
 		});
@@ -180,8 +181,18 @@ export default class MessageScreen extends React.Component {
 
 		return scrollY.interpolate({
 			inputRange: shortInputRange,
-			outputRange: [ 'rgba(0, 0, 0, 0.3)', 'rgba(0, 0, 0, 0.6)' ],
-			//outputRange: [ 'rgba(0, 0, 0, 0.3)', 'rgba(32, 26, 48, 0.5)' ],
+			outputRange: [ 'rgba(0, 0, 0, 0.3)', 'rgba(0, 0, 0, 0.3)' ],
+			//outputRange: [ 'rgba(0, 0, 0, 0.3)', 'rgba(32, 26, 48, 1)' ],
+			extrapolate: 'clamp',
+			useNativeDriver: true,
+		});
+	};
+	_getBlurHeaderOpacity = () => {
+		const { scrollY, shortInputRange, inputRange, headlineHeight } = this.state;
+
+		return scrollY.interpolate({
+			inputRange: inputRange,
+			outputRange: [ 0, 0, 1 ],
 			extrapolate: 'clamp',
 			useNativeDriver: true,
 		});
@@ -371,9 +382,13 @@ export default class MessageScreen extends React.Component {
 	_deleteFile(pos) {}
 
 	render() {
+		const s_width = Dimensions.get('window').width;
+		const s_height = Dimensions.get('window').height;
+
 		const mes = this.state.mes;
 		const club = this.state.club;
 
+		const blurHeaderOpacity = this._getBlurHeaderOpacity();
 		const headlineFontScale = this._getHeadlineFontScale();
 		const headlineMaxWidth = this._getHeadlineMaxWidth();
 		const headlineMarginTop = this._getHeadlineMarginTop();
@@ -570,6 +585,7 @@ export default class MessageScreen extends React.Component {
 									fontSize: 40,
 									transform: [ { scale: headlineFontScale } ],
 									color: 'white',
+									lineHeight: 50,
 								}}
 								onLayout={event => {
 									var { x, y, width, height } = event.nativeEvent.layout;
@@ -675,7 +691,15 @@ export default class MessageScreen extends React.Component {
 						}}
 					>
 						<View style={{ marginTop: 30, marginLeft: 22, marginRight: 20 }}>
-							<Text style={{ fontFamily: 'Poppins-Regular', fontSize: 20, color: 'white', marginBottom: 30 }}>
+							<Text
+								style={{
+									textAlign: 'justify',
+									fontFamily: 'Poppins-Regular',
+									fontSize: 20,
+									color: 'white',
+									marginBottom: 30,
+								}}
+							>
 								{mes.long_text}
 							</Text>
 							{downloadsElements || eventsElements
@@ -723,6 +747,23 @@ export default class MessageScreen extends React.Component {
 				</Animated.ScrollView>
 
 				<Animated.View
+					style={{
+						position: 'absolute',
+						opacity: blurHeaderOpacity,
+						zIndex: 200,
+					}}
+				>
+					<BlurView
+						blurType="dark"
+						blurAmount={100}
+						reducedTransparencyFallbackColor="#201A30"
+						style={{
+							width: s_width,
+							height: s_width * 0.123,
+						}}
+					/>
+				</Animated.View>
+				<Animated.View
 					style={
 						([ s.headlineIcon ], {
 							zIndex: 20,
@@ -739,11 +780,11 @@ export default class MessageScreen extends React.Component {
 						this.setState({ backBtnY: y });
 					}}
 				>
-					<TouchableOpacity onPress={() => this.props.navigation.navigate('ScreenHandler')}>
-						<FontAwesomeIcon style={{ zIndex: 0 }} size={29} color="#F5F5F5" icon={faChevronCircleLeft} />
+					<TouchableOpacity style={{}} onPress={() => this.props.navigation.navigate('ScreenHandler')}>
+						<FontAwesomeIcon style={{ zIndex: 0 }} size={27} color="#F5F5F5" icon={faChevronCircleLeft} />
 					</TouchableOpacity>
 					<TouchableOpacity onPress={() => this._openMessageModal()}>
-						<FontAwesomeIcon style={{ zIndex: 0, marginLeft: 285 }} size={25} color="#F5F5F5" icon={faEllipsisV} />
+						<FontAwesomeIcon style={{ zIndex: 0, marginLeft: 285 }} size={24} color="#F5F5F5" icon={faEllipsisV} />
 					</TouchableOpacity>
 				</Animated.View>
 			</View>
