@@ -27,23 +27,26 @@ import { AnimatedCircularProgress } from 'react-native-circular-progress';
 export default class Toast extends React.Component {
 	constructor(props) {
 		super(props);
+		this.type = this.props.type ? this.props.type : 'timeout';
 		this.visible = false;
 		this.marginTop = new Animated.Value(725);
 		this.reamingBarWidth = new Animated.Value(100);
 	}
 
 	show() {
-		this.reamingBarWidth.setValue(100);
-		Animated
-			.timing(this.reamingBarWidth, {
-				useNativeDriver: false,
-				toValue: 0,
-				duration: 5000,
-				easing: Easing.linear,
-			})
-			.start(() => {
-				this.hide();
-			});
+		if (this.type == 'timeout') {
+			this.reamingBarWidth.setValue(100);
+			Animated
+				.timing(this.reamingBarWidth, {
+					useNativeDriver: false,
+					toValue: 0,
+					duration: 5000,
+					easing: Easing.linear,
+				})
+				.start(() => {
+					this.hide();
+				});
+		}
 
 		this.marginTop.setValue(850);
 		Animated
@@ -84,6 +87,8 @@ export default class Toast extends React.Component {
 	}
 
 	render() {
+		if (this.type == 'progress') this.reamingBarWidth.setValue(this.props.progress);
+
 		if (this.props.visible) {
 			if (!this.visible) {
 				this.visible = true;
@@ -141,7 +146,7 @@ export default class Toast extends React.Component {
 								}}
 								size={25}
 								color="white"
-								icon={faInfoCircle}
+								icon={this.props.icon ? this.props.icon : faInfoCircle}
 							/>
 							<Text
 								style={{

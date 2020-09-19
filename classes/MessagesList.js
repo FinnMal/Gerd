@@ -102,10 +102,15 @@ export class MessagesList extends React.Component {
 
 	onVisibilityChange(mes_id, visible) {
 		var total_visible = 0;
+		console.log('-------------------');
 		this.state.messages[mes_id].visible = visible;
 		Object.keys(this.state.messages).map(mes_id => {
-			if (this.state.messages[mes_id].visible) total_visible++;
+			if (this.state.messages[mes_id].visible) {
+				console.log(mes_id + ' is visible');
+				total_visible++;
+			}
 		});
+		console.log('total_visible: ' + total_visible);
 		if (total_visible == 0) {
 			if (this.state.shows_messages) {
 				this.state.shows_messages = false;

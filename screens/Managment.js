@@ -22,6 +22,7 @@ import { Headlines } from './../app/constants.js';
 import { withNavigation } from 'react-navigation';
 import ClubCard from './../components/ClubCard.js';
 import database from '@react-native-firebase/database';
+import HeaderScrollView from './../components/HeaderScrollView.js';
 
 class ManagmentScreen extends React.Component {
 	uid: null;
@@ -106,35 +107,23 @@ class ManagmentScreen extends React.Component {
 
 		if (this.props.show) {
 			return (
-				<ScrollView
-					style={[ { marginTop: -44, height: '100%' } ]}
-					onLayout={event => {
-						var { x, y, width, height } = event.nativeEvent.layout;
-						//this.checkIfScrollViewIsNeeded(height);
-					}}
+				<HeaderScrollView
+					headline="Verwaltung"
+					headlineFontSize={47}
+					backButton={false}
+					showHeadline={false}
+					actionButton={
+						(
+							<TouchableOpacity style={{ marginLeft: 20 }} onPress={() => this._openAddClub()}>
+								<FontAwesomeIcon size={29} color="#F5F5F5" icon={faPlusCircle} />
+							</TouchableOpacity>
+						)
+					}
 				>
-					<View
-						style={{
-							flexWrap: 'wrap',
-							alignItems: 'flex-start',
-							flexDirection: 'row',
-						}}
-					>
-						<Text style={s.pageHeadline}>Verwaltung</Text>
-						<TouchableOpacity
-							style={{
-								marginTop: s_width * 0.15,
-								marginLeft: s_width * 0.1,
-							}}
-							onPress={() => this._openAddClub()}
-						>
-							<FontAwesomeIcon size={29} color="#F5F5F5" icon={faPlusCircle} />
-						</TouchableOpacity>
-					</View>
-					<View style={{ flex: 1, marginTop: 40, marginLeft: 20, marginRight: 20 }}>
+					<View style={{ flex: 1, marginTop: 40 }}>
 						{clubCards}
 					</View>
-				</ScrollView>
+				</HeaderScrollView>
 			);
 		}
 		return null;
