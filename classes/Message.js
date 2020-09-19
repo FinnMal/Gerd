@@ -336,12 +336,11 @@ export class Message extends React.Component {
                     flexDirection: "row"
                   }}
                 >
-                  <Image
+                  <AutoHeightImage
                     style={{borderRadius: 36}}
                     width={36}
                     source={{
-                      uri:
-                        "https://cdn.jpegmini.com/user/images/slider_puffin_jpegmini_mobile.jpg"
+                      uri: club.logo
                     }}
                   />
                   <View
