@@ -57,12 +57,18 @@ export default class InputBox extends React.Component {
           }}
         >
           <TextInput
-            multiline
-            secureTextEntry={true}
+            keyboardType={
+              this.props.keyboardType ? this.props.keyboardType : "default"
+            }
+            returnKeyType={
+              this.props.returnKeyType ? this.props.returnKeyType : ""
+            }
+            textContentType={this.props.type ? this.props.type : "none"}
+            secureTextEntry={this.state.secure}
             style={{
               maxHeight: 70,
               fontFamily: "Poppins-Medium",
-              marginTop: 8,
+              marginTop: 0,
               padding: 15,
               fontSize: 17,
               color: "#D5D3D9"

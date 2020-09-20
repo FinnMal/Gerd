@@ -40,7 +40,8 @@ export default class Setting extends React.Component {
         headline: this.props.label,
         club: this.props.club,
         utils: this.props.utils,
-        callback: this.props.callback
+        callback: this.props.callback,
+        childs: this.props.children
       });
     }
   }
