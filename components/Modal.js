@@ -13,6 +13,7 @@ import {
   Dimensions,
   Modal
 } from "react-native";
+import GestureRecognizer, {swipeDirections} from "react-native-swipe-gestures";
 
 export default class GerdModal extends React.Component {
   constructor(props) {
@@ -54,13 +55,28 @@ export default class GerdModal extends React.Component {
   }
 
   render() {
+    /*
+<GestureRecognizer
+  onSwipe={(direction, state) => alert(direction)}
+  config={config}
+  style={{
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "red"
+  }}
+>*/
     return (
       <Modal
+        hideModalContentWhileAnimating={true}
+        useNativeDriver={true}
+        isVisible={() => alert("is visible")}
         animationType="slide"
         presentationStyle="formSheet"
         visible={this.state.visible}
+        onShow={() => console.log("onShow")}
         onDismiss={() => console.log("onDismiss")}
         onRequestClose={() => console.log("onRequestClose")}
+        onOrientationChange={() => console.log("onOrientationChange")}
       >
         <View
           style={{

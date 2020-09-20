@@ -57,6 +57,7 @@ export default class Setting extends React.Component {
     var headline = this.props.navigation.getParam("headline", null);
     var club = this.props.navigation.getParam("club", null);
     var utils = this.props.navigation.getParam("utils", null);
+    var childs = this.props.navigation.getParam("childs", null);
     this.state = {
       headline: headline,
       club: club,
@@ -72,9 +73,11 @@ export default class Setting extends React.Component {
           code: "0"
         }
       },
-      callback: this.props.navigation.getParam("callback", null)
+      callback: this.props.navigation.getParam("callback", null),
+      childs: childs
     };
 
+    if (!this.state.club) this.state.club = {};
     if (!this.state.club.invite_codes) this.state.club.invite_codes = {};
 
     //firebase listener
@@ -682,7 +685,7 @@ export default class Setting extends React.Component {
           {pageContent}
         </View>
       );
-    } else if (this.state.type == "name") {
+    } else if (this.state.type == "name" || this.state.type == "textbox") {
       pageContent = (
         <View>
           <InputBox
@@ -838,7 +841,7 @@ export default class Setting extends React.Component {
         </Modal>
 
         <HeaderScrollView headline={pageHeadline}>
-          {pageContent}
+          {this.state.childs ? this.state.childs : pageContent}
         </HeaderScrollView>
         {this.state.type == "groups" || this.state.type == "qrcodes" ? (
           <TouchableOpacity
