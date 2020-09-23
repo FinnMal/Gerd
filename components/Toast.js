@@ -178,7 +178,7 @@ export default class Toast extends React.Component {
               <TouchableOpacity
                 style={{
                   borderRadius: 7,
-                  backgroundColor: "#38304C",
+                  backgroundColor: "#1e1e1e",
                   paddingTop: 7,
                   paddingBottom: 7,
                   paddingLeft: 9,

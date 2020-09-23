@@ -1,54 +1,54 @@
 import React from 'react';
 import AutoHeightImage from 'react-native-auto-height-image';
 import {
-	Alert,
-	TextInput,
-	StyleSheet,
-	Text,
-	View,
-	StatusBar,
-	Image,
-	Button,
-	TouchableOpacity,
-	ScrollView,
-	Animated,
-	Easing,
-	Dimensions,
-	RefreshControl
+  Alert,
+  TextInput,
+  StyleSheet,
+  Text,
+  View,
+  StatusBar,
+  Image,
+  Button,
+  TouchableOpacity,
+  ScrollView,
+  Animated,
+  Easing,
+  Dimensions,
+  RefreshControl
 } from 'react-native';
-import { Headlines } from './../app/constants.js';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faPlusCircle } from '@fortawesome/free-solid-svg-icons';
-import { NotificationCard } from './../app/components.js';
+import {Headlines} from './../app/constants.js';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import {faPlusCircle} from '@fortawesome/free-solid-svg-icons';
+import {NotificationCard} from './../app/components.js';
 import database from '@react-native-firebase/database';
-import { withNavigation } from 'react-navigation';
-import { Message } from './../classes/Message.js';
-import { MessagesList } from './../classes/MessagesList.js';
+import {withNavigation} from 'react-navigation';
+import {Message} from './../classes/Message.js';
+import {MessagesList} from './../classes/MessagesList.js';
 import HeaderScrollView from './../components/HeaderScrollView.js';
 
 class HomeScreen extends React.Component {
-	constructor(props) {
-		super(props);
+  constructor(props) {
+    super(props);
 
-		var utils = this.props.utilsObject;
+    var utils = this.props.utilsObject;
 
-		//var uid = utils.USER_ID;
-		this.state = {
-			newMesList: [],
-			todayMesList: [],
-			olderMesList: [],
-			clubs: {},
-			moveTo: 'none',
-			navPos: 0,
-			utils: utils,
-			uid: utils.getUserID(),
-			account_type: utils.getAccountType(),
-			unread_messages_count: 0,
-		};
-		this.margin = new Animated.Value(0);
-		this.navMarginLeft = new Animated.Value(0);
+    //var uid = utils.USER_ID;
+    this.state = {
+      newMesList: [],
+      todayMesList: [],
+      olderMesList: [],
+      clubs: {},
+      moveTo: 'none',
+      navPos: 0,
+      utils: utils,
+      uid: utils.getUserID(),
+      account_type: utils.getAccountType(),
+      unread_messages_count: 0
+    };
+    this.margin = new Animated.Value(0);
+    this.navMarginLeft = new Animated.Value(0);
 
-		/*
+    /*
 		database().ref('messages/list').on(
 			'value',
 			(function(snapshot) {
@@ -133,50 +133,44 @@ class HomeScreen extends React.Component {
 			}).bind(this)
 		);
 */
-	}
+  }
 
-	doRefresh() {
-		this.state.refreshing = true;
-		this.forceUpdate();
-		this.refs.messagesList.refresh(
-			(function() {
-				this.state.refreshing = false;
-				this.forceUpdate();
-			}).bind(this)
-		);
-	}
+  doRefresh() {
+    this.state.refreshing = true;
+    this.forceUpdate();
+    this.refs.messagesList.refresh((function() {
+      this.state.refreshing = false;
+      this.forceUpdate();
+    }).bind(this));
+  }
 
-	_filterMessages(data, cb) {
-		var c_mes = 0;
-		var messages = {};
-		const total_mes = Object.keys(data).length;
-		cb(data);
+  _filterMessages(data, cb) {
+    var c_mes = 0;
+    var messages = {};
+    const total_mes = Object.keys(data).length;
+    cb(data);
 
-		Object.keys(data).map(mes_id => {
-			var mes = data[mes_id];
-			mes.id = mes_id;
+    Object.keys(data).map(mes_id => {
+      var mes = data[mes_id];
+      mes.id = mes_id;
 
-			var c_group = 0;
-			const total_groups = Object.keys(mes.groups).length;
-			Object.keys(mes.groups).map(group_id => {
-				if (mes.groups[group_id]) {
-					database()
-						.ref('users/' + this.state.uid + '/clubs/' + mes.club_id + '/groups/' + group_id + '/subscribed')
-						.once(
-							'value',
-							(function(snap) {
-								if (snap.val() === true) messages[mes_id] = mes;
-								c_group++;
-								if (c_mes == total_mes && c_group == total_groups) {
-									cb(messages);
-								}
-							}).bind(this)
-						);
-				}
-			});
-			c_mes++;
-		});
-		/*
+      var c_group = 0;
+      const total_groups = Object.keys(mes.groups).length;
+      Object.keys(mes.groups).map(group_id => {
+        if (mes.groups[group_id]) {
+          database().ref('users/' + this.state.uid + '/clubs/' + mes.club_id + '/groups/' + group_id + '/subscribed').once('value', (function(snap) {
+            if (snap.val() === true) 
+              messages[mes_id] = mes;
+            c_group++;
+            if (c_mes == total_mes && c_group == total_groups) {
+              cb(messages);
+            }
+          }).bind(this));
+        }
+      });
+      c_mes++;
+    });
+    /*
 		console.log(JSON.stringify(messages));
 		var ret = {};
 		Object.keys(messages).map(key => {
@@ -188,59 +182,60 @@ class HomeScreen extends React.Component {
 		});
 		return ret;
 		*/
-	}
+  }
 
-	sortList(listName) {
-		var list = this.state[listName];
-		list.sort(function(a, b) {
-			return parseInt(a.ago_seconds) - parseInt(b.ago_seconds);
-		});
-		this.state[listName] = list;
-	}
+  sortList(listName) {
+    var list = this.state[listName];
+    list.sort(function(a, b) {
+      return parseInt(a.ago_seconds) - parseInt(b.ago_seconds);
+    });
+    this.state[listName] = list;
+  }
 
-	generateCards(listName) {
-		var cardsList = Object.keys(this.state[listName]).map(key => {
-			var mes = this.state[listName][key];
-			return (
-				<NotificationCard utils={this.props.utilsObject} content={mes} key={key} navigation={this.props.navigation} />
-			);
-		});
-		this.state[listName] = cardsList;
-	}
+  generateCards(listName) {
+    var cardsList = Object.keys(this.state[listName]).map(key => {
+      var mes = this.state[listName][key];
+      return (<NotificationCard utils={this.props.utilsObject} content={mes} key={key} navigation={this.props.navigation}/>);
+    });
+    this.state[listName] = cardsList;
+  }
 
-	navigateSection(pos, forceUpdate = true) {
-		this.navMarginLeft.setValue(this.state.navPos * 115 - 3);
+  navigateSection(pos, forceUpdate = true) {
+    this.navMarginLeft.setValue(this.state.navPos * 115 - 3);
 
-		this.state.navPos = pos;
+    this.state.navPos = pos;
 
-		this.props.startNavbarAnimation('show', false);
-		if (forceUpdate) this.forceUpdate();
+    this.props.startNavbarAnimation('show', false);
+    if (forceUpdate) 
+      this.forceUpdate();
+    
+    Animated.timing(this.navMarginLeft, {
+      useNativeDriver: false,
+      toValue: pos * 115 - 3,
+      duration: 100,
+      easing: Easing.ease
+    }).start(() => {});
+  }
 
-		Animated
-			.timing(this.navMarginLeft, {
-				useNativeDriver: false,
-				toValue: pos * 115 - 3,
-				duration: 100,
-				easing: Easing.ease,
-			})
-			.start(() => {});
-	}
+  render() {
+    var s = require('./../app/style.js');
+    const marginLeft = this.margin.interpolate({
+      inputRange: [
+        0, 2000
+      ],
+      outputRange: [0, 2000]
+    });
 
-	render() {
-		var s = require('./../app/style.js');
-		const marginLeft = this.margin.interpolate({
-			inputRange: [ 0, 2000 ],
-			outputRange: [ 0, 2000 ],
-		});
+    const nav_margin_left = this.navMarginLeft.interpolate({
+      inputRange: [
+        0, 2000
+      ],
+      outputRange: [0, 2000]
+    });
 
-		const nav_margin_left = this.navMarginLeft.interpolate({
-			inputRange: [ 0, 2000 ],
-			outputRange: [ 0, 2000 ],
-		});
-
-		if (this.props.show) {
-			//if (this.state.newMesList.length == 0 && this.state.navPos == 0) this.navigateSection(1, false);
-			/*<ScrollView
+    if (this.props.show) {
+      //if (this.state.newMesList.length == 0 && this.state.navPos == 0) this.navigateSection(1, false);
+      /*<ScrollView
 				scrollEventThrottle={260}
 				onScroll={event => {
 					var currentOffset = event.nativeEvent.contentOffset.y;
@@ -344,17 +339,17 @@ class HomeScreen extends React.Component {
 						/>
 
 						<TouchableOpacity style={[ styles.navTouch ]} onPress={() => this.navigateSection(0)}>
-							<Text style={[ styles.navText, { color: this.state.navPos == 0 ? '#201A30' : '#ffffff' } ]}>
+							<Text style={[ styles.navText, { color: this.state.navPos == 0 ? '#121212' : '#ffffff' } ]}>
 								Neu
 							</Text>
 						</TouchableOpacity>
 						<TouchableOpacity style={styles.navTouch} onPress={() => this.navigateSection(1)}>
-							<Text style={[ styles.navText, { color: this.state.navPos == 1 ? '#201A30' : '#ffffff' } ]}>
+							<Text style={[ styles.navText, { color: this.state.navPos == 1 ? '#121212' : '#ffffff' } ]}>
 								Heute
 							</Text>
 						</TouchableOpacity>
 						<TouchableOpacity style={styles.navTouch} onPress={() => this.navigateSection(2)}>
-							<Text style={[ styles.navText, { color: this.state.navPos == 2 ? '#201A30' : '#ffffff' } ]}>
+							<Text style={[ styles.navText, { color: this.state.navPos == 2 ? '#121212' : '#ffffff' } ]}>
 								Älter
 							</Text>
 						</TouchableOpacity>
@@ -363,150 +358,175 @@ class HomeScreen extends React.Component {
 				<MessagesList ref="messagesList" section={this.state.navPos} utils={this.state.utils} />
 			</ScrollView>
 			*/
-			return (
-				<HeaderScrollView
-					headline="Mitteilungen"
-					marginTop={100}
-					headlineFontSize={47}
-					backButton={false}
-					showHeadline={false}
-					setNavbarPos={pos => {
-						this.props.startNavbarAnimation(pos);
-					}}
-					actionButton={
-						this.state.account_type == 'manager'
-							? <TouchableOpacity onPress={() => this.openAddMessage()}>
-									<FontAwesomeIcon size={29} color="#F5F5F5" icon={faPlusCircle} />
-								</TouchableOpacity>
-							: void 0
-					}
-					refreshControl={
-						<RefreshControl style={{}} refreshing={this.state.refreshing} onRefresh={this.doRefresh.bind(this)} />
-					}
-				>
-					<View
-						style={{
-							marginTop: -30,
-							marginRight: -20,
-							marginLeft: 0,
-							flexWrap: 'wrap',
-							alignItems: 'flex-start',
-							flexDirection: 'row',
-						}}
-					>
+      return (
+        <HeaderScrollView
+          headline="Mitteilungen"
+          marginTop={100}
+          headlineFontSize={47}
+          backButton={false}
+          showHeadline={false}
+          setNavbarPos={pos => {
+            this.props.startNavbarAnimation(pos);
+          }}
+          actionButton={this.state.account_type == 'manager'
+            ? <TouchableOpacity onPress={() => this.openAddMessage()}>
+                <FontAwesomeIcon size={29} color="#F5F5F5" icon={faPlusCircle}/>
+              </TouchableOpacity>
+            : void 0
+}
+          refreshControl={<RefreshControl style = {{}}refreshing = {
+            this.state.refreshing
+          }
+          onRefresh = {
+            this.doRefresh.bind(this)
+          } />
+}>
+          <View
+            style={{
+              marginTop: -30,
+              marginRight: -20,
+              marginLeft: 0,
+              flexWrap: 'wrap',
+              alignItems: 'flex-start',
+              flexDirection: 'row'
+            }}>
 
-						<View
-							style={{
-								marginTop: 20,
-								flexWrap: 'wrap',
-								alignItems: 'flex-start',
-								flexDirection: 'row',
-							}}
-						>
-							{this.state.unread_messages_count
-								? <View
-										style={{
-											minHeight: 20,
-											minWidth: 20,
-											zIndex: 100,
-											position: 'absolute',
-											marginTop: -10,
-											marginLeft: 50,
-											borderRadius: 40,
-											paddingLeft: 5,
-											paddingRight: 5,
-											paddingTop: 2,
-											paddingBottom: 1,
-											backgroundColor: 'red',
-											justifyContent: 'center',
-											alignItems: 'center',
-										}}
-									>
-										<Text style={{ fontFamily: 'Poppins-SemiBold', color: 'white' }}>
-											{this.state.unread_messages_count}
-										</Text>
-									</View>
-								: void 0}
+            <View
+              style={{
+                marginTop: 20,
+                flexWrap: 'wrap',
+                alignItems: 'flex-start',
+                flexDirection: 'row'
+              }}>
+              {
+                this.state.unread_messages_count
+                  ? <View
+                      style={{
+                        minHeight: 20,
+                        minWidth: 20,
+                        zIndex: 100,
+                        position: 'absolute',
+                        marginTop: -10,
+                        marginLeft: 50,
+                        borderRadius: 40,
+                        paddingLeft: 5,
+                        paddingRight: 5,
+                        paddingTop: 2,
+                        paddingBottom: 1,
+                        backgroundColor: 'red',
+                        justifyContent: 'center',
+                        alignItems: 'center'
+                      }}>
+                      <Text style={{
+                          fontFamily: 'Poppins-SemiBold',
+                          color: 'white'
+                        }}>
+                        {this.state.unread_messages_count}
+                      </Text>
+                    </View>
+                  : void 0
+              }
 
-							<Animated.View
-								style={{
-									borderRadius: 16,
-									marginTop: -2.5,
-									position: 'absolute',
-									width: 76,
-									backgroundColor: '#0DF5E3',
-									height: 31,
-									shadowColor: '#0DF5E3',
-									shadowOffset: {
-										width: 6,
-										height: 0,
-									},
-									marginLeft: nav_margin_left,
-									shadowOpacity: 0.20,
-									shadowRadius: 20.00,
-								}}
-							/>
+              <Animated.View
+                style={{
+                  borderRadius: 16,
+                  marginTop: -2.5,
+                  position: 'absolute',
+                  width: 76,
+                  backgroundColor: '#0DF5E3',
+                  height: 31,
+                  opacity: 0.9,
+                  shadowColor: '#0DF5E3',
+                  shadowOffset: {
+                    width: 6,
+                    height: 0
+                  },
+                  marginLeft: nav_margin_left,
+                  shadowOpacity: 0.20,
+                  shadowRadius: 20.00
+                }}/>
 
-							<TouchableOpacity style={[ styles.navTouch ]} onPress={() => this.navigateSection(0)}>
-								<Text style={[ styles.navText, { color: this.state.navPos == 0 ? '#201A30' : '#ffffff' } ]}>
-									Neu
-								</Text>
-							</TouchableOpacity>
-							<TouchableOpacity style={styles.navTouch} onPress={() => this.navigateSection(1)}>
-								<Text style={[ styles.navText, { color: this.state.navPos == 1 ? '#201A30' : '#ffffff' } ]}>
-									Heute
-								</Text>
-							</TouchableOpacity>
-							<TouchableOpacity style={styles.navTouch} onPress={() => this.navigateSection(2)}>
-								<Text style={[ styles.navText, { color: this.state.navPos == 2 ? '#201A30' : '#ffffff' } ]}>
-									Älter
-								</Text>
-							</TouchableOpacity>
-						</View>
-					</View>
-					<View style={{ marginLeft: -20 }}>
-						<MessagesList ref="messagesList" section={this.state.navPos} utils={this.state.utils} />
-					</View>
-				</HeaderScrollView>
-			);
-		}
-		return null;
-	}
+              <TouchableOpacity style={[styles.navTouch]} onPress={() => this.navigateSection(0)}>
+                <Text
+                  style={[
+                    styles.navText, {
+                      color: this.state.navPos == 0
+                        ? '#121212'
+                        : '#ffffff'
+                    }
+                  ]}>
+                  Neu
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.navTouch} onPress={() => this.navigateSection(1)}>
+                <Text
+                  style={[
+                    styles.navText, {
+                      color: this.state.navPos == 1
+                        ? '#121212'
+                        : '#ffffff'
+                    }
+                  ]}>
+                  Heute
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.navTouch} onPress={() => this.navigateSection(2)}>
+                <Text
+                  style={[
+                    styles.navText, {
+                      color: this.state.navPos == 2
+                        ? '#121212'
+                        : '#ffffff'
+                    }
+                  ]}>
+                  Älter
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <View style={{
+              marginLeft: -20
+            }}>
+            <MessagesList ref="messagesList" section={this.state.navPos} utils={this.state.utils}/>
+          </View>
+        </HeaderScrollView>
+      );
+    }
+    return null;
+  }
 
-	checkIfScrollViewIsNeeded(viewHeight) {
-		if (viewHeight < Dimensions.get('window').height) {
-			this.props.setScrollViewEnabled(false);
-		} else {
-			this.props.setScrollViewEnabled(true);
-		}
-	}
+  checkIfScrollViewIsNeeded(viewHeight) {
+    if (viewHeight < Dimensions.get('window').height) {
+      this.props.setScrollViewEnabled(false);
+    } else {
+      this.props.setScrollViewEnabled(true);
+    }
+  }
 
-	openAddMessage() {
-		this.props.navigation.navigate('NewMessageScreen', {
-			utils: this.props.utilsObject,
-		});
-	}
+  openAddMessage() {
+    this.props.navigation.navigate('NewMessageScreen', {utils: this.props.utilsObject});
+  }
 }
 
 //Styles
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: 'transparent',
-	},
-	navText: {
-		fontFamily: 'Poppins-ExtraBold',
-		fontSize: 22,
-		marginLeft: 0,
-		color: 'white',
-	},
-	navTouch: {
-		width: 70,
-		marginTop: 0,
-		marginRight: 45,
-		alignItems: 'center',
-		justifyContent: 'center',
-	},
+  container: {
+    flex: 1,
+    backgroundColor: 'transparent'
+  },
+  navText: {
+    fontFamily: 'Poppins-ExtraBold',
+    fontSize: 22,
+    marginLeft: 0,
+    color: 'white'
+  },
+  navTouch: {
+    width: 70,
+    marginTop: 0,
+    marginRight: 45,
+    alignItems: 'center',
+    justifyContent: 'center'
+  }
 });
 
 export default withNavigation(HomeScreen);

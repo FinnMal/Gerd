@@ -326,7 +326,7 @@ export default class Setting extends React.Component {
                 style={{
                   backgroundColor: group.has_admin_rights
                     ? "#16FFD7"
-                    : "#38304C",
+                    : "#1e1e1e",
                   padding: 7,
                   borderRadius: 15,
                   borderBottomLeftRadius:
@@ -342,7 +342,7 @@ export default class Setting extends React.Component {
                 <View style={{padding: 8}}>
                   <FontAwesomeIcon
                     size={24}
-                    color={group.has_admin_rights ? "#38304C" : "#16FFD7"}
+                    color={group.has_admin_rights ? "#1e1e1e" : "#16FFD7"}
                     icon={group.public === false ? faLock : faLayerGroup}
                   />
                 </View>
@@ -358,7 +358,7 @@ export default class Setting extends React.Component {
                     style={{
                       fontFamily: "Poppins-SemiBold",
                       fontSize: 21,
-                      color: group.has_admin_rights ? "#38304C" : "white"
+                      color: group.has_admin_rights ? "#1e1e1e" : "white"
                     }}
                   >
                     {group.name}
@@ -368,7 +368,7 @@ export default class Setting extends React.Component {
                       marginTop: -4,
                       fontFamily: "Poppins-Medium",
                       fontSize: 16,
-                      color: group.has_admin_rights ? "#38304C" : "white",
+                      color: group.has_admin_rights ? "#1e1e1e" : "white",
                       opacity: 0.77
                     }}
                   >
@@ -381,7 +381,7 @@ export default class Setting extends React.Component {
                 >
                   <FontAwesomeIcon
                     size={22}
-                    color={group.has_admin_rights ? "#38304C" : "white"}
+                    color={group.has_admin_rights ? "#1e1e1e" : "white"}
                     icon={faEllipsisV}
                   />
                 </TouchableOpacity>
@@ -443,7 +443,7 @@ export default class Setting extends React.Component {
               >
                 <TouchableOpacity
                   style={{
-                    backgroundColor: "#38304C",
+                    backgroundColor: "#1e1e1e",
                     padding: 7,
                     borderRadius: 15,
                     borderBottomLeftRadius:
@@ -525,12 +525,12 @@ export default class Setting extends React.Component {
                     <ActivityIndicator
                       style={{transform: [{scale: 0.9}]}}
                       size="small"
-                      color="#38304C"
+                      color="#1e1e1e"
                     />
                     <Text
                       style={{
                         marginLeft: 10,
-                        color: "#38304C",
+                        color: "#1e1e1e",
                         fontSize: 16,
                         fontFamily: "Poppins-Bold"
                       }}
@@ -738,7 +738,7 @@ export default class Setting extends React.Component {
               >
                 NAME
               </Text>
-              <View style={{borderRadius: 10, backgroundColor: "#38304C"}}>
+              <View style={{borderRadius: 10, backgroundColor: "#1e1e1e"}}>
                 <TextInput
                   multiline
                   autoCorrect={false}
@@ -786,7 +786,7 @@ export default class Setting extends React.Component {
                 }}
                 trackColor={{false: "#575757", true: "#16FFD7"}}
                 thumbColor={
-                  this.state.modal.group.public ? "#38304C" : "#f4f3f4"
+                  this.state.modal.group.public ? "#1e1e1e" : "#f4f3f4"
                 }
                 ios_backgroundColor="#3e3e3e"
                 onValueChange={() => {
@@ -825,7 +825,7 @@ export default class Setting extends React.Component {
                 trackColor={{false: "#575757", true: "#16FFD7"}}
                 thumbColor={
                   this.state.modal.group.has_admin_rights
-                    ? "#38304C"
+                    ? "#1e1e1e"
                     : "#f4f3f4"
                 }
                 ios_backgroundColor="#3e3e3e"
@@ -902,7 +902,7 @@ export default class Setting extends React.Component {
                 zIndex: 0
               }}
               size={27}
-              color="#38304C"
+              color="#1e1e1e"
               icon={faPlus}
             />
           </TouchableOpacity>

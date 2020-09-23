@@ -470,7 +470,7 @@ export default class MessageScreen extends React.Component {
 							<View
 								style={{
 									padding: 20,
-									backgroundColor: '#201A30',
+									backgroundColor: '#121212',
 									height: '100%',
 								}}
 							>
@@ -500,18 +500,18 @@ export default class MessageScreen extends React.Component {
 										}}
 										onPress={text => this._editMessage()}
 									>
-										<Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: '#38304C' }}>FERTIG</Text>
+										<Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: '#1e1e1e' }}>FERTIG</Text>
 									</TouchableOpacity>
 								</View>
 
 								<View
-									style={{ marginLeft: -20, height: 0.5, marginBottom: 40, backgroundColor: '#38304C', width: '140%' }}
+									style={{ marginLeft: -20, height: 0.5, marginBottom: 40, backgroundColor: '#1e1e1e', width: '140%' }}
 								/>
 
 								<ScrollView>
 									<View style={{ marginBottom: 20 }}>
 										<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>Überschrift</Text>
-										<View style={{ borderRadius: 20, backgroundColor: '#38304C' }}>
+										<View style={{ borderRadius: 20, backgroundColor: '#1e1e1e' }}>
 											<TextInput
 												multiline
 												autoCorrect={false}
@@ -531,7 +531,7 @@ export default class MessageScreen extends React.Component {
 									</View>
 									<View style={{ marginBottom: 20 }}>
 										<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>Subtext</Text>
-										<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
+										<View style={{ borderRadius: 10, backgroundColor: '#1e1e1e' }}>
 											<TextInput
 												multiline
 												autoCorrect={false}
@@ -551,7 +551,7 @@ export default class MessageScreen extends React.Component {
 									</View>
 									<View style={{ marginBottom: 20 }}>
 										<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>Text</Text>
-										<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
+										<View style={{ borderRadius: 10, backgroundColor: '#1e1e1e' }}>
 											<TextInput
 												multiline
 												autoCorrect={false}
@@ -685,7 +685,7 @@ export default class MessageScreen extends React.Component {
 							zIndex: 10,
 							minHeight: 615,
 							marginTop: 240 + this.state.headlineHeight - 90,
-							backgroundColor: '#201A30',
+							backgroundColor: '#121212',
 							borderTopLeftRadius: 37,
 							borderTopRightRadius: 37,
 						}}
@@ -711,7 +711,7 @@ export default class MessageScreen extends React.Component {
 											borderRadius: 30,
 											marginLeft: -22,
 											marginTop: 0,
-											backgroundColor: '#38304C',
+											backgroundColor: '#1e1e1e',
 											width: '120%',
 										}}
 									>
@@ -756,7 +756,7 @@ export default class MessageScreen extends React.Component {
 					<BlurView
 						blurType="dark"
 						blurAmount={100}
-						reducedTransparencyFallbackColor="#201A30"
+						reducedTransparencyFallbackColor="#121212"
 						style={{
 							width: s_width,
 							height: s_width * 0.123,

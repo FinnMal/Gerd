@@ -173,7 +173,7 @@ export default class File extends React.Component {
 							<View
 								style={{
 									padding: 20,
-									backgroundColor: '#201A30',
+									backgroundColor: '#121212',
 									height: '100%',
 								}}
 							>
@@ -203,17 +203,17 @@ export default class File extends React.Component {
 										}}
 										onPress={text => this.editFile()}
 									>
-										<Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: '#38304C' }}>FERTIG</Text>
+										<Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: '#1e1e1e' }}>FERTIG</Text>
 									</TouchableOpacity>
 								</View>
 
 								<View
-									style={{ marginLeft: -20, height: 0.5, marginBottom: 40, backgroundColor: '#38304C', width: '140%' }}
+									style={{ marginLeft: -20, height: 0.5, marginBottom: 40, backgroundColor: '#1e1e1e', width: '140%' }}
 								/>
 
 								<View style={{ marginBottom: 20 }}>
 									<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>NAME</Text>
-									<View style={{ borderRadius: 10, backgroundColor: '#38304C' }}>
+									<View style={{ borderRadius: 10, backgroundColor: '#1e1e1e' }}>
 										<TextInput
 											multiline
 											autoCorrect={false}
@@ -250,7 +250,7 @@ export default class File extends React.Component {
 							flexWrap: 'wrap',
 							flexDirection: 'row',
 							padding: 15,
-							backgroundColor: this.props.card_type != 'normal' ? '#38304C' : '#201A30',
+							backgroundColor: this.props.card_type != 'normal' ? '#1e1e1e' : '#121212',
 							marginBottom: 0,
 							borderRadius: 13,
 						}}
@@ -276,7 +276,7 @@ export default class File extends React.Component {
 										fill={this.state.download_progress}
 										tintColor="#0DF5E3"
 										onAnimationComplete={() => console.log('onAnimationComplete')}
-										backgroundColor="#201A30"
+										backgroundColor="#121212"
 									/>
 								: void 0}
 						</View>

@@ -26,6 +26,7 @@ import InputBox from "./../components/InputBox.js";
 import Button from "./../components/Button.js";
 import User from "./../classes/User.js";
 import {faTrash, faEye, faUser} from "@fortawesome/free-solid-svg-icons";
+import {AnimatedCircularProgress} from 'react-native-circular-progress';
 
 class SettingsScreen extends React.Component {
   user: null;
@@ -42,7 +43,7 @@ class SettingsScreen extends React.Component {
       }
     };
 
-    this.user = new User(utils.getUserID());
+    this.user = utils.getUser();
 
     var cb = function() {
       this.forceUpdate();
@@ -52,14 +53,28 @@ class SettingsScreen extends React.Component {
     this.user.startListener("email", cb);
     this.user.startListener("password", cb);
     this.user.startListener("img", cb);
-    this.user.startListener(
-      "options",
-      function() {
-        this.forceUpdate();
-      }.bind(this)
-    );
+    this.user.startListener("options", function() {
+      this.forceUpdate();
+    }.bind(this));
 
     this.margin = new Animated.Value(0);
+  }
+
+  openImagePicker() {
+    this.state.utils.openImagePicker(function(ok, percentage_done, url, error) {
+      if (ok && percentage_done > -1) {
+        this.state.image_upload.active = true;
+        this.state.image_upload.progress = percentage_done;
+      } else if (ok && percentage_done == -1) {
+        this.state.image_upload.active = false;
+        this.state.image_upload.progress = percentage_done;
+
+        if (url) 
+          this.user.setImage(url);
+        }
+      
+      this.forceUpdate();
+    }.bind(this));
   }
 
   render() {
@@ -68,56 +83,57 @@ class SettingsScreen extends React.Component {
     const user = this.user;
     var s = require("./../app/style.js");
     const marginLeft = this.margin.interpolate({
-      inputRange: [0, 2000],
+      inputRange: [
+        0, 2000
+      ],
       outputRange: [0, 2000]
     });
 
     if (this.props.show) {
       return (
-        <HeaderScrollView
-          marginTop={80}
-          headline="Einstellungen"
-          headlineFontSize={47}
-          backButton={false}
-          showHeadline={false}
-        >
-          <View style={{marginLeft: -20, marginRight: -20}}>
-            <View style={{backgroundColor: "#38304C", padding: 15}}>
-              <View
-                style={{
+        <HeaderScrollView marginBottom={100} marginTop={80} headline="Einstellungen" headlineFontSize={47} backButton={false} showHeadline={false}>
+          <View style={{
+              marginLeft: -20,
+              marginRight: -20,
+              marginBottom: 50
+            }}>
+            <View style={{
+                backgroundColor: "#2e2e2e",
+                padding: 15
+              }}>
+              <View style={{
                   flexWrap: "wrap",
                   alignItems: "flex-start",
                   flexDirection: "row"
-                }}
-              >
+                }}>
                 <TouchableOpacity onPress={() => this.openImagePicker()}>
-                  {this.state.image_upload.active ? (
-                    <AnimatedCircularProgress
-                      size={57}
-                      width={3}
-                      style={{
-                        position: "absolute",
-                        marginTop: -3.5,
-                        marginLeft: -3.5
-                      }}
-                      fill={this.state.image_upload.progress}
-                      tintColor="#0DF5E3"
-                      onAnimationComplete={() =>
-                        console.log("onAnimationComplete")
-                      }
-                      backgroundColor="#201A30"
-                    />
-                  ) : (
-                    void 0
-                  )}
+                  {
+                    this.state.image_upload.active
+                      ? (
+                        <AnimatedCircularProgress
+                          size={57}
+                          width={3}
+                          style={{
+                            position: "absolute",
+                            marginTop: -3.5,
+                            marginLeft: -3.5
+                          }}
+                          fill={this.state.image_upload.progress}
+                          tintColor="#0DF5E3"
+                          onAnimationComplete={() => console.log("onAnimationComplete")}
+                          backgroundColor="#201A30"/>
+                      )
+                      : (void 0)
+                  }
 
                   <AutoHeightImage
-                    style={{borderRadius: 50}}
+                    style={{
+                      borderRadius: 50
+                    }}
                     width={50}
                     source={{
                       uri: user.getImage()
-                    }}
-                  />
+                    }}/>
                 </TouchableOpacity>
                 <View
                   style={{
@@ -125,28 +141,24 @@ class SettingsScreen extends React.Component {
                     height: 50,
                     justifyContent: "center",
                     maxWidth: 275
-                  }}
-                >
+                  }}>
                   <Text
                     style={{
                       fontSize: 21,
                       color: "white",
                       fontFamily: "Poppins-SemiBold"
-                    }}
-                  >
+                    }}>
                     {user.getName()}
                   </Text>
                 </View>
               </View>
             </View>
-            <View
-              style={{marginTop: 60, backgroundColor: "#38304C", padding: 15}}
-            >
-              <Setting
-                label="Account"
-                icon={faUser}
-                utils={this.props.utilsObject}
-              >
+            <View style={{
+                marginTop: 60,
+                backgroundColor: "#2e2e2e",
+                padding: 15
+              }}>
+              <Setting label="Account" icon={faUser} utils={this.props.utilsObject}>
                 <AccountSetting
                   name={user.getName()}
                   email={user.getMail()}
@@ -156,13 +168,14 @@ class SettingsScreen extends React.Component {
                     this.user.updateMail(values.email);
                     this.user.updatePassword(values.password);
                     this.state.utils.getNavigation().navigate("ScreenHandler");
-                  }}
-                />
+                  }}/>
               </Setting>
             </View>
-            <View
-              style={{marginTop: 40, backgroundColor: "#38304C", padding: 15}}
-            >
+            <View style={{
+                marginTop: 40,
+                backgroundColor: "#2e2e2e",
+                padding: 15
+              }}>
               <Setting
                 type="switch"
                 isEnabled={this.user.getOption("show_groups")}
@@ -170,8 +183,7 @@ class SettingsScreen extends React.Component {
                   this.user.toggleOption("show_groups");
                 }}
                 label="Empfänger anzeigen"
-                icon={faEye}
-              />
+                icon={faEye}/>
               <Setting
                 type="switch"
                 isEnabled={this.user.getOption("send_notifications")}
@@ -179,49 +191,29 @@ class SettingsScreen extends React.Component {
                   this.user.toggleOption("send_notifications");
                 }}
                 label="Mitteilungen senden"
-                icon={faEye}
-              />
+                icon={faEye}/>
             </View>
-            <View
-              style={{marginTop: 40, backgroundColor: "#38304C", padding: 15}}
-            >
-              <Setting
-                label="Vereine"
-                icon={faTrash}
-                onPress={() => alert("setting")}
-              />
-              <Setting
-                label="Konto löschen"
-                icon={faTrash}
-                onPress={() => alert("setting")}
-              />
+            <View style={{
+                marginTop: 40,
+                backgroundColor: "#2e2e2e",
+                padding: 15
+              }}>
+              <Setting label="Vereine" icon={faTrash} onPress={() => alert("setting")}/>
+              <Setting label="Konto löschen" icon={faTrash} onPress={() => alert("setting")}/>
             </View>
 
-            <View
-              style={{marginTop: 40, backgroundColor: "#38304C", padding: 15}}
-            >
-              <Setting
-                color="red"
-                label="Konto löschen"
-                icon={faTrash}
-                iconColor="light"
-                type="action"
-                onPress={() => alert("setting")}
-              />
+            <View style={{
+                marginTop: 40,
+                backgroundColor: "#2e2e2e",
+                padding: 15
+              }}>
+              <Setting color="red" label="Konto löschen" icon={faTrash} iconColor="light" type="action" onPress={() => alert("setting")}/>
             </View>
           </View>
         </HeaderScrollView>
       );
     }
     return null;
-  }
-
-  checkIfScrollViewIsNeeded(viewHeight) {
-    if (viewHeight < Dimensions.get("window").height) {
-      this.props.setScrollViewEnabled(false);
-    } else {
-      this.props.setScrollViewEnabled(true);
-    }
   }
 }
 
@@ -247,14 +239,7 @@ class AccountSetting extends React.Component {
   render() {
     return (
       <View>
-        <InputBox
-          returnKeyType="next"
-          type="name"
-          label="Name"
-          marginTop={-10}
-          value={this.state.name}
-          onChange={v => (this.state.name = v)}
-        />
+        <InputBox returnKeyType="next" type="name" label="Name" marginTop={-10} value={this.state.name} onChange={v => (this.state.name = v)}/>
         <InputBox
           keyboardType="email-address"
           returnKeyType="next"
@@ -262,8 +247,7 @@ class AccountSetting extends React.Component {
           label="E-Mail"
           marginTop={20}
           value={this.state.email}
-          onChange={v => (this.state.email = v)}
-        />
+          onChange={v => (this.state.email = v)}/>
         <InputBox
           returnKeyType="done"
           type="newPassword"
@@ -271,13 +255,8 @@ class AccountSetting extends React.Component {
           label="Passwort"
           marginTop={20}
           value={this.state.password}
-          onChange={v => (this.state.password = v)}
-        />
-        <Button
-          marginTop={40}
-          label="Fertig"
-          onPress={() => this.props.onChange(this.state)}
-        />
+          onChange={v => (this.state.password = v)}/>
+        <Button marginTop={40} label="Fertig" onPress={() => this.props.onChange(this.state)}/>
       </View>
     );
   }

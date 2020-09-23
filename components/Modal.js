@@ -81,7 +81,7 @@ export default class GerdModal extends React.Component {
         <View
           style={{
             padding: 20,
-            backgroundColor: "#201A30",
+            backgroundColor: "#121212",
             height: "100%"
           }}
         >
@@ -122,7 +122,7 @@ export default class GerdModal extends React.Component {
                   textTransform: "uppercase",
                   fontSize: 18,
                   fontFamily: "Poppins-Bold",
-                  color: "#38304C"
+                  color: "#1e1e1e"
                 }}
               >
                 {this.state.done_text}
@@ -134,7 +134,7 @@ export default class GerdModal extends React.Component {
               marginLeft: -20,
               height: 0.5,
               marginBottom: 40,
-              backgroundColor: "#38304C",
+              backgroundColor: "#1e1e1e",
               width: "140%"
             }}
           />

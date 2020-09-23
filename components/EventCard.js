@@ -88,8 +88,8 @@ export default class EventCard extends React.Component {
 	render() {
 		//var s = require('./style.js');
 
-		var backgroundColor = '#201A30';
-		if (this.props.card_type == 'new_message') backgroundColor = '#38304C';
+		var backgroundColor = '#121212';
+		if (this.props.card_type == 'new_message') backgroundColor = '#1e1e1e';
 		else if (this.props.card_type == 'preview') backgroundColor = '';
 
 		var fontColor = '#BBB0B5';
@@ -182,7 +182,7 @@ export default class EventCard extends React.Component {
 					{this.props.card_type == 'message'
 						? <TouchableOpacity
 								style={{
-									backgroundColor: '#38304C',
+									backgroundColor: '#1e1e1e',
 									borderRadius: 25,
 									marginTop: 30,
 									marginLeft: 20,
@@ -222,7 +222,7 @@ export default class EventCard extends React.Component {
 									alignItems: 'center',
 								}}
 							>
-								<FontAwesomeIcon size={17} color="#38304C" icon={faPen} />
+								<FontAwesomeIcon size={17} color="#1e1e1e" icon={faPen} />
 							</TouchableOpacity>
 							<TouchableOpacity
 								onPress={() => this.props.onDelete(this.props.pos)}
@@ -237,7 +237,7 @@ export default class EventCard extends React.Component {
 									alignItems: 'center',
 								}}
 							>
-								<FontAwesomeIcon size={17} color="#38304C" icon={faTrash} />
+								<FontAwesomeIcon size={17} color="#1e1e1e" icon={faTrash} />
 							</TouchableOpacity>
 						</View>
 					: void 0}

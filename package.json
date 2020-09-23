@@ -41,6 +41,7 @@
     "react-native-file-viewer": "^2.1.1",
     "react-native-fs": "^2.16.6",
     "react-native-gesture-handler": "~1.8.0",
+    "react-native-haptic-feedback": "^1.10.0",
     "react-native-image-crop-picker": "^0.35.0",
     "react-native-image-picker": "^2.3.4",
     "react-native-input-scroll-view": "^1.11.0",
