@@ -8,14 +8,19 @@ import {
   Easing,
   Dimensions
 } from "react-native";
+import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
 
 export default class InputBox extends React.Component {
   constructor(props) {
     super(props);
 
     sizes = {
-      small: [5, 12, 18],
-      normal: [7, 20, 18],
+      small: [
+        5, 12, 18
+      ],
+      normal: [
+        7, 20, 18
+      ],
       big: [11, 25, 18]
     };
 
@@ -24,13 +29,21 @@ export default class InputBox extends React.Component {
     };
 
     //set default values
-    this.props.label = this.props.label ? this.props.label : "Button";
-    this.props.margin = this.props.margin ? this.props.margin : 0;
-    this.props.marginTop = this.props.marginTop ? this.props.marginTop : 0;
+    this.props.label = this.props.label
+      ? this.props.label
+      : "Button";
+    this.props.margin = this.props.margin
+      ? this.props.margin
+      : 0;
+    this.props.marginTop = this.props.marginTop
+      ? this.props.marginTop
+      : 0;
     this.props.marginBottom = this.props.marginBottom
       ? this.props.marginBottom
       : 20;
-    this.props.marginLeft = this.props.marginLeft ? this.props.marginLeft : 0;
+    this.props.marginLeft = this.props.marginLeft
+      ? this.props.marginLeft
+      : 0;
     this.props.marginRight = this.props.marginRight
       ? this.props.marginRight
       : 20;
@@ -38,13 +51,21 @@ export default class InputBox extends React.Component {
     this.state.sizes = this.props.size
       ? sizes[this.props.size]
       : sizes["normal"];
+
+    this.state.text_color = "#1e1e1e"
+    this.state.background_color = "#0DF5E3"
+    if (this.props.color == "danger") {
+      this.state.text_color = "white"
+      this.state.background_color = "red"
+    }
     console.log(sizes);
   }
 
   _onPress(value) {
-    if (this.props.onPress) this.props.onPress();
-  }
-
+    if (this.props.onPress) 
+      this.props.onPress();
+    }
+  
   render() {
     return (
       <View
@@ -53,8 +74,7 @@ export default class InputBox extends React.Component {
           alignItems: "flex-start",
           flexDirection: "row",
           justifyContent: "flex-start"
-        }}
-      >
+        }}>
         <TouchableOpacity
           style={{
             paddingTop: this.state.sizes[0],
@@ -67,21 +87,32 @@ export default class InputBox extends React.Component {
             marginBottom: this.props.marginBottom,
             marginLeft: this.props.marginLeft,
             marginRight: this.props.marginRight,
-            backgroundColor: "#0DF5E3",
+            backgroundColor: this.state.background_color,
             justifyContent: "center",
             alignItems: "center"
           }}
-          onPress={text => this._onPress()}
-        >
-          <Text
-            style={{
-              fontSize: this.state.sizes[2],
-              fontFamily: "Poppins-Bold",
-              color: "#38304C"
-            }}
-          >
-            {this.props.label}
-          </Text>
+          onPress={text => this._onPress()}>
+          <View style={{
+              flexWrap: 'wrap',
+              alignItems: 'flex-start',
+              flexDirection: 'row'
+            }}>
+            {
+              this.props.icon
+                ? <FontAwesomeIcon style={{
+                      marginRight: 15
+                    }} size={this.state.sizes[2]} color="#1e1e1e" icon={this.props.icon}/>
+                : void 0
+            }
+
+            <Text style={{
+                fontSize: this.state.sizes[2],
+                fontFamily: "Poppins-Bold",
+                color: "#1e1e1e"
+              }}>
+              {this.props.label}
+            </Text>
+          </View>
         </TouchableOpacity>
       </View>
     );

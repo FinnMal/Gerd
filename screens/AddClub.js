@@ -329,7 +329,7 @@ class AddClubScreen extends React.Component {
 					<Modal animationType="slide" presentationStyle="formSheet" visible={this.state.modal_visible[0]}>
 						<View
 							style={{
-								backgroundColor: '#201A30',
+								backgroundColor: '#121212',
 								height: '100%',
 								justifyContent: 'center',
 								alignItems: 'center',
@@ -404,7 +404,7 @@ class AddClubScreen extends React.Component {
 																	marginRight: 15,
 																}}
 																size={25}
-																color="#201A30"
+																color="#121212"
 																icon={faExclamationCircle}
 															/>
 														: void 0}
@@ -412,7 +412,7 @@ class AddClubScreen extends React.Component {
 														style={{
 															marginRight: 15,
 															opacity: 0.8,
-															color: '#201A30',
+															color: '#121212',
 															fontFamily: 'Poppins-Bold',
 															fontSize: 26,
 														}}
@@ -428,7 +428,7 @@ class AddClubScreen extends React.Component {
 																	marginTop: 3,
 																}}
 																size={25}
-																color="#201A30"
+																color="#121212"
 																icon={faChevronCircleRight}
 															/>
 														: void 0}
@@ -444,7 +444,7 @@ class AddClubScreen extends React.Component {
 						<View
 							style={{
 								padding: 20,
-								backgroundColor: '#201A30',
+								backgroundColor: '#121212',
 								height: '100%',
 							}}
 						>
@@ -474,12 +474,12 @@ class AddClubScreen extends React.Component {
 									}}
 									onPress={text => this._joinClub(this.state.selected_club, 1)}
 								>
-									<Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: '#38304C' }}>FERTIG</Text>
+									<Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: '#1e1e1e' }}>FERTIG</Text>
 								</TouchableOpacity>
 							</View>
 
 							<View
-								style={{ marginLeft: -20, height: 0.5, marginBottom: 20, backgroundColor: '#38304C', width: '140%' }}
+								style={{ marginLeft: -20, height: 0.5, marginBottom: 20, backgroundColor: '#1e1e1e', width: '140%' }}
 							/>
 
 							<ScrollView showsVerticalScrollIndicator={false} style={{ marginBottom: 20 }}>
@@ -560,7 +560,7 @@ class AddClubScreen extends React.Component {
 								borderTopRightRadius: 10,
 								borderBottomLeftRadius: searchResults.length > 0 ? 0 : 10,
 								borderBottomRightRadius: searchResults.length > 0 ? 0 : 10,
-								backgroundColor: '#38304C',
+								backgroundColor: '#1e1e1e',
 							}}
 						>
 							<TextInput
@@ -605,7 +605,7 @@ class AddClubScreen extends React.Component {
 									marginTop: 0,
 									borderBottomLeftRadius: 10,
 									borderBottomRightRadius: 10,
-									backgroundColor: '#38304C',
+									backgroundColor: '#1e1e1e',
 								}}
 							>
 								{searchResults}

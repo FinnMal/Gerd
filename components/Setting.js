@@ -69,7 +69,7 @@ export default class Setting extends React.Component {
         >
           <FontAwesomeIcon
             size={20}
-            color={!this.props.iconColor ? "#38304C" : "white"}
+            color={!this.props.iconColor ? "#1e1e1e" : "white"}
             icon={this.props.icon}
           />
         </TouchableOpacity>
@@ -100,7 +100,7 @@ export default class Setting extends React.Component {
               transform: [{scale: 0.8}]
             }}
             trackColor={{false: "#575757", true: "#16FFD7"}}
-            thumbColor={this.props.isEnabled ? "#38304C" : "#f4f3f4"}
+            thumbColor={this.props.isEnabled ? "#1e1e1e" : "#f4f3f4"}
             ios_backgroundColor="#3e3e3e"
             onValueChange={() => this.props.onSwitch()}
             value={this.props.isEnabled}

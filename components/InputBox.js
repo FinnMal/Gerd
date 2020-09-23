@@ -53,7 +53,7 @@ export default class InputBox extends React.Component {
         <View
           style={{
             borderRadius: 10,
-            backgroundColor: this.props.color == "dark" ? "#201A30" : "#38304C"
+            backgroundColor: this.props.color == "dark" ? "#121212" : "#1e1e1e"
           }}
         >
           <TextInput

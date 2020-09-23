@@ -31,56 +31,61 @@ export default class User {
 
   getValue(path, cb = null) {
     var obj = this.data;
-    path_arr = path.split("/");
-    for (i = 0; i < path_arr.length - 1; i++) obj = obj[path_arr[i]];
-    var value = obj[path_arr[i]];
-
-    if (value) return value;
-    if (cb) getDatabaseValue(path, cb);
+    if (obj) {
+      path_arr = path.split("/");
+      if (path_arr) {
+        for (i = 0; i < path_arr.length - 1; i++) 
+          obj = obj[path_arr[i]];
+        
+        if (obj && path_arr && path_arr[i]) 
+          var value = obj[path_arr[i]];
+        
+        if (value) 
+          return value;
+        if (cb) 
+          getDatabaseValue(path, cb);
+        }
+      }
   }
 
   setValue(value, path, store = false) {
     console.log("SET_VALUE: " + path);
     path_arr = path.split("/");
 
-    var obj = this.data;
-    for (i = 0; i < path_arr.length - 1; i++) obj = obj[path_arr[i]];
-    obj[path_arr[i]] = value;
+    if (path_arr) {
+      var obj = this.data;
+      if (obj) {
+        for (i = 0; i < path_arr.length - 1; i++) 
+          obj = obj[path_arr[i]];
+        obj[path_arr[i]] = value;
 
-    if (store) {
-      database()
-        .ref("users/" + this.uid + "/" + path)
-        .set(value);
-    } else this._triggerCallbacks(path, value);
-
-    console.log(this.data);
+        if (store) {
+          database().ref("users/" + this.uid + "/" + path).set(value);
+        } else 
+          this._triggerCallbacks(path, value);
+        
+        console.log(this.data);
+      }
+    }
   }
 
   getDatabaseValue(path, cb) {
-    database()
-      .ref("users/" + this.uid + "/" + path)
-      .once(
-        "value",
-        function(snap) {
-          this.setValue(snap.val(), path);
-          cb(snap.val());
-        }.bind(this)
-      );
+    database().ref("users/" + this.uid + "/" + path).once("value", function(snap) {
+      this.setValue(snap.val(), path);
+      cb(snap.val());
+    }.bind(this));
   }
 
   startListener(path, cb) {
     if (!this.listener[path]) {
-      this.listener[path] = {callbacks: [cb]};
+      this.listener[path] = {
+        callbacks: [cb]
+      };
 
-      this.listener[path].ref = database().ref(
-        "users/" + this.uid + "/" + path
-      );
-      this.listener[path].ref.on(
-        "value",
-        function(snap) {
-          this.setValue(snap.val(), path);
-        }.bind(this)
-      );
+      this.listener[path].ref = database().ref("users/" + this.uid + "/" + path);
+      this.listener[path].ref.on("value", function(snap) {
+        this.setValue(snap.val(), path);
+      }.bind(this));
     } else {
       this.listener[path].callbacks.push(cb);
     }
@@ -94,7 +99,11 @@ export default class User {
     if (this.listener[path]) {
       if (this.listener[path].callbacks) {
         this.listener[path].callbacks.forEach((cb, i) => {
-          cb(value ? value : this.getValue(path));
+          cb(
+            value
+              ? value
+              : this.getValue(path)
+          );
         });
       }
     }
@@ -162,5 +171,9 @@ export default class User {
     return img
       ? img
       : "https://yt3.ggpht.com/a/AATXAJy6_f0l3LV_ewft6LltTAEwa1NO8nwbFtkvFz6S4w=s900-c-k-c0xffffffff-no-rj-mo";
+  }
+
+  setImage(url) {
+    this.setValue(url, 'img', true);
   }
 }

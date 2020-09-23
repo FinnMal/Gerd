@@ -98,8 +98,8 @@ class FirstStartScreen extends React.Component {
 							onPress={() => this._selectProfile(0)}
 							style={{ marginRight: 50, justifyContent: 'center', alignItems: 'center' }}
 						>
-							<View style={{ padding: 45, backgroundColor: ps0 ? '#0FD5B3' : '#38304C', borderRadius: 25 }}>
-								<FontAwesomeIcon style={{}} size={50} color={ps0 ? '#38304C' : '#E3E2E6'} icon={faUserCircle} />
+							<View style={{ padding: 45, backgroundColor: ps0 ? '#0FD5B3' : '#1e1e1e', borderRadius: 25 }}>
+								<FontAwesomeIcon style={{}} size={50} color={ps0 ? '#1e1e1e' : '#E3E2E6'} icon={faUserCircle} />
 							</View>
 							<Text style={{ color: ps0 ? '#188E82' : '#635E6E', fontFamily: 'Poppins-Bold', fontSize: 16 }}>
 								MITGLIED
@@ -109,8 +109,8 @@ class FirstStartScreen extends React.Component {
 							onPress={() => this._selectProfile(1)}
 							style={{ justifyContent: 'center', alignItems: 'center' }}
 						>
-							<View style={{ padding: 40, backgroundColor: ps0 ? '#38304C' : '#0FD5B3', borderRadius: 25 }}>
-								<FontAwesomeIcon style={{}} size={40} color={ps0 ? '#E3E2E6' : '#38304C'} icon={faUserShield} />
+							<View style={{ padding: 40, backgroundColor: ps0 ? '#1e1e1e' : '#0FD5B3', borderRadius: 25 }}>
+								<FontAwesomeIcon style={{}} size={40} color={ps0 ? '#E3E2E6' : '#1e1e1e'} icon={faUserShield} />
 							</View>
 							<Text style={{ color: ps0 ? '#635E6E' : '#188E82', fontFamily: 'Poppins-Bold', fontSize: 16 }}>
 								BETREIBER
@@ -129,7 +129,7 @@ class FirstStartScreen extends React.Component {
 						}}
 						onPress={() => this._registerProfile()}
 					>
-						<Text style={{ color: '#38304C', fontSize: 20, fontFamily: 'Poppins-ExtraBold' }}>Fertig</Text>
+						<Text style={{ color: '#1e1e1e', fontSize: 20, fontFamily: 'Poppins-ExtraBold' }}>Fertig</Text>
 					</TouchableOpacity>
 				</View>
 			</View>
