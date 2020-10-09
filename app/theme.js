@@ -10,9 +10,10 @@ import {
 import {useDarkMode} from 'react-native-dynamic'
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import ReactLinearGradient from 'react-native-linear-gradient';
+import {usePalette} from 'react-palette';
 
 const colors = {
-  "primary": ["#00e0b9", "#16FFD7"]
+  "primary": ["#16FFD7", "#00e0b9"]
 }
 
 function View(props) {
@@ -146,12 +147,10 @@ function LinearGradient(props) {
       : "#007AFF"
   )
   var colors = [
-    //'rgba(255, 255, 255, 0.0000001)', 'rgba(28, 28, 30, 0.95)'
-    'rgba(' + rgb[0] + ', ' + rgb[1] + ', ' + rgb[2] + ', .01)',
-    'rgba(' + rgb[0] + ', ' + rgb[1] + ', ' + rgb[2] + ', .97)'
+    'rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0)'
+    //'rgba(' + rgb[0] + ', ' + rgb[1] + ', ' + rgb[2] + ', .01)', 'rgba(' + rgb[0] + ', ' + rgb[1] + ', ' + rgb[2] + ', .97)'
   ];
 
-  return <View style={props.style}>{props.children}</View>
   return <ReactLinearGradient style={props.style} start={{
       x: 0,
       y: 0.5

@@ -462,6 +462,8 @@ PODS:
     - React
   - RNCPushNotificationIOS (1.5.0):
     - React
+  - RNDominantColor (1.7.0):
+    - React
   - RNFBApp (8.4.3):
     - Firebase/CoreOnly (~> 6.30.0)
     - React-Core
@@ -611,6 +613,7 @@ DEPENDENCIES:
   - "RNCCheckbox (from `../node_modules/@react-native-community/checkbox`)"
   - "RNCMaskedView (from `../node_modules/@react-native-community/masked-view`)"
   - "RNCPushNotificationIOS (from `../node_modules/@react-native-community/push-notification-ios`)"
+  - RNDominantColor (from `../node_modules/rn-dominant-color`)
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
   - "RNFBAuth (from `../node_modules/@react-native-firebase/auth`)"
   - "RNFBDatabase (from `../node_modules/@react-native-firebase/database`)"
@@ -782,6 +785,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-community/masked-view"
   RNCPushNotificationIOS:
     :path: "../node_modules/@react-native-community/push-notification-ios"
+  RNDominantColor:
+    :path: "../node_modules/rn-dominant-color"
   RNFBApp:
     :path: "../node_modules/@react-native-firebase/app"
   RNFBAuth:
@@ -927,6 +932,7 @@ SPEC CHECKSUMS:
   RNCCheckbox: aac2c42466ceeac86f7016e3f659f819501d8859
   RNCMaskedView: f5c7d14d6847b7b44853f7acb6284c1da30a3459
   RNCPushNotificationIOS: 8025ff0b610d7b28d29ddc1b619cd55814362e4c
+  RNDominantColor: 72126cb96ffedf4bcd564ed00e2e578f5b93e0d6
   RNFBApp: a74d8259d827c8bf55100e759cffa2e50ba6fe30
   RNFBAuth: ccae9605207f4a3bc6e03cd0adb5433872ef4418
   RNFBDatabase: c82e5e9d842f4f40c5bfaa2bb67c5af5f52a45b1

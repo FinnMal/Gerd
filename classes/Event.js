@@ -41,16 +41,19 @@ import {default as Modal} from "./../components/Modal.js";
 import {Theme} from './../app/index.js';
 import Button from './../components/Button.js';
 import storage from "@react-native-firebase/storage";
+import {getColorFromURL} from 'rn-dominant-color';
 
 export class Event {
   data = {};
   club = {};
+  text_color = "#000000";
   uid = null;
   visible = false;
   listener = {};
   imageScale = new Animated.Value(1);
   textOpacity = new Animated.Value(0);
   textMarginLeft = new Animated.Value(15);
+  buttonMarginBottom = new Animated.Value(-30);
 
   constructor(event_id = false, club_id = false, uid = false, data = false) {
     if (!data && event_id && club_id) {
@@ -176,14 +179,43 @@ export class Event {
             this.readyListener();
           this.data.utils.getUser().getDatabaseValue("events/" + this.getClubID() + "_" + this.getID(), function(value) {
             console.log(this.getID() + ": " + value)
-            if (this.renderListerner) 
-              this.renderListerner(this)
+
+            this.calculateTextColor(function() {
+              if (this.renderListerner) 
+                this.renderListerner(this)
+            }.bind(this))
           }.bind(this));
 
         }.bind(this));
       }.bind(this));
     }.bind(this));
 
+  }
+
+  calculateTextColor(cb) {
+    getColorFromURL(this.getImage()).then(colors => {
+      var rgb = this.hexToRGBA(colors.background)
+      console.log(rgb)
+
+      const brightness = Math.round(((parseInt(rgb[0]) * 299) + (parseInt(rgb[1]) * 587) + (parseInt(rgb[2]) * 114)) / 1000);
+      console.log(brightness)
+      this.text_color = (brightness > 125)
+        ? 'black'
+        : 'white';
+      cb();
+    })
+  }
+
+  hexToRGBA(hex, alpha) {
+    if (!/^#([A-Fa-f0-9]{3,4}){1,2}$/.test(hex)) {
+      throw new Error("Invalid HEX")
+    }
+    const hexArr = hex.slice(1).match(new RegExp(`.{${Math.floor((hex.length - 1) / 3)}}`, "g"))
+    return hexArr.map(this.convertHexUnitTo256)
+  }
+
+  convertHexUnitTo256(hexStr) {
+    return parseInt(hexStr.repeat(2 / hexStr.length), 16)
   }
 
   getID() {
@@ -404,17 +436,23 @@ export class Event {
       easing: Easing.ease
     }).start();
 
+    Animated.timing(this.buttonMarginBottom, {
+      useNativeDriver: false,
+      toValue: 15,
+      duration: 300,
+      easing: Easing.ease
+    }).start();
+
     setTimeout(function() {
       if (this.visible) {
         Animated.timing(this.imageScale, {
           useNativeDriver: false,
-          toValue: 1.4,
+          toValue: 1.7,
           duration: 10000,
           easing: Easing.linear
         }).start();
       }
     }.bind(this), 500)
-
   }
 
   onHide() {
@@ -429,7 +467,7 @@ export class Event {
     Animated.timing(this.imageScale, {
       useNativeDriver: false,
       toValue: 1,
-      duration: 0,
+      duration: 200,
       easing: Easing.ease
     }).start();
 
@@ -437,6 +475,13 @@ export class Event {
       useNativeDriver: false,
       toValue: 15,
       duration: 100,
+      easing: Easing.ease
+    }).start();
+
+    Animated.timing(this.buttonMarginBottom, {
+      useNativeDriver: false,
+      toValue: -30,
+      duration: 300,
       easing: Easing.ease
     }).start();
   }
@@ -477,6 +522,13 @@ export class Event {
 
     const imageScale = this.imageScale.interpolate({
       inputRange: [
+        0, 2
+      ],
+      outputRange: [0, 2]
+    });
+
+    const buttonMarginBottom = this.buttonMarginBottom.interpolate({
+      inputRange: [
         0, 1000
       ],
       outputRange: [0, 1000]
@@ -486,22 +538,32 @@ export class Event {
       return <View style={{
           flex: 1,
           height: "100%",
-          width: s_width * .88
-        }}><Animated.Image
-        style={{
-          transform: [
-            {
-              scale: imageScale
-            }
-          ],
-          position: "absolute",
-          width: "100%",
-          height: "100%",
-          zIndex: -10
-        }}
-        source={{
-          url: this.getImage()
-        }}/>
+          width: s_width * .9466
+        }}>
+        <View
+          style={{
+            backgroundColor: this.text_color == "white"
+              ? "black"
+              : "white",
+            position: "absolute",
+            width: "100%",
+            height: "100%"
+          }}/>
+        <Animated.Image
+          style={{
+            transform: [
+              {
+                scale: imageScale
+              }
+            ],
+            opacity: 0.7,
+            position: "absolute",
+            width: "100%",
+            height: "100%"
+          }}
+          source={{
+            url: this.getImage()
+          }}/>
         <Theme.LinearGradient
           color={club.color}
           style={{
@@ -525,6 +587,9 @@ export class Event {
               onPress={() => this.onClickBell()}
               padding={9}
               iconSize={20}
+              color={this.text_color == "white"
+                ? "#ffffff"
+                : "#000000"}
               icon={user.hasEventSubscribed(this.getClubID(), this.getID())
                 ? faBell
                 : faBellSlash}/>
@@ -543,7 +608,7 @@ export class Event {
                 textTransform: 'uppercase',
                 fontFamily: "Poppins-SemiBold",
                 fontSize: 15,
-                color: club.text_color
+                color: this.text_color
               }}>{this.getDate()}</Text>
             <View
               style={{
@@ -553,23 +618,21 @@ export class Event {
                 alignItems: 'flex-start',
                 flexDirection: 'row'
               }}>
-              <FontAwesomeIcon color={club.text_color} size={15} icon={faMapMarkerAlt}/>
+              <FontAwesomeIcon color={this.text_color} size={15} icon={faMapMarkerAlt}/>
               <Text
                 style={{
                   marginLeft: 7,
                   fontSize: 15,
                   fontFamily: "Poppins-SemiBold",
-                  color: club.text_color
+                  color: this.text_color
                 }}>{this.getLocation()}</Text>
             </View>
             <Animated.Text
-              numberOfLines={2}
               style={{
-                fontSize: 24,
+                fontSize: 26,
                 marginTop: 5,
                 fontFamily: "Poppins-Bold",
-                color: club.text_color,
-                height: 60,
+                color: this.text_color,
                 opacity: 0.9
               }}>{event.title}</Animated.Text>
           </Animated.View>

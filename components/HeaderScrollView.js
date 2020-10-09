@@ -122,6 +122,9 @@ class HeaderScrollView extends React.Component {
         ? this.props.height
         : 100,
       showHeadlineJustInHeader: this.props.showHeadlineJustInHeader === true,
+      showHeader: this.props.showHeader === false
+        ? false
+        : true,
       hasFlatList: this.props.flatList != null,
       flatList: this.props.flatList,
       keyboardVisibleHeight: this.props.keyboardVisibleHeight
@@ -502,41 +505,46 @@ class HeaderScrollView extends React.Component {
               </CAnimatedView>
         }
 
-        <Animated.View style={{
-            flex: 1,
-            opacity: 1,
-            position: "absolute",
-            width: s_width
-          }}>
-          {
-            false
-              ? <CBlurView/>
-              : void 0
-          }
-          <CAnimatedView
-            style={{
-              position: "absolute",
-              opacity: backgroundColorOpacity,
-              width: s_width,
-              height: s_width * 0.235,
-              paddingTop: s_width * 0.115,
-              backgroundColor: "#F2F2F7",
-              flexWrap: "wrap",
-              alignItems: "flex-start",
-              flexDirection: "row",
-              paddingBottom: 10
-            }}/>
-          <View
-            style={{
-              position: "absolute",
-              width: s_width,
-              paddingTop: s_width * 0.115,
-              flexWrap: "wrap",
-              alignItems: "flex-start",
-              flexDirection: "row",
-              paddingBottom: 10
-            }}/>
-        </Animated.View>
+        {
+          this.state.showHeader
+            ? <Animated.View
+                style={{
+                  flex: 1,
+                  opacity: 1,
+                  position: "absolute",
+                  width: s_width
+                }}>
+                {
+                  false
+                    ? <CBlurView/>
+                    : void 0
+                }
+                <CAnimatedView
+                  style={{
+                    position: "absolute",
+                    opacity: backgroundColorOpacity,
+                    width: s_width,
+                    height: s_width * 0.235,
+                    paddingTop: s_width * 0.115,
+                    backgroundColor: "#F2F2F7",
+                    flexWrap: "wrap",
+                    alignItems: "flex-start",
+                    flexDirection: "row",
+                    paddingBottom: 10
+                  }}/>
+                <View
+                  style={{
+                    position: "absolute",
+                    width: s_width,
+                    paddingTop: s_width * 0.115,
+                    flexWrap: "wrap",
+                    alignItems: "flex-start",
+                    flexDirection: "row",
+                    paddingBottom: 10
+                  }}/>
+              </Animated.View>
+            : void 0
+        }
         <View
           style={{
             overflow: "hidden",
@@ -614,7 +622,7 @@ class HeaderScrollView extends React.Component {
           }
         </View>
         {
-          this.state.backButton
+          this.state.backButton && this.state.showHeader
             ? (
               <TouchableOpacity
                 style={{

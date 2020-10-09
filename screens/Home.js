@@ -169,44 +169,81 @@ class HomeScreen extends React.Component {
   _getHeaderListView() {
     const s_width = Dimensions.get("window").width;
     return (
-      <Theme.SelectedView
+      <Theme.BackgroundView
         style={{
           backgroundColor: "white",
-          marginTop: 55,
           //borderTopRightRadius: 55, borderBottomRightRadius: 55,
           paddingBottom: 15
         }}>
-        <CText
-          style={{
-            marginTop: 20,
-            opacity: .85,
-            marginLeft: 20,
-            fontFamily: 'Poppins-Bold',
-            fontSize: 21
-          }}>Aktuelle Veranstaltungen</CText>
+        <View style={{
+            flex: 1,
+            flexWrap: 'wrap',
+            flexDirection: 'row',
+            width: "100%"
+          }}>
+          <View >
+            <Theme.Text
+              color={"primary"}
+              style={{
+                marginTop: 20,
+                opacity: .8,
+                marginLeft: 20,
+                textTransform: 'uppercase',
+                fontFamily: 'Poppins-SemiBold',
+                fontSize: 17
+              }}>Sonntag, 23. Mai</Theme.Text>
+            <Theme.Text
+              style={{
+                marginTop: -3,
+                opacity: 0.9,
+                marginLeft: 20,
+                fontFamily: 'Poppins-ExtraBold',
+                fontSize: 41
+              }}>Heute</Theme.Text>
+          </View>
+          <Image
+            source={{
+              url: this.state.utils.getUser().getImage()
+            }}
+            style={{
+              marginLeft: "auto",
+              alignSelf: 'flex-end',
+              borderRadius: 47,
+              height: 47,
+              width: 47,
+              marginRight: 20,
+              marginBottom: 5
+            }}/>
+        </View>
         <Swiper data={this.state.events} style={{
-            marginTop: 15
+            marginTop: 25
           }} autoplay={false}></Swiper>
-        {
-          false
-            ? <FlatList
-                horizontal={true}
-                showsHorizontalScrollIndicator={false}
-                legacyImplementation={false}
-                onEndReached={() => {
-                  this.state.eventsList._setLimit(10);
-                }}
-                onEndReachedThreshold={100}
-                initialNumToRender={10}
-                data={this.state.events}
-                renderItem={({item}) => {
-                  return item.getRenderForFlatList();
-                }}
-                keyExtractor={(item, index) => index.toString()}/>
-            : void 0
-        }
-
-      </Theme.SelectedView>
+        <View style={{
+            flexWrap: 'wrap',
+            alignItems: 'flex-start',
+            flexDirection: 'row',
+            marginBottom: 10
+          }}>
+          <Theme.Text
+            style={{
+              marginTop: 60,
+              marginLeft: 20,
+              fontFamily: 'Poppins-Bold',
+              fontSize: 33
+            }}>Mitteilungen</Theme.Text>
+          <Theme.Text
+            color={"primary"}
+            style={{
+              marginLeft: "auto",
+              alignSelf: 'flex-end',
+              opacity: .8,
+              marginRight: 20,
+              marginBottom: 5,
+              fontFamily: 'Poppins-SemiBold',
+              fontSize: 16
+            }}>Alle anzeigen</Theme.Text>
+        </View>
+      </Theme.BackgroundView>
     )
   }
 
@@ -233,21 +270,13 @@ class HomeScreen extends React.Component {
                 this._onFlatListScroll = view.getScrollCallback();
               }
             }}
-            marginTop={150}
-            headlineFontSize={47}
-            backButton={false}
-            showHeadline={false}
+            marginTop={90}
+            showHeader={false}
             height={100}
             scrollY={this.state.scrollY}
-            headline="Mitteilungen"
             setNavbarPos={pos => {
               this.props.startNavbarAnimation(pos);
             }}
-            actionButton={this.state.account_type == 'manager'
-              ? <TouchableOpacity onPress={() => this.openAddMessage()}>
-                  <CIcon size={29} color="#F5F5F5" icon={faPlusCircle}/>
-                </TouchableOpacity>
-              : void 0}
             refreshControl={<RefreshControl refreshing = {
               this.state.refreshing
             }

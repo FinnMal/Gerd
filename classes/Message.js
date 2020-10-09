@@ -389,7 +389,7 @@ export class Message {
               height: "auto",
               borderRadius: 13,
               backgroundColor: club.color,
-              marginTop: 40,
+              marginBottom: 40,
               marginLeft: 10,
               marginRight: 10,
               shadowColor: club.color,

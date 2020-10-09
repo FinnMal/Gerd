@@ -165,7 +165,7 @@ export default class Toast extends React.Component {
           height: 65,
           width: 355,
 
-          shadowColor: "#8471B2",
+          shadowColor: "black",
           shadowOffset: {
             width: 0,
             height: 0
@@ -238,11 +238,11 @@ export default class Toast extends React.Component {
             width: 334,
             position: "absolute",
             marginLeft: 10,
-            marginTop: 60
+            marginTop: 61
           }}>
           <Theme.LightView style={{
-              height: 5,
-              borderRadius: 2.5,
+              height: 4,
+              borderRadius: 4,
               width: barWidth
             }}/>
         </View>

@@ -23,15 +23,39 @@ export default class Swiper extends React.Component {
   cur_index = 0;
   data = [];
   elements = <View/>;
+  scrollView = null;
+  swiper_width = 0;
+  autplay_interval = null;
+
   constructor(props) {
     super(props);
     this.data = props.data;
 
+    var index = 0;
+    this.autplay_interval = setInterval(function() {
+      const s_width = Dimensions.get("window").width;
+      if (this.scrollView) {
+        index++;
+        if (index == this.data.length) 
+          index = 0;
+        this.scrollView.scrollTo({
+          x: Math.round(index * this.swiper_width),
+          y: 0,
+          animated: true
+        })
+        setTimeout(function() {
+          this.onScrolledTo(Math.round(index * (s_width * .8936)), true)
+        }.bind(this), 60)
+      }
+    }.bind(this), 4000)
   }
 
-  onScrolledTo(x_pos) {
+  onScrolledTo(x_pos, from_autoplay = false) {
+    if (!from_autoplay) 
+      clearInterval(this.autplay_interval);
+    
     const s_width = Dimensions.get("window").width;
-    var index = x_pos / (s_width * .88)
+    var index = Math.round(x_pos / (s_width * .8936))
     if (this.cur_index != index) {
       console.log(index)
       this.data[this.cur_index].onHide();
@@ -53,31 +77,50 @@ export default class Swiper extends React.Component {
     });
 
     return (
-      <ScrollView
-        onScrollEndDrag={(e) => {
-          this.onScrolledTo(e.nativeEvent.targetContentOffset.x)
-        }}
-        bounces={false}
-        horizontal={true}
-        showsHorizontalScrollIndicator={false}
-        pagingEnabled={true}
-        style={{
-          marginTop: 10,
-          marginLeft: 20,
-          marginRight: 25,
-          shadowColor: "black",
-          shadowOffset: {
-            width: 0,
-            height: 0
-          },
-          shadowOpacity: 0.4,
-          shadowRadius: 15.0,
-          borderRadius: 20,
-          backgroundColor: "white",
-          height: s_width * 1.1
-        }}>
-        {this.elements}
-      </ScrollView>
+      <View
+        style={[
+          this.props.style, {
+            shadowColor: "black",
+            shadowOffset: {
+              width: 0,
+              height: 0
+            },
+            shadowOpacity: .4,
+            shadowRadius: 18.0
+          }
+        ]}>
+        <ScrollView
+          ref={(v) => {
+            this.scrollView = v;
+          }}
+          onScrollEndDrag={(e) => {
+            this.onScrolledTo(e.nativeEvent.targetContentOffset.x)
+          }}
+          onLayout={event => {
+            var {
+              x,
+              y,
+              width,
+              height
+            } = event.nativeEvent.layout;
+            this.swiper_width = width;
+          }}
+          bounces={false}
+          horizontal={true}
+          showsHorizontalScrollIndicator={false}
+          pagingEnabled={true}
+          style={{
+            marginTop: 10,
+            marginLeft: 10,
+            marginRight: 10,
+
+            borderRadius: 25,
+            backgroundColor: "white",
+            height: s_width * 1.1
+          }}>
+          {this.elements}
+        </ScrollView>
+      </View>
     )
 
   }

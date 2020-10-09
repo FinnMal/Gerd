@@ -63,13 +63,6 @@ export default class Button extends React.Component {
     }
 
     this.state.text_color = "#1e1e1e"
-    this.state.background_color = this.props.color
-      ? this.props.color
-      : "#ffffff"
-    if (this.props.color == "danger") {
-      this.state.text_color = "white"
-      this.state.background_color = "red"
-    }
     console.log(sizes);
   }
 
@@ -112,6 +105,14 @@ export default class Button extends React.Component {
     }
   
   render() {
+    this.state.background_color = this.props.color
+      ? this.props.color
+      : "#ffffff"
+    if (this.props.color == "danger") {
+      this.state.text_color = "white"
+      this.state.background_color = "red"
+    }
+
     return (
       <View
         style={[
