@@ -20,7 +20,9 @@ export default class GerdModal extends React.Component {
     super(props);
     this.state = {
       visible: false,
-      done_text: this.props.done_text ? this.props.done_text : "Fertig"
+      done_text: this.props.done_text
+        ? this.props.done_text
+        : "Fertig"
     };
   }
 
@@ -32,13 +34,10 @@ export default class GerdModal extends React.Component {
     if (this.state.visible) {
       this.state.visible = false;
       this.forceUpdate();
-      setTimeout(
-        function() {
-          this.state.visible = true;
-          this.forceUpdate();
-        }.bind(this),
-        0
-      );
+      setTimeout(function() {
+        this.state.visible = true;
+        this.forceUpdate();
+      }.bind(this), 0);
     } else {
       this.state.visible = true;
       this.forceUpdate();
@@ -51,20 +50,13 @@ export default class GerdModal extends React.Component {
   }
 
   _onDone() {
-    this.props.onDone();
-  }
-
+    this.close();
+    if (this.props.onDone) 
+      this.props.onDone();
+    }
+  
   render() {
-    /*
-<GestureRecognizer
-  onSwipe={(direction, state) => alert(direction)}
-  config={config}
-  style={{
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "red"
-  }}
->*/
+    console.log(this.props.children)
     return (
       <Modal
         hideModalContentWhileAnimating={true}
@@ -76,23 +68,19 @@ export default class GerdModal extends React.Component {
         onShow={() => console.log("onShow")}
         onDismiss={() => console.log("onDismiss")}
         onRequestClose={() => console.log("onRequestClose")}
-        onOrientationChange={() => console.log("onOrientationChange")}
-      >
-        <View
-          style={{
+        onOrientationChange={() => console.log("onOrientationChange")}>
+        <View style={{
             padding: 20,
-            backgroundColor: "#201A30",
+            backgroundColor: "#121212",
             height: "100%"
-          }}
-        >
+          }}>
           <View
             style={{
               marginBottom: 10,
               justifyContent: "space-between",
               flexWrap: "wrap",
               flexDirection: "row"
-            }}
-          >
+            }}>
             <Text
               style={{
                 height: 30,
@@ -101,8 +89,7 @@ export default class GerdModal extends React.Component {
                 fontSize: 25,
                 width: "76%"
               }}
-              numberOfLines={1}
-            >
+              numberOfLines={1}>
               {this.props.headline}
             </Text>
             <TouchableOpacity
@@ -115,16 +102,14 @@ export default class GerdModal extends React.Component {
                 paddingLeft: 10,
                 backgroundColor: "#0DF5E3"
               }}
-              onPress={() => this._onDone()}
-            >
+              onPress={() => this._onDone()}>
               <Text
                 style={{
                   textTransform: "uppercase",
                   fontSize: 18,
                   fontFamily: "Poppins-Bold",
-                  color: "#38304C"
-                }}
-              >
+                  color: "#1e1e1e"
+                }}>
                 {this.state.done_text}
               </Text>
             </TouchableOpacity>
@@ -134,11 +119,10 @@ export default class GerdModal extends React.Component {
               marginLeft: -20,
               height: 0.5,
               marginBottom: 40,
-              backgroundColor: "#38304C",
+              backgroundColor: "#1e1e1e",
               width: "140%"
-            }}
-          />
-          {this.props.children}
+            }}/>
+          <View>{this.props.children}</View>
         </View>
       </Modal>
     );

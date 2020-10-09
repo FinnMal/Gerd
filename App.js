@@ -1,9 +1,10 @@
 import {createAppContainer} from "react-navigation";
 import React, {useState, useEffect, Component} from "react";
 import {Alert, AsyncStorage} from "react-native";
-import OneSignal from "react-native-onesignal"; // Import package from node modules
+import OneSignal from "react-native-onesignal";
 import * as utils from "./utils.js";
 import {createStackNavigator} from "react-navigation-stack";
+import {createSharedElementStackNavigator} from "react-navigation-shared-element";
 import {fadeIn} from "react-navigation-transitions";
 import {
   StyleSheet,
@@ -34,6 +35,7 @@ import database from "@react-native-firebase/database";
 import Firebase from "firebase";
 import auth from "@react-native-firebase/auth";
 
+import {useDarkMode} from 'react-native-dynamic'
 const firebaseConfig = {
   apiKey: "AIzaSyA8WgcS53qQskfdqzJInCK-VlBOU_gPMYI",
   authDomain: "gerd-eu.firebaseapp.com",
@@ -48,81 +50,75 @@ const app = Firebase.initializeApp(firebaseConfig);
 
 AppRegistry.registerComponent("app", () => App);
 
-auth()
-  .signInAnonymously()
-  .then(() => {
-    console.log("User signed in anonymously");
-  })
-  .catch(error => {
-    if (error.code === "auth/operation-not-allowed") {
-      console.log("Enable anonymous in your firebase console.");
-    }
-    console.error(error);
-  });
+auth().signInAnonymously().then(() => {
+  console.log("User signed in anonymously");
+}).catch(error => {
+  if (error.code === "auth/operation-not-allowed") {
+    console.log("Enable anonymous in your firebase console.");
+  }
+  console.error(error);
+});
 
 navigationOptions = {
   headerShown: false,
   gestureEnabled: true
 };
 
-const MainNavigator = createStackNavigator(
-  {
-    ScreenHandler: {
-      screen: ScreenHandler,
-      navigationOptions: navigationOptions
-    },
-    HomeScreen: {
-      screen: HomeScreen,
-      navigationOptions: navigationOptions
-    },
-    ManagmentScreen: {
-      screen: ManagmentScreen,
-      navigationOptions: navigationOptions
-    },
-    MessagesScreen: {
-      screen: MessagesScreen,
-      navigationOptions: navigationOptions
-    },
-    SettingsScreen: {
-      screen: SettingsScreen,
-      navigationOptions: navigationOptions
-    },
-    MessageScreen: {
-      screen: MessageScreen,
-      navigationOptions: navigationOptions
-    },
-    NewMessageScreen: {
-      screen: NewMessageScreen,
-      navigationOptions: navigationOptions
-    },
-    ChatScreen: {
-      screen: ChatScreen,
-      navigationOptions: navigationOptions
-    },
-    FirstStartScreen: {
-      screen: FirstStartScreen,
-      navigationOptions: navigationOptions
-    },
-    AddClubScreen: {
-      screen: AddClubScreen,
-      navigationOptions: navigationOptions
-    },
-    ClubSettingsScreen: {
-      screen: ClubSettingsScreen,
-      navigationOptions: navigationOptions
-    },
-    SettingScreen: {
-      screen: SettingScreen,
-      navigationOptions: navigationOptions
-    }
+const MainNavigator = createStackNavigator({
+  ScreenHandler: {
+    screen: ScreenHandler,
+    navigationOptions: navigationOptions
   },
-  {headerMode: "screen", initialRouteName: "ScreenHandler"},
-  {
-    transitionConfig: () => ({
-      screenInterpolator: CardStackStyleInterpolator.forVertical
-    })
+  HomeScreen: {
+    screen: HomeScreen,
+    navigationOptions: navigationOptions
+  },
+  ManagmentScreen: {
+    screen: ManagmentScreen,
+    navigationOptions: navigationOptions
+  },
+  MessagesScreen: {
+    screen: MessagesScreen,
+    navigationOptions: navigationOptions
+  },
+  SettingsScreen: {
+    screen: SettingsScreen,
+    navigationOptions: navigationOptions
+  },
+  MessageScreen: {
+    screen: MessageScreen,
+    navigationOptions: navigationOptions
+  },
+  NewMessageScreen: {
+    screen: NewMessageScreen,
+    navigationOptions: navigationOptions
+  },
+  ChatScreen: {
+    screen: ChatScreen,
+    navigationOptions: navigationOptions
+  },
+  FirstStartScreen: {
+    screen: FirstStartScreen,
+    navigationOptions: navigationOptions
+  },
+  AddClubScreen: {
+    screen: AddClubScreen,
+    navigationOptions: navigationOptions
+  },
+  ClubSettingsScreen: {
+    screen: ClubSettingsScreen,
+    navigationOptions: navigationOptions
+  },
+  SettingScreen: {
+    screen: SettingScreen,
+    navigationOptions: navigationOptions
   }
-);
+}, {
+  headerMode: "screen",
+  initialRouteName: "ScreenHandler"
+}, {
+  transitionConfig: () => ({screenInterpolator: CardStackStyleInterpolator.forVertical})
+});
 
 const AppContainer = createAppContainer(MainNavigator);
 export default class App extends Component {
@@ -174,13 +170,9 @@ export default class App extends Component {
   }
 
   render() {
-    return (
-      <AppContainer
-        ref={nav => {
-          this.navigator = nav;
-        }}
-      />
-    );
+    return (<AppContainer ref={nav => {
+        this.navigator = nav;
+      }}/>);
   }
 }
 function myiOSPromptCallback(permission) {

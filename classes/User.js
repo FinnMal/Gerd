@@ -19,6 +19,7 @@ import {faChevronCircleRight} from "@fortawesome/free-solid-svg-icons";
 import {withNavigation} from "react-navigation";
 import {useNavigation} from "@react-navigation/native";
 import database from "@react-native-firebase/database";
+import OneSignal from "react-native-onesignal";
 
 export default class User {
   uid = null;
@@ -27,60 +28,70 @@ export default class User {
 
   constructor(uid) {
     this.uid = uid;
+    this.startListener('name');
   }
 
   getValue(path, cb = null) {
     var obj = this.data;
-    path_arr = path.split("/");
-    for (i = 0; i < path_arr.length - 1; i++) obj = obj[path_arr[i]];
-    var value = obj[path_arr[i]];
-
-    if (value) return value;
-    if (cb) getDatabaseValue(path, cb);
+    if (obj) {
+      path_arr = path.split("/");
+      if (path_arr) {
+        for (i = 0; i < path_arr.length - 1; i++) {
+          if (obj) 
+            obj = obj[path_arr[i]];
+          else if (cb) 
+            this.getDatabaseValue(path, cb);
+          else 
+            return null;
+          }
+        
+        if (obj && path_arr && path_arr[i]) 
+          var value = obj[path_arr[i]];
+        
+        if (value) 
+          return value;
+        if (cb) 
+          this.getDatabaseValue(path, cb);
+        }
+      }
   }
 
   setValue(value, path, store = false) {
-    console.log("SET_VALUE: " + path);
     path_arr = path.split("/");
 
-    var obj = this.data;
-    for (i = 0; i < path_arr.length - 1; i++) obj = obj[path_arr[i]];
-    obj[path_arr[i]] = value;
+    if (path_arr) {
+      var obj = this.data;
+      if (obj) {
+        for (i = 0; i < path_arr.length - 1; i++) 
+          obj = obj[path_arr[i]];
+        obj[path_arr[i]] = value;
 
-    if (store) {
-      database()
-        .ref("users/" + this.uid + "/" + path)
-        .set(value);
-    } else this._triggerCallbacks(path, value);
-
-    console.log(this.data);
+        if (store) {
+          database().ref("users/" + this.uid + "/" + path).set(value);
+        } else 
+          this._triggerCallbacks(path, value);
+        }
+      }
   }
 
   getDatabaseValue(path, cb) {
-    database()
-      .ref("users/" + this.uid + "/" + path)
-      .once(
-        "value",
-        function(snap) {
-          this.setValue(snap.val(), path);
-          cb(snap.val());
-        }.bind(this)
-      );
+    database().ref("users/" + this.uid + "/" + path).once("value", function(snap) {
+      console.log('in getDatabaseValue: ' + path)
+      this.setValue(snap.val(), path);
+      cb(snap.val());
+    }.bind(this));
   }
 
   startListener(path, cb) {
     if (!this.listener[path]) {
-      this.listener[path] = {callbacks: [cb]};
+      this.listener[path] = {
+        callbacks: [cb]
+      };
 
-      this.listener[path].ref = database().ref(
-        "users/" + this.uid + "/" + path
-      );
-      this.listener[path].ref.on(
-        "value",
-        function(snap) {
-          this.setValue(snap.val(), path);
-        }.bind(this)
-      );
+      this.listener[path].ref = database().ref("users/" + this.uid + "/" + path);
+      this.listener[path].ref.on("value", function(snap) {
+        this.setValue(snap.val(), path);
+      }.bind(this));
     } else {
       this.listener[path].callbacks.push(cb);
     }
@@ -94,8 +105,14 @@ export default class User {
     if (this.listener[path]) {
       if (this.listener[path].callbacks) {
         this.listener[path].callbacks.forEach((cb, i) => {
-          cb(value ? value : this.getValue(path));
-        });
+          if (cb) 
+            cb(
+              value
+                ? value
+                : this.getValue(path)
+            );
+          }
+        );
       }
     }
   }
@@ -162,5 +179,94 @@ export default class User {
     return img
       ? img
       : "https://yt3.ggpht.com/a/AATXAJy6_f0l3LV_ewft6LltTAEwa1NO8nwbFtkvFz6S4w=s900-c-k-c0xffffffff-no-rj-mo";
+  }
+
+  setImage(url) {
+    this.setValue(url, 'img', true);
+  }
+
+  hasEventSubscribed(club_id, event_id) {
+    if (!this.getValue('events')) 
+      this.setValue({}, 'events')
+    if (!this.getValue('events/' + club_id + "_" + event_id)) {
+      this.setValue({
+        notification_subscribed: true
+      }, 'events/' + club_id + "_" + event_id)
+      return true;
+    }
+    return this.getValue('events/' + club_id + "_" + event_id + '/notification_subscribed') === true
+  }
+
+  toggleEventNotification(club_id, event_id, cb = false) {
+    var has_notif = this.hasEventSubscribed(club_id, event_id);
+    this.setValue(!has_notif, 'events/' + club_id + "_" + event_id + '/notification_subscribed', true)
+
+    OneSignal.sendTag(
+      club_id + "_" + event_id + "_before",
+      !has_notif
+        ? "yes"
+        : "no"
+    );
+    OneSignal.sendTag(
+      club_id + "_" + event_id + "_start",
+      !has_notif
+        ? "yes"
+        : "no"
+    );
+
+    if (cb) 
+      cb(!has_notif);
+    }
+  
+  getChatsList(cb) {
+    database().ref("users/" + this.uid + "/chats").once("value", function(snap) {
+      var result = [];
+      var chats = snap.val();
+      if (chats) {
+        Object.keys(chats).forEach((chat_id, i) => {
+          var res = {
+            chat_id: chat_id
+          };
+          database().ref("chats/" + chat_id + "/user_id_1").once("value", function(snap) {
+            res.user_id_1 = snap.val();
+            database().ref("chats/" + chat_id + "/user_id_2").once("value", function(snap) {
+              res.user_id_2 = snap.val();
+              result.push(res);
+              if (i == Object.keys(chats).length - 1) 
+                cb(result);
+              }
+            .bind(this));
+          }.bind(this));
+        });
+      } else 
+        cb([{}]);
+      }
+    .bind(this));
+  }
+
+  getClubsList(cb) {
+    database().ref("users/" + this.uid + "/clubs").once("value", function(snap) {
+      var result = [];
+      var clubs = snap.val();
+      if (clubs) {
+        Object.keys(clubs).forEach((key, i) => {
+          console.log("KEY: " + key);
+          if (clubs[key]) {
+            database().ref("clubs/" + key + "/name").once("value", function(snap) {
+              clubs[key].name = snap.val();
+              database().ref("clubs/" + key + "/logo").once("value", function(snap) {
+                clubs[key].logo = snap.val();
+                result.push(clubs[key]);
+                if (i == Object.keys(clubs).length - 1) 
+                  cb(result);
+                }
+              .bind(this));
+            }.bind(this));
+          }
+        });
+      } else 
+        cb([{}]);
+      }
+    .bind(this));
   }
 }

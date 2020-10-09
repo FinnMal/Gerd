@@ -23,19 +23,31 @@ import Share from "react-native-share";
 import RNFS from "react-native-fs";
 import CameraRoll from "@react-native-community/cameraroll";
 import {AnimatedCircularProgress} from "react-native-circular-progress";
+import {Theme} from './../app/index.js';
 
 export default class Toast extends React.Component {
+  visible = false;
   constructor(props) {
     super(props);
 
     this.state = {
-      pressed: false
+      pressed: false,
+      text: this.props.text,
+      btn_visible: true,
+      icon: this.props.icon
     };
 
-    this.type = this.props.type ? this.props.type : "timeout";
+    this.type = this.props.type
+      ? this.props.type
+      : "timeout";
     this.visible = false;
     this.marginTop = new Animated.Value(725);
     this.reamingBarWidth = new Animated.Value(100);
+
+    if (this.props.ref) 
+      this.props.ref(this);
+    
+    this.hide(false);
   }
 
   show() {
@@ -44,7 +56,7 @@ export default class Toast extends React.Component {
       Animated.timing(this.reamingBarWidth, {
         useNativeDriver: false,
         toValue: 0,
-        duration: 5000,
+        duration: 3300,
         easing: Easing.linear
       }).start(() => {
         this.hide();
@@ -57,29 +69,31 @@ export default class Toast extends React.Component {
       toValue: 725,
       duration: 350,
       easing: Easing.ease
-    }).start(() => {});
+    }).start(() => {
+      this.visible = true;
+    });
   }
 
-  hide() {
+  hide(animated = true) {
     this.reamingBarWidth.setValue(0);
 
     this.marginTop.setValue(725);
     Animated.timing(this.marginTop, {
       useNativeDriver: false,
       toValue: 850,
-      duration: 250,
+      duration: animated
+        ? 250
+        : 0,
       easing: Easing.ease
     }).start(() => {
-      setTimeout(
-        function() {
-          if (this.state.pressed) {
-            this.state.pressed = false;
-            this._onAction();
-          }
-          this._onHide();
-        }.bind(this),
-        200
-      );
+      this.visible = false;
+      setTimeout(function() {
+        if (this.state.pressed) {
+          this.state.pressed = false;
+          this._onAction();
+        }
+        this._onHide();
+      }.bind(this), 200);
     });
   }
 
@@ -89,144 +103,151 @@ export default class Toast extends React.Component {
   }
 
   _onHide() {
-    if (this.props.onHide) this.props.onHide();
-  }
-
+    if (this.props.onHide) 
+      this.props.onHide();
+    }
+  
   _onAction() {
-    if (this.props.onAction) this.props.onAction();
+    if (this.props.onAction) 
+      this.props.onAction();
+    }
+  
+  _callback(action) {
+    if (this.props.callback) 
+      this.props.callback(action);
+    }
+  
+  isVisible() {
+    return this.visible;
   }
 
-  _callback(action) {
-    if (this.props.callback) this.props.callback(action);
+  setText(text) {
+    this.state.text = text;
+    this.forceUpdate();
+  }
+
+  setButtonVisible(visible) {
+    this.state.btn_visible = visible;
+    this.forceUpdate();
+  }
+
+  setIcon(icon) {
+    this.state.icon = icon;
+    this.forceUpdate();
   }
 
   render() {
-    if (this.type == "progress")
+    if (this.type == "progress") 
       this.reamingBarWidth.setValue(this.props.progress);
+    
+    const barWidth = this.reamingBarWidth.interpolate({
+      inputRange: [
+        0, 100
+      ],
+      outputRange: ["0%", "100%"]
+    });
 
-    if (this.props.visible) {
-      if (!this.visible) {
-        this.visible = true;
-        this.show();
-      }
-      const barWidth = this.reamingBarWidth.interpolate({
-        inputRange: [0, 100],
-        outputRange: ["0%", "100%"]
-      });
+    const marginTop = this.marginTop.interpolate({
+      inputRange: [
+        0, 2000
+      ],
+      outputRange: [0, 2000]
+    });
 
-      const marginTop = this.marginTop.interpolate({
-        inputRange: [0, 2000],
-        outputRange: [0, 2000]
-      });
+    return (
+      <Theme.View
+        style={{
+          borderRadius: 15,
+          zIndex: 100,
+          position: "absolute",
+          marginTop: marginTop,
+          marginLeft: 10,
+          height: 65,
+          width: 355,
 
-      return (
-        <Animated.View
-          style={{
-            borderRadius: 15,
-            zIndex: 100,
-            position: "absolute",
-            marginTop: marginTop,
-            marginLeft: 10,
+          shadowColor: "#8471B2",
+          shadowOffset: {
+            width: 0,
+            height: 0
+          },
+          shadowOpacity: 0.5,
+          shadowRadius: 14.0
+        }}>
+        <View style={{
             height: 65,
-            width: 355,
-            backgroundColor: "#8471B2",
-
-            shadowColor: "#8471B2",
-            shadowOffset: {
-              width: 0,
-              height: 0
-            },
-            shadowOpacity: 0.5,
-            shadowRadius: 14.0
-          }}
-        >
+            justifyContent: "center",
+            alignItems: "center"
+          }}>
           <View
             style={{
-              height: 65,
+              flexWrap: "wrap",
+              flexDirection: "row",
               justifyContent: "center",
               alignItems: "center"
-            }}
-          >
-            <View
+            }}>
+            <Theme.Icon
               style={{
-                flexWrap: "wrap",
-                flexDirection: "row",
-                justifyContent: "center",
-                alignItems: "center"
+                opacity: 0.9
               }}
-            >
-              <FontAwesomeIcon
-                style={{
-                  opacity: 0.9
-                }}
-                size={25}
-                color="white"
-                icon={this.props.icon ? this.props.icon : faInfoCircle}
-              />
-              <Text
-                style={{
-                  marginTop: 5,
-                  marginLeft: 20,
-                  fontSize: 20,
-                  fontFamily: "Poppins-SemiBold",
-                  color: "white",
-                  opacity: 0.9
-                }}
-              >
-                {this.props.text}
-              </Text>
-              <TouchableOpacity
-                style={{
-                  borderRadius: 7,
-                  backgroundColor: "#38304C",
-                  paddingTop: 7,
-                  paddingBottom: 7,
-                  paddingLeft: 9,
-                  paddingRight: 9,
-                  marginTop: -2,
-                  marginLeft: 20,
-                  fontSize: 20
-                }}
-                onPress={() => this._btnClick()}
-              >
-                <Text
-                  style={{
-                    textTransform: "uppercase",
-                    fontSize: 17,
-                    fontFamily: "Poppins-ExtraBold",
-                    color: "white",
-                    opacity: 0.77
-                  }}
-                >
-                  {this.props.action}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View
-            style={{
-              width: 334,
-              position: "absolute",
-              marginLeft: 10,
-              marginTop: 60
-            }}
-          >
-            <Animated.View
+              size={23}
+              color="white"
+              icon={this.state.icon
+                ? this.state.icon
+                : faInfoCircle}/>
+            <Theme.Text
               style={{
-                height: 5,
-                borderRadius: 2.5,
-                backgroundColor: "white",
-                opacity: 0.7,
-                width: barWidth
-              }}
-            />
+                marginTop: 5,
+                marginLeft: 20,
+                fontSize: 20,
+                fontFamily: "Poppins-Bold",
+                opacity: 0.8
+              }}>
+              {this.state.text}
+            </Theme.Text>
+            {
+              this.state.btn_visible
+                ? <TouchableOpacity
+                    style={{
+                      borderRadius: 7,
+                      backgroundColor: "#1e1e1e",
+                      paddingTop: 7,
+                      paddingBottom: 7,
+                      paddingLeft: 9,
+                      paddingRight: 9,
+                      marginTop: -2,
+                      marginLeft: 20,
+                      fontSize: 20
+                    }}
+                    onPress={() => this._btnClick()}>
+                    <Theme.Text
+                      style={{
+                        textTransform: "uppercase",
+                        fontSize: 17,
+                        fontFamily: "Poppins-ExtraBold",
+                        color: "white",
+                        opacity: 0.77
+                      }}>
+                      {this.props.action}
+                    </Theme.Text>
+                  </TouchableOpacity>
+                : void 0
+            }
           </View>
-        </Animated.View>
-      );
-    } else {
-      this.visible = false;
-      console.log("TOAST: not visible");
-    }
+        </View>
+        <View style={{
+            width: 334,
+            position: "absolute",
+            marginLeft: 10,
+            marginTop: 60
+          }}>
+          <Theme.LightView style={{
+              height: 5,
+              borderRadius: 2.5,
+              width: barWidth
+            }}/>
+        </View>
+      </Theme.View>
+    );
     return null;
   }
 }

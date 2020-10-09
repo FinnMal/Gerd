@@ -14,11 +14,8 @@ import {
 import AutoHeightImage from "react-native-auto-height-image";
 import FileViewer from "react-native-file-viewer";
 import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
-import {
-  faPlusCircle,
-  faChevronCircleLeft,
-  faChevronRight
-} from "@fortawesome/free-solid-svg-icons";
+import {faPlusCircle, faChevronCircleLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
+import {Theme} from './../app/index.js';
 
 import database from "@react-native-firebase/database";
 
@@ -57,57 +54,68 @@ export default class Setting extends React.Component {
           flexDirection: "row",
           alignItems: "center"
         }}
-        onPress={() => this._onPress()}
-      >
+        onPress={() => this._onPress()}>
         <TouchableOpacity
           style={{
             padding: 8,
-            backgroundColor: this.props.color ? this.props.color : "#16FFD7",
+            backgroundColor: this.props.color
+              ? this.props.color
+              : "#16FFD7",
             borderRadius: 11
           }}
-          onPress={() => this._onPress()}
-        >
-          <FontAwesomeIcon
-            size={20}
-            color={!this.props.iconColor ? "#38304C" : "white"}
-            icon={this.props.icon}
-          />
+          onPress={() => this._onPress()}>
+          <FontAwesomeIcon size={20} color={!this.props.iconColor
+              ? "#1e1e1e"
+              : "white"} icon={this.props.icon}/>
         </TouchableOpacity>
-        <Text
+        <Theme.Text
           style={{
-            width: this.props.type == "switch" ? 238 : 240,
+            width: this.props.type == "switch"
+              ? 238
+              : 240,
             marginLeft: 20,
             fontFamily: "Poppins-SemiBold",
             fontSize: 20,
             color: "white"
-          }}
-        >
+          }}>
           {this.props.label}
-        </Text>
-        {this.props.type == null ? (
-          <TouchableOpacity
-            style={{padding: 8, opacity: 0.77}}
-            onPress={() => this._onPress()}
-          >
-            <FontAwesomeIcon size={20} color="white" icon={faChevronRight} />
-          </TouchableOpacity>
-        ) : (
-          void 0
-        )}
-        {this.props.type == "switch" ? (
-          <Switch
-            style={{
-              transform: [{scale: 0.8}]
-            }}
-            trackColor={{false: "#575757", true: "#16FFD7"}}
-            thumbColor={this.props.isEnabled ? "#38304C" : "#f4f3f4"}
-            ios_backgroundColor="#3e3e3e"
-            onValueChange={() => this.props.onSwitch()}
-            value={this.props.isEnabled}
-          />
-        ) : (
-          void 0
-        )}
+        </Theme.Text>
+        {
+          this.props.type == null
+            ? (
+              <TouchableOpacity style={{
+                  padding: 8,
+                  opacity: 0.77
+                }} onPress={() => this._onPress()}>
+                <Theme.Icon size={20} color="white" icon={faChevronRight}/>
+              </TouchableOpacity>
+            )
+            : (void 0)
+        }
+        {
+          this.props.type == "switch"
+            ? (
+              <Switch
+                style={{
+                  transform: [
+                    {
+                      scale: 0.8
+                    }
+                  ]
+                }}
+                trackColor={{
+                  false: "#575757",
+                  true: "#16FFD7"
+                }}
+                thumbColor={this.props.isEnabled
+                  ? "#1e1e1e"
+                  : "#f4f3f4"}
+                ios_backgroundColor="#3e3e3e"
+                onValueChange={() => this.props.onSwitch()}
+                value={this.props.isEnabled}/>
+            )
+            : (void 0)
+        }
       </TouchableOpacity>
     );
   }
