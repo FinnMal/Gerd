@@ -226,6 +226,7 @@ export default class Setting extends React.Component {
 
     invite.code = null;
     database().ref("clubs/" + this.state.club.id + "/invite_codes/" + this.state.modal.invite.code).set(invite);
+    database().ref("clubs/invite_codes/" + this.state.modal.invite.code).set(this.state.club.id);
 
     this.forceUpdate();
   }
@@ -263,6 +264,7 @@ export default class Setting extends React.Component {
           return (
             <Theme.View
               key={key}
+              shadow={"normal"}
               color={group.has_admin_rights
                 ? 'primary'
                 : ''}

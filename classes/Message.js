@@ -385,47 +385,23 @@ export class Message {
         return (
           <CView
             style={{
-              width: s_width * 0.945,
+              width: s_width * 0.92,
               height: "auto",
-              borderRadius: 13,
               backgroundColor: club.color,
               marginBottom: 40,
-              marginLeft: 10,
-              marginRight: 10,
               shadowColor: club.color,
               shadowOffset: {
                 width: 0,
                 height: 0
               },
-              shadowRadius: 20.0
+              shadowRadius: 20.0,
+              padding: 15,
+              paddingTop: 22,
+              borderRadius: 22
             }}>
-            {
-              false
-                ? <SharedElement id={"image_" + this.getID()}>
-                    <AutoHeightImage
-                      style={{
-                        borderTopLeftRadius: 30,
-                        borderTopRightRadius: 30,
-                        marginBottom: 10,
-
-                        shadowColor: "#000000",
-                        shadowOffset: {
-                          width: 0,
-                          height: 0
-                        },
-                        shadowOpacity: 1,
-                        shadowRadius: 30.0
-                      }}
-                      width={s_width * 0.875}
-                      source={{
-                        uri: mes.img
-                      }}/></SharedElement>
-                : void 0
-            }
             <TouchableOpacity
               style={{
                 zIndex: 100,
-                marginTop: 0,
                 borderRadius: 17,
                 backgroundColor: "rgba(0, 0,0,0)"
               }}
@@ -437,31 +413,27 @@ export class Message {
                 })
               }}>
 
-              <View
-                style={{
-                  marginTop: 20,
-                  marginLeft: 15,
+              <View style={{
                   display: "flex",
                   flexDirection: "row"
                 }}>
                 <FontAwesomeIcon
                   style={{
-                    marginTop: 7,
-                    marginLeft: s_width * 0.81,
+                    top: 0,
+                    right: 0,
                     position: "absolute",
                     marginBottom: 7,
-                    opacity: 1
+                    opacity: 0.93
                   }}
-                  size={20}
+                  size={25}
                   color={club.text_color}
-                  icon={faChevronRight}/>
+                  icon={faChevronCircleRight}/>
 
                 <View>
                   <SharedElement id={"headline_" + this.getID()}>
                     <Text
                       style={{
                         marginTop: -5,
-                        marginRight: 45,
                         alignSelf: "flex-start",
                         fontFamily: "Poppins-Bold",
                         color: club.text_color,
@@ -474,9 +446,7 @@ export class Message {
                 </View>
               </View>
               <View style={{
-                  marginTop: 5,
-                  marginLeft: 15,
-                  marginRight: 15
+                  marginTop: 5
                 }}>
                 <Text
                   style={{
@@ -495,7 +465,6 @@ export class Message {
                   ? <View
                       style={{
                         marginRight: 20,
-                        marginLeft: 15,
                         marginTop: 10,
                         marginBottom: 10,
                         flexWrap: 'wrap',
@@ -507,11 +476,8 @@ export class Message {
                   : void 0
               }
 
-              <View
-                style={{
+              <View style={{
                   marginTop: 20,
-                  marginBottom: 20,
-                  marginLeft: 15,
                   display: "flex",
                   flexDirection: "row"
                 }}>

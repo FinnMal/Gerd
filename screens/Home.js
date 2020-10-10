@@ -102,6 +102,7 @@ class HomeScreen extends React.Component {
 
     this.state.messagesList.startMessagesListener(function(mes) {
       // message added
+      console.log('ADDED -> ' + this.state.messages.length)
       if (this.state.messages.indexOf(mes) == -1) {
         const mes_index = this.state.messages.length;
         mes.setRenderListerner(function(new_mes) {
@@ -133,7 +134,6 @@ class HomeScreen extends React.Component {
         const event_index = this.state.events.length;
 
         event.setRenderListerner(function(new_event) {
-          console.log('event changed')
           this.state.events[event_index] = new_event;
           this.forceUpdate();
         }.bind(this))
@@ -168,83 +168,6 @@ class HomeScreen extends React.Component {
 
   _getHeaderListView() {
     const s_width = Dimensions.get("window").width;
-    return (
-      <Theme.BackgroundView
-        style={{
-          backgroundColor: "white",
-          //borderTopRightRadius: 55, borderBottomRightRadius: 55,
-          paddingBottom: 15
-        }}>
-        <View style={{
-            flex: 1,
-            flexWrap: 'wrap',
-            flexDirection: 'row',
-            width: "100%"
-          }}>
-          <View >
-            <Theme.Text
-              color={"primary"}
-              style={{
-                marginTop: 20,
-                opacity: .8,
-                marginLeft: 20,
-                textTransform: 'uppercase',
-                fontFamily: 'Poppins-SemiBold',
-                fontSize: 17
-              }}>Sonntag, 23. Mai</Theme.Text>
-            <Theme.Text
-              style={{
-                marginTop: -3,
-                opacity: 0.9,
-                marginLeft: 20,
-                fontFamily: 'Poppins-ExtraBold',
-                fontSize: 41
-              }}>Heute</Theme.Text>
-          </View>
-          <Image
-            source={{
-              url: this.state.utils.getUser().getImage()
-            }}
-            style={{
-              marginLeft: "auto",
-              alignSelf: 'flex-end',
-              borderRadius: 47,
-              height: 47,
-              width: 47,
-              marginRight: 20,
-              marginBottom: 5
-            }}/>
-        </View>
-        <Swiper data={this.state.events} style={{
-            marginTop: 25
-          }} autoplay={false}></Swiper>
-        <View style={{
-            flexWrap: 'wrap',
-            alignItems: 'flex-start',
-            flexDirection: 'row',
-            marginBottom: 10
-          }}>
-          <Theme.Text
-            style={{
-              marginTop: 60,
-              marginLeft: 20,
-              fontFamily: 'Poppins-Bold',
-              fontSize: 33
-            }}>Mitteilungen</Theme.Text>
-          <Theme.Text
-            color={"primary"}
-            style={{
-              marginLeft: "auto",
-              alignSelf: 'flex-end',
-              opacity: .8,
-              marginRight: 20,
-              marginBottom: 5,
-              fontFamily: 'Poppins-SemiBold',
-              fontSize: 16
-            }}>Alle anzeigen</Theme.Text>
-        </View>
-      </Theme.BackgroundView>
-    )
   }
 
   render() {
@@ -258,78 +181,109 @@ class HomeScreen extends React.Component {
       outputRange: [0, 2000]
     });
 
+    const firstMessages = Object.keys(this.state.messages).map(key => {
+      const mes = this.state.messages[key];
+      return mes.getRender();
+    });
+
     if (this.props.show) {
       return (
-        <View style={{
-            height: s_height
+        <HeaderScrollView
+          onRef={view => {
+            this.headerScrollView = view;
+            if (view) {
+              this._onFlatListScroll = view.getScrollCallback();
+            }
+          }}
+          showHeader={false}
+          backButton={false}
+          scrollY={this.state.scrollY}
+          setNavbarPos={pos => {
+            this.props.startNavbarAnimation(pos);
           }}>
-          <HeaderScrollView
-            onRef={view => {
-              this.headerScrollView = view;
-              if (view) {
-                this._onFlatListScroll = view.getScrollCallback();
-              }
-            }}
-            marginTop={90}
-            showHeader={false}
-            height={100}
-            scrollY={this.state.scrollY}
-            setNavbarPos={pos => {
-              this.props.startNavbarAnimation(pos);
-            }}
-            refreshControl={<RefreshControl refreshing = {
-              this.state.refreshing
-            }
-            onRefresh = {
-              this.doRefresh.bind(this)
-            } />
-}
-            flatList={<AnimatedFlatList
-            ListHeaderComponent = {
-              this._getHeaderListView()
-            }
-            scrollEventThrottle = {
-              16
-            }
-            onScroll = {
-              Animated.event([
-                {
-                  nativeEvent: {
-                    contentOffset: {
-                      y: this.state.scrollY
-                    }
-                  }
-                }
-              ], {
-                useNativeDriver: false,
-                listener: event => this.headerScrollView._onScroll(event.nativeEvent.contentOffset.y)
-              })
-            }
-            onEndReached = {
-              () => {
-                this.state.messagesList._setLimit(10);
-              }
-            }
-            onEndReachedThreshold = {
-              100
-            }
-            initialNumToRender = {
-              10
-            }
-            data = {
-              this.state.messages
-            }
-            renderItem = {
-              ({item}) => {
-                return item.getRender();
-              }
-            }
-            keyExtractor = {
-              (item, index) => index.toString()
-            }
-            />
-            }
-          /></View>
+          <Theme.BackgroundView style={{
+              backgroundColor: "white",
+              paddingBottom: 15
+            }}>
+            <View
+              style={{
+                flex: 1,
+                flexWrap: 'wrap',
+                flexDirection: 'row',
+                width: "100%",
+                marginLeft: 5,
+                marginRight: 5
+              }}>
+              <View>
+                <Theme.Text
+                  color={"primary"}
+                  style={{
+                    opacity: .8,
+                    textTransform: 'uppercase',
+                    fontFamily: 'Poppins-SemiBold',
+                    fontSize: 16
+                  }}>{
+                    new Date().toLocaleDateString('de-DE', {
+                      weekday: 'long',
+                      month: 'long',
+                      day: 'numeric'
+                    })
+                  }</Theme.Text>
+                <Theme.Text
+                  style={{
+                    marginTop: -1,
+                    opacity: 0.9,
+                    fontFamily: 'Poppins-ExtraBold',
+                    fontSize: 41
+                  }}>Heute</Theme.Text>
+              </View>
+              <Image
+                source={{
+                  url: this.state.utils.getUser().getImage()
+                }}
+                style={{
+                  marginLeft: "auto",
+                  marginRight: 5,
+                  alignSelf: 'flex-end',
+                  borderRadius: 47,
+                  height: 47,
+                  width: 47,
+                  marginBottom: 5
+                }}/>
+            </View>
+            <Swiper data={this.state.events} style={{
+                marginTop: 25
+              }} autoplay={false}></Swiper>
+            <View
+              style={{
+                flexWrap: 'wrap',
+                alignItems: 'flex-start',
+                flexDirection: 'row',
+                marginBottom: 10
+              }}>
+              <Theme.Text
+                style={{
+                  marginTop: 60,
+                  marginLeft: 5,
+                  fontFamily: 'Poppins-Bold',
+                  fontSize: 35
+                }}>Mitteilungen</Theme.Text>
+              <Theme.Text
+                color={"primary"}
+                style={{
+                  marginLeft: "auto",
+                  alignSelf: 'flex-end',
+                  opacity: .8,
+                  marginBottom: 5,
+                  fontFamily: 'Poppins-SemiBold',
+                  fontSize: 16
+                }}>Alle anzeigen</Theme.Text>
+            </View>
+            <View>
+              {firstMessages}
+            </View>
+          </Theme.BackgroundView>
+        </HeaderScrollView>
       );
     }
     return null;

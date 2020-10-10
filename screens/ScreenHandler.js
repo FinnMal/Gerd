@@ -224,8 +224,8 @@ export default class ScreenHandler extends React.Component {
               setScrollViewEnabled={this.setScrollViewEnabled}
               moveTo={this.state.nav[0].moveTo}
               show={this.state.nav[0].active}/>
-            <ManagmentScreen utilsObject={utils} setScrollViewEnabled={this.setScrollViewEnabled} moveTo={this.state.nav[1].moveTo} show={this.state.nav[1].active}/>
-            <AddClubScreen utilsObject={utils} setScrollViewEnabled={this.setScrollViewEnabled} moveTo={this.state.nav[2].moveTo} show={this.state.nav[2].active}/>
+            <AddClubScreen utilsObject={utils} setScrollViewEnabled={this.setScrollViewEnabled} moveTo={this.state.nav[1].moveTo} show={this.state.nav[1].active}/>
+            <ManagmentScreen utilsObject={utils} setScrollViewEnabled={this.setScrollViewEnabled} moveTo={this.state.nav[2].moveTo} show={this.state.nav[2].active}/>
             <MessagesScreen utilsObject={utils} setScrollViewEnabled={this.setScrollViewEnabled} moveTo={this.state.nav[3].moveTo} show={this.state.nav[3].active}/>
             <SettingsScreen utilsObject={utils} setScrollViewEnabled={this.setScrollViewEnabled} moveTo={this.state.nav[4].moveTo} show={this.state.nav[4].active}/>
           </View>
@@ -244,9 +244,9 @@ export default class ScreenHandler extends React.Component {
             </Animated.View>
             <View style={styles.navigationBarIcons}>
               <NavItem index={0} label="Home" icon={faHome} active={this.state.nav[0].active} navigate={this.navigate.bind(this)}/>
-              <NavItem index={1} label="Clubs" icon={faUsers} active={this.state.nav[1].active} navigate={this.navigate.bind(this)}/>
+              <NavItem index={1} label="Add Club" icon={faPlusCircle} active={this.state.nav[1].active} navigate={this.navigate.bind(this)}/>
+              <NavItem index={2} label="Clubs" icon={faUsers} active={this.state.nav[2].active} navigate={this.navigate.bind(this)}/>
               <NavItem index={3} label="Chats" icon={faComment} active={this.state.nav[3].active} navigate={this.navigate.bind(this)}/>
-              <NavItem index={4} label="Settings" icon={faCog} active={this.state.nav[4].active} navigate={this.navigate.bind(this)}/>
             </View>
           </Animated.View>
         </this.AppContext.Provider>

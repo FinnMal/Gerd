@@ -4,6 +4,7 @@ import {
   Text as ReactText,
   TextInput as ReactTextInput,
   TouchableOpacity as ReactTouchableOpacity,
+  ActivityIndicator as ReactActivityIndicator,
   StyleSheet,
   Animated
 } from 'react-native';
@@ -11,25 +12,54 @@ import {useDarkMode} from 'react-native-dynamic'
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import ReactLinearGradient from 'react-native-linear-gradient';
 import {usePalette} from 'react-palette';
+import {BlurView as ReactBlurView} from "@react-native-community/blur";
 
 const colors = {
-  "primary": ["#16FFD7", "#00e0b9"]
+  "view": [
+    "#2C2C2E", "#E5E5EA"
+  ],
+  "primary": ["#0B84FF", "#007AFF"]
 }
 
 function View(props) {
   const isDarkMode = useDarkMode()
+  var shadow = {
+    "normal": {
+      shadowColor: "#2C2C2E",
+      shadowOffset: {
+        width: 0,
+        height: 0
+      },
+      shadowOpacity: isDarkMode
+        ? 0
+        : .3,
+      shadowRadius: 10.0
+    },
+    "large": {
+      shadowColor: "black",
+      shadowOffset: {
+        width: 0,
+        height: 0
+      },
+      shadowOpacity: isDarkMode
+        ? 0
+        : .4,
+      shadowRadius: 18.0
+    }
+  };
 
   var color = isDarkMode
-    ? "#1C1C1E"
-    : "white";
+    ? colors["view"][0]
+    : colors["view"][1];
 
   if (props.color) 
     color = isDarkMode
-      ? colors[props.color][1]
-      : colors[props.color][0];
+      ? colors[props.color][0]
+      : colors[props.color][1];
   
   return <Animated.View style={[
-      props.style, {
+      props.style,
+      shadow[props.shadow], {
         backgroundColor: color
       }
     ]}>{props.children}</Animated.View>;
@@ -44,8 +74,8 @@ function SelectedView(props) {
 
   if (props.color) 
     color = isDarkMode
-      ? colors[props.color][1]
-      : colors[props.color][0];
+      ? colors[props.color][0]
+      : colors[props.color][1];
   
   return <Animated.View style={[
       props.style, {
@@ -63,8 +93,8 @@ function LightView(props) {
 
   if (props.color) 
     color = isDarkMode
-      ? colors[props.color][1]
-      : colors[props.color][0];
+      ? colors[props.color][0]
+      : colors[props.color][1];
   
   return <Animated.View style={[
       props.style, {
@@ -78,18 +108,32 @@ function BackgroundView(props) {
 
   var color = isDarkMode
     ? "#1C1C1E"
-    : "#F9F9F9"
+    : "#F2F2F7"
 
   if (props.color) 
     color = isDarkMode
-      ? colors[props.color][1]
-      : colors[props.color][0];
+      ? colors[props.color][0]
+      : colors[props.color][1];
   
   return <Animated.View style={[
       props.style, {
         backgroundColor: color
       }
-    ]}>{props.children}</Animated.View>;
+    ]} onLayout={props.onLayout}>{props.children}</Animated.View>;
+}
+
+function BlurView(props) {
+  const isDarkMode = useDarkMode()
+  return (
+    <ReactBlurView
+      onLayout={props.onLayout}
+      blurType={isDarkMode
+        ? "dark"
+        : "regular"}
+      blurAmount={10}
+      reducedTransparencyFallbackColor="#121212"
+      style={props.style}>{props.children}</ReactBlurView>
+  );
 }
 
 function Text(props) {
@@ -111,6 +155,35 @@ function Text(props) {
     ]}>{props.children}</Animated.Text>;
 }
 
+function TextInput(props) {
+  const isDarkMode = useDarkMode()
+
+  var color = isDarkMode
+    ? colors["view"][0]
+    : colors["view"][1];
+
+  var text_color = isDarkMode
+    ? "#ffffff"
+    : "#1C1C1E";
+
+  return <ReactTextInput
+    onFocus={props.onFocus}
+    onBlur={props.onBlur}
+    keyboardType={props.keyboardType}
+    placeholderTextColor={hexToRGBA(text_color, .8)}
+    placeholder={props.placeholder}
+    textContentType={props.type}
+    secureTextEntry={props.secure}
+    style={[
+      props.style, {
+        color: text_color,
+        backgroundColor: color
+      }
+    ]}
+    value={props.value}
+    onChangeText={props.onChangeText}/>;
+}
+
 function TouchableOpacity(props) {
   const isDarkMode = useDarkMode()
   return <ReactTouchableOpacity onPress={props.onPress} style={[props.style]}>{props.children}</ReactTouchableOpacity>;
@@ -126,8 +199,8 @@ function Icon(props) {
   if (props.color) {
     if (colors[props.color]) {
       color = isDarkMode
-        ? colors[props.color][1]
-        : colors[props.color][0];
+        ? colors[props.color][0]
+        : colors[props.color][1];
     }
   }
 
@@ -160,6 +233,41 @@ function LinearGradient(props) {
     }} colors={colors}>{props.children}</ReactLinearGradient>
 }
 
+function ActivityIndicator(props) {
+  const isDarkMode = useDarkMode()
+
+  var color = isDarkMode
+    ? "#F5F5F5"
+    : "#121212"
+
+  if (props.visible) 
+    return <ReactActivityIndicator
+      style={[
+        props.style, {
+          transform: [
+            {
+              scale: props.scale
+            }
+          ]
+        }
+      ]}
+      size="small"
+      color={color}/>
+  return null;
+}
+
+function hexToRGBA(hex, alpha) {
+  if (!/^#([A-Fa-f0-9]{3,4}){1,2}$/.test(hex)) {
+    throw new Error("Invalid HEX")
+  }
+  const hexArr = hex.slice(1).match(new RegExp(`.{${Math.floor((hex.length - 1) / 3)}}`, "g"))
+  return hexArr.map(convertHexUnitTo256)
+}
+
+function convertHexUnitTo256(hexStr) {
+  return parseInt(hexStr.repeat(2 / hexStr.length), 16)
+}
+
 function hexToRgb(hex) {
   var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
   hex = hex.replace(shorthandRegex, function(m, r, g, b) {
@@ -182,7 +290,10 @@ export {
   SelectedView,
   LightView,
   BackgroundView,
+  BlurView,
   Text,
+  TextInput,
   Icon,
-  LinearGradient
+  LinearGradient,
+  ActivityIndicator
 };

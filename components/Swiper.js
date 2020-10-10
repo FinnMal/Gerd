@@ -71,22 +71,10 @@ export default class Swiper extends React.Component {
   render() {
     const s_width = Dimensions.get("window").width;
 
-    this.elements = Object.keys(this.data).map(index => {
-      const ele = this.data[index];
-      return ele.getRenderForPreview()
-    });
-
     return (
-      <View
-        style={[
+      <Theme.View shadow={"large"} style={[
           this.props.style, {
-            shadowColor: "black",
-            shadowOffset: {
-              width: 0,
-              height: 0
-            },
-            shadowOpacity: .4,
-            shadowRadius: 18.0
+            borderRadius: 25
           }
         ]}>
         <ScrollView
@@ -110,17 +98,19 @@ export default class Swiper extends React.Component {
           showsHorizontalScrollIndicator={false}
           pagingEnabled={true}
           style={{
-            marginTop: 10,
-            marginLeft: 10,
-            marginRight: 10,
 
             borderRadius: 25,
             backgroundColor: "white",
-            height: s_width * 1.1
+            height: s_width
           }}>
-          {this.elements}
+          {
+            Object.keys(this.data).map(index => {
+              const ele = this.data[index];
+              return ele.getRenderForPreview(this.swiper_width)
+            })
+          }
         </ScrollView>
-      </View>
+      </Theme.View>
     )
 
   }

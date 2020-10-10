@@ -23,6 +23,7 @@ import {withNavigation} from 'react-navigation';
 import ClubCard from './../components/ClubCard.js';
 import database from '@react-native-firebase/database';
 import HeaderScrollView from './../components/HeaderScrollView.js';
+import {Theme} from './../app/index.js';
 
 class ManagmentScreen extends React.Component {
   uid: null;
@@ -105,21 +106,24 @@ class ManagmentScreen extends React.Component {
       return (
         <HeaderScrollView
           headline="Verwaltung"
-          headlineFontSize={47}
+          headlineFontSize={38}
           backButton={false}
           showHeadline={false}
           actionButton={(
-            <TouchableOpacity style={{
-                marginLeft: 20
-              }} onPress={() => this._openAddClub()}>
-              <FontAwesomeIcon size={29} color="#F5F5F5" icon={faPlusCircle}/>
+            <TouchableOpacity onPress={() => this._openAddClub()}>
+              <Theme.Icon size={26} color="#F5F5F5" icon={faPlusCircle}/>
             </TouchableOpacity>
           )
 }>
           <View style={{
-              flex: 1,
-              marginTop: 40
+              flex: 1
             }}>
+            {clubCards}
+            {clubCards}
+            {clubCards}
+            {clubCards}
+            {clubCards}
+            {clubCards}
             {clubCards}
           </View>
         </HeaderScrollView>

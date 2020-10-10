@@ -16,7 +16,7 @@ import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faInbox, faTimesCircle} from '@fortawesome/free-solid-svg-icons';
 
 export class MessagesList {
-  limit = 20;
+  limit = 2;
   messages = {};
   utils = null;
   refs = [];
@@ -48,11 +48,9 @@ export class MessagesList {
   _setLimit(increase) {
     console.log("_setLimit")
     var old_limit = this.limit;
-    if (this.limit == Object.keys(this.messages).length) {
-      this.limit = old_limit + increase;
-      console.log('NEW LIMIT: ' + this.limit);
-      this._updateMessageList();
-    }
+    this.limit = old_limit + increase;
+    console.log('NEW LIMIT: ' + this.limit);
+    this._updateMessageList();
   }
 
   _updateMessageList() {
@@ -65,6 +63,8 @@ export class MessagesList {
     }
     database().ref('users/' + this.uid + '/clubs').once("value", function(snap) {
       this.clubs = snap.val();
+
+      var total_clubs = this.clubs.length;
       Object.keys(this.clubs).map(key => {
         const club = this.clubs[key];
         if (club) {
@@ -124,52 +124,4 @@ export class MessagesList {
     if (cb) 
       cb();
     }
-  
-  /*
-  render() {
-    var messagesList = Object.keys(this.state.messages).map(mes_id => {
-      const club_id = this.state.messages[mes_id].club_id;
-      this.state.messages[mes_id].visible = true;
-      return (
-        <Message
-          ref={component => {
-            this.state.messages[mes_id].object = component;
-          }}
-          onVisibilityChange={(id, visible) => this.onVisibilityChange(id, visible)}
-          club_id={club_id}
-          mes_id={mes_id}
-          utils={this.state.utils}/>
-      );
-    });
-    messagesList = messagesList.filter(function(e) {
-      return e != null;
-    });
-
-    if (messagesList == [])
-      messagesList.push(
-        <View style={{
-            opacity: 0.4,
-            marginTop: 200,
-            justifyContent: 'center',
-            alignItems: 'center'
-          }}>
-          <FontAwesomeIcon style={{}} size={65} color="white" icon={faInbox}/>
-          <Text
-            style={{
-              margin: 20,
-              textTransform: 'uppercase',
-              textAlign: 'center',
-              color: 'white',
-              fontFamily: 'Poppins-ExtraBold',
-              fontSize: 24
-            }}>'Keine Mitteilungen'
-          </Text>
-        </View>
-      );
-
-    return <View style={{
-        marginBottom: 80
-      }}>{messagesList}</View>;
   }
-  */
-}

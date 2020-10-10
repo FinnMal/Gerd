@@ -63,7 +63,6 @@ export default class Button extends React.Component {
     }
 
     this.state.text_color = "#1e1e1e"
-    console.log(sizes);
   }
 
   isValidHex(hex) {

@@ -56,7 +56,6 @@ export default class GerdModal extends React.Component {
     }
   
   render() {
-    console.log(this.props.children)
     return (
       <Modal
         hideModalContentWhileAnimating={true}
@@ -65,6 +64,7 @@ export default class GerdModal extends React.Component {
         animationType="slide"
         presentationStyle="formSheet"
         visible={this.state.visible}
+        onSwipe={() => console.log("onSwipe")}
         onShow={() => console.log("onShow")}
         onDismiss={() => console.log("onDismiss")}
         onRequestClose={() => console.log("onRequestClose")}
@@ -74,9 +74,7 @@ export default class GerdModal extends React.Component {
             backgroundColor: "#121212",
             height: "100%"
           }}>
-          <View
-            style={{
-              marginBottom: 10,
+          <View style={{
               justifyContent: "space-between",
               flexWrap: "wrap",
               flexDirection: "row"
@@ -118,7 +116,8 @@ export default class GerdModal extends React.Component {
             style={{
               marginLeft: -20,
               height: 0.5,
-              marginBottom: 40,
+              marginTop: 10,
+              marginBottom: 0,
               backgroundColor: "#1e1e1e",
               width: "140%"
             }}/>

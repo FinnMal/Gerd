@@ -15,8 +15,8 @@ import {
   Easing,
   Dimensions,
   AsyncStorage,
-  Modal,
-  Linking
+  Linking,
+  ActivityIndicator
 } from 'react-native';
 import {Headlines} from './../app/constants.js';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -41,6 +41,10 @@ import CheckBox from '@react-native-community/checkbox';
 import QRCodeScanner from 'react-native-qrcode-scanner';
 import {RNCamera} from 'react-native-camera';
 import Group from "./../components/Group.js";
+import {Theme} from './../app/index.js';
+import HeaderScrollView from './../components/HeaderScrollView.js';
+import InputBox from "./../components/InputBox.js";
+import {default as Modal} from "./../components/Modal.js";
 
 class AddClubScreen extends React.Component {
   constructor(props) {
@@ -50,7 +54,7 @@ class AddClubScreen extends React.Component {
 
     this.state = {
       utils: utils,
-      selected_club: -1,
+      selected_club_id: -1,
       search_value: '',
       clubs: [],
       joinable_groups: [],
@@ -60,43 +64,43 @@ class AddClubScreen extends React.Component {
         false, false
       ],
       qr_code_result: null,
-      account_type: utils.getAccountType()
+      account_type: utils.getAccountType(),
+      loading: false
     };
 
     this.margin = new Animated.Value(-20);
   }
 
-  onChangeText(value) {
-    this.state.search_value = value;
-    this.forceUpdate();
-  }
-
-  _onTextInputFocus(has_focus) {
-    this.state.text_input_focused = has_focus;
-    this._doSearch();
-    this.forceUpdate();
-  }
-
-  _doSearch(qrCodeResult = -1) {
-    if (this.state.search_value && this.state.search_value != '' && this.state.search_value != ' ') {
+  searchClub(str, open_result = -1) {
+    if (str && str != '' && str != ' ') {
       console.log('searching');
-      functions().httpsCallable('searchClub')({search: this.state.search_value}).then(response => {
+      this.state.loading = true;
+      this.forceUpdate();
+      functions().httpsCallable('searchClub')({search: str}).then(response => {
         console.log(response.data);
         this.state.search_results = response.data;
-        if (qrCodeResult > -1) {
-          if (this.state.qr_code_result == null) 
-            this._fadeQrCodeResult('in', response.data[qrCodeResult]);
-          else 
-            this._fadeQrCodeResult('out', response.data[qrCodeResult], (function() {
-              this._fadeQrCodeResult('in', response.data[qrCodeResult]);
-            }).bind(this));
-          }
+        this.state.loading = false;
+        this.forceUpdate();
+        if (open_result > -1) {
+          //fetch club name
+          database().ref('clubs/' + response.data[open_result].id + '/name').once('value', (function(snap) {
+            response.data[open_result].name = snap.val();
+            if (this.state.qr_code_result == null) 
+              this.animateQrCodeResult('in', response.data[open_result]);
+            else 
+              this.animateQrCodeResult('out', response.data[open_result], (function() {
+                this.animateQrCodeResult('in', response.data[open_result]);
+              }).bind(this));
+            }
+          ).bind(this));
+
+        }
         this.forceUpdate();
       });
     }
   }
 
-  _fadeQrCodeResult(dir, res, cb) {
+  animateQrCodeResult(dir, res, cb) {
     if (!res) 
       this.state.qr_code_result = {
         ok: false,
@@ -108,9 +112,9 @@ class AddClubScreen extends React.Component {
     }
     this.forceUpdate();
     if (dir == 'in') 
-      var param = [250, -20, 250];
+      var param = [630, 430, 250];
     else 
-      var param = [-20, 250, 100];
+      var param = [430, 630, 100];
     this.margin.setValue(param[0]);
     Animated.timing(this.margin, {
       useNativeDriver: false,
@@ -124,93 +128,99 @@ class AddClubScreen extends React.Component {
     );
   }
 
-  _joinClub(id, state = 0, selected_groups = {}) {
-    if (state == 0) {
-      this.state.selected_club = id;
-      database().ref('clubs/' + id + '/groups').once('value', (function(snapshot) {
-        var groups = snapshot.val();
-        database().ref('users/' + this.state.utils.getUserID() + '/clubs/' + id + '/groups').once('value', (function(snap) {
-          var joined_groups = snap.val();
+  showJoinClubModal(club_id, preselected_groups = {}) {
+    this.state.selected_club_id = club_id;
 
-          var joinable_groups = [];
-          Object.keys(groups).map(key => {
-            var group = groups[key];
+    // load all groups of club
+    database().ref('clubs/' + club_id + '/groups').once('value', (function(snapshot) {
+      var groups = snapshot.val();
+
+      // load already joined groups by user
+      database().ref('users/' + this.state.utils.getUserID() + '/clubs/' + club_id + '/groups').once('value', (function(snap) {
+        var joined_groups = snap.val();
+        if (!joined_groups) 
+          joined_groups = {};
+        
+        // merge joined groups and preselected groups
+        var joinable_groups = [];
+        Object.keys(groups).map(key => {
+          var group = groups[key];
+          var preselected = preselected_groups[key] || joined_groups[key];
+          if (group.public !== false || preselected) {
             group.key = key;
-            group.members = null;
-            group.preselected = selected_groups[key] === true || joined_groups[key] === true;
-
-            if (group.public !== false || group.preselected) 
-              joinable_groups.push(group);
-            this.forceUpdate();
-          });
-          this.state.joinable_groups = joinable_groups;
-          console.log(this.state.joinable_groups);
-
-          this._openModal(1);
-
+            group.preselected = preselected;
+            group.selected = preselected;
+            joinable_groups.push(group);
+          }
+          console.log(group.key + ": " + preselected)
           this.forceUpdate();
-        }).bind(this));
+        });
+        this.state.joinable_groups = joinable_groups;
+
+        // show the modal
+        this.select_groups_modal.open();
+
+        this.forceUpdate();
       }).bind(this));
-    } else if (state == 1) {
-      const utils = this.state.utils;
+    }).bind(this));
+  }
 
-      var selected_groups = 0;
-      this.state.joinable_groups.forEach((group, i) => {
-        if (group.selected || group.preselected) 
-          selected_groups++;
+  joinClub(club_id, groups) {
+    const utils = this.state.utils;
+
+    // close the modal
+    this.select_groups_modal.close();
+
+    var selected_groups = [];
+    groups.forEach((group, i) => {
+      if (group.selected) 
+        selected_groups.push(group)
+    });
+    database().ref('clubs/' + club_id + '/name').once('value', (function(snapshot) {
+      var club_name = snapshot.val();
+
+      database().ref('clubs/' + club_id + '/members').once('value', (function(snapshot) {
+        const uid = utils.getUserID();
+        var club_members = snapshot.val();
+
+        database().ref('clubs/' + club_id + '/members').set(club_members + 1);
+
+        var user_club = {
+          club_id: club_id,
+          notifications: true,
+          groups: {}
         }
-      );
-      console.log(selected_groups);
-      if (selected_groups > 0) {
-        database().ref('clubs/' + id + '/name').once('value', (function(snapshot) {
-          var club_name = snapshot.val();
 
-          database().ref('clubs/' + id + '/members').once('value', (function(snapshot) {
-            const uid = utils.getUserID();
-            var club_members = snapshot.val();
-            this.state.modal_visible[1] = false;
-            this.forceUpdate();
-            setTimeout((function() {
-              var joined_groups = [];
+        var is_admin = false;
+        selected_groups.forEach((group, i) => {
+          if (group.has_admin_rights) 
+            is_admin = true;
+          database().ref('clubs/' + club_id + '/groups/' + group.key + '/members').set(group.members + 1);
+          user_club.groups[group.key] = true;
+        });
 
-              database().ref('clubs/' + id + '/members').set(club_members + 1);
-              database().ref('users/' + uid + '/clubs/' + id + '/club_id').set(id);
-              database().ref('users/' + uid + '/clubs/' + id + '/notifications').set(true);
+        user_club.role = is_admin
+          ? 'admin'
+          : 'subscriber'
 
-              var is_admin = false;
-              this.state.joinable_groups.forEach((group, i) => {
-                if (group.selected || group.preselected) {
-                  if (group.has_admin_rights) 
-                    is_admin = true;
-                  joined_groups.push(group.name);
-                  database().ref('clubs/' + id + '/groups/' + group.key + '/members').set(group.members + 1);
-                  database().ref('users/' + uid + '/clubs/' + id + '/groups/' + group.key).set(true);
-                }
-              });
+        if (selected_groups.length > 0) {
+          database().ref('users/' + uid + '/clubs/' + club_id).set(user_club);
+          utils.showAlert('Du bist jetzt ' + (
+            is_admin
+              ? 'Administrator'
+              : 'Mitglied'
+          ) + ' von ' + club_name, '', ['Ok'], false, false);
+        } else {
+          database().ref('users/' + uid + '/clubs/' + club_id).remove();
+          utils.showAlert('Du bist jetzt kein Mitglied mehr von ' + club_name, '', ['Ok'], false, false);
+        }
 
-              database().ref('users/' + uid + '/clubs/' + id + '/role').set(
-                is_admin
-                  ? 'admin'
-                  : 'subscriber'
-              );
-
-              utils.showAlert('Du bist jetzt ' + (
-                is_admin
-                  ? 'Administrator'
-                  : 'Mitglied'
-              ) + ' von ' + club_name, '', ['Ok'], false, false);
-            }).bind(this), 500);
-          }).bind(this));
-        }).bind(this));
-      } else 
-        utils.showAlert('Bitte wähle eine Gruppe aus', '', ['Ok']);
-      }
-    }
+      }).bind(this));
+    }).bind(this));
+  }
 
   _selectGroup(key, selected) {
     this.state.joinable_groups[key].selected = selected;
-    if (!selected) 
-      this.state.joinable_groups[key].preselected = false;
     this.forceUpdate();
   }
 
@@ -231,9 +241,7 @@ class AddClubScreen extends React.Component {
 
   _qrCodeScanned(e) {
     console.log(e.data);
-    //this.state.modal_visible[0] = false;
-    this.state.search_value = e.data;
-    this._doSearch(0);
+    this.searchClub(e.data, 0);
     this.forceUpdate();
   }
 
@@ -260,35 +268,28 @@ class AddClubScreen extends React.Component {
 
     var searchResults = Object.keys(this.state.search_results).map(key => {
       var result = this.state.search_results[key];
-      return (
-        <SearchResult
-          key={key}
-          groups={result.groups}
-          club_id={result.id}
-          name={result.name}
-          img={result.img}
-          onPress={(id, selected_groups) => this._joinClub(id, 0, selected_groups)}/>
-      );
+      if (result) {
+        return (<SearchResult key={key} club_id={result.id} onPress={() => this.showJoinClubModal(result.id, result.groups)}/>);
+      }
     });
+    // filter null results
     searchResults = searchResults.filter(function(e) {
       return e !== undefined;
     });
 
+    // groups list for select groups modal
     const groupsList = Object.keys(this.state.joinable_groups).map(key => {
       var group = this.state.joinable_groups[key];
       if (!group.preselected) {
-        return (
-          <Group key={key} id={key} name={group.name} onSelect={(key, selected) => this._selectGroup(key, selected)} selected={group.selected}/>
-        );
+        return (<Group key={key} id={key} name={group.name} onSelect={(key, selected) => this._selectGroup(key, selected)} selected={group.selected}/>);
       }
     });
 
+    // all groups that are preselected, by (QR-)Code
     var preSelectedGroupsList = Object.keys(this.state.joinable_groups).map(key => {
       var group = this.state.joinable_groups[key];
       if (group.preselected) {
-        return (
-          <Group key={key} id={key} name={group.name} onSelect={(key, selected) => this._selectGroup(key, selected)} selected={group.selected || group.preselected}/>
-        );
+        return (<Group key={key} id={key} name={group.name} onSelect={(key, selected) => this._selectGroup(key, selected)} selected={group.selected}/>);
       }
     });
 
@@ -301,262 +302,147 @@ class AddClubScreen extends React.Component {
     const qrc_r = this.state.qr_code_result;
     if (this.props.show || this.props.navigation.getParam('show', null)) {
       return (
-        <View
-          style={s.container}
-          onLayout={event => {
-            var {
-              x,
-              y,
-              width,
-              height
-            } = event.nativeEvent.layout;
-            this.checkIfScrollViewIsNeeded(height);
-          }}>
-          <Modal animationType="slide" presentationStyle="formSheet" visible={this.state.modal_visible[0]}>
-            <View
-              style={{
-                backgroundColor: '#121212',
-                height: '100%',
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}>
-              <QRCodeScanner
-                reactivate={true}
-                reactivateTimeout={1700}
-                onRead={this._qrCodeScanned.bind(this)}
-                topContent={(
-                  <View style={{
-                      marginLeft: 20,
-                      marginRight: 20
-                    }}>
-                    <Text
-                      style={{
-                        opacity: 0.9,
-                        color: 'white',
-                        fontFamily: 'Poppins-ExtraBold',
-                        fontSize: 35
-                      }}>
-                      QR-Code scannen
-                    </Text>
-                    <Text
-                      style={{
-                        marginTop: 8,
-                        opacity: 0.6,
-                        color: 'white',
-                        fontFamily: 'Poppins-Regular',
-                        fontSize: 19
-                      }}>
-                      Du kannst einem Verein per QR-Code beitreten. Halte dazu deine Kamera auf den QR-Code des Vereins.
-                    </Text>
-                  </View>
-                )
-}
-                bottomContent={qrc_r
-                  ? <Animated.View
-                      style={{
-                        marginTop: margin,
-                        borderRadius: 13,
-                        //backgroundColor: '#34c759',
-                        backgroundColor: qrc_r.ok
-                          ? '#0DF5E3'
-                          : '#ff3d00',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-
-                        shadowColor: qrc_r.ok
-                          ? '#0DF5E3'
-                          : '#ff3d00',
-                        shadowOffset: {
-                          width: 0,
-                          height: 0
-                        },
-                        shadowOpacity: 0.5,
-                        shadowRadius: 10.00
-                      }}>
-                      <TouchableOpacity
-                        style={{
-                          padding: 12,
-                          paddingLeft: 15,
-                          paddingRight: 15,
-                          flexWrap: 'wrap',
-                          alignItems: 'flex-start',
-                          flexDirection: 'row'
-                        }}
-                        onPress={() => {
-                          if (qrc_r.ok) {
-                            this.state.modal_visible[0] = false;
-                            this.forceUpdate();
-                            this._joinClub(qrc_r.id, 0, qrc_r.groups);
-                          }
-                        }}>
-                        {
-                          !qrc_r.ok
-                            ? <FontAwesomeIcon
-                                style={{
-                                  opacity: 0.95,
-                                  marginTop: 3,
-                                  marginRight: 15
-                                }}
-                                size={25}
-                                color="#121212"
-                                icon={faExclamationCircle}/>
-                            : void 0
-                        }
-                        <Text
-                          style={{
-                            marginRight: 15,
-                            opacity: 0.8,
-                            color: '#121212',
-                            fontFamily: 'Poppins-Bold',
-                            fontSize: 26
-                          }}
-                          numberOfLines={1}>
-                          {qrc_r.name}
-                        </Text>
-
-                        {
-                          qrc_r.ok
-                            ? <FontAwesomeIcon
-                                style={{
-                                  opacity: 0.95,
-                                  marginTop: 3
-                                }}
-                                size={25}
-                                color="#121212"
-                                icon={faChevronCircleRight}/>
-                            : void 0
-                        }
-
-                      </TouchableOpacity>
-                    </Animated.View>
-                  : void 0
-}/>
-            </View>
-          </Modal>
-          <Modal animationType="slide" presentationStyle="formSheet" visible={this.state.modal_visible[1]}>
-            <View style={{
-                padding: 20,
-                backgroundColor: '#121212',
-                height: '100%'
-              }}>
-              <View
-                style={{
-                  marginBottom: 10,
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  flexDirection: 'row'
-                }}>
-                <Text
-                  style={{
-                    fontFamily: 'Poppins-Bold',
-                    color: 'white',
-                    fontSize: 25,
-                    width: '76%'
-                  }}
-                  numberOfLines={1}>
-                  Rollen auswählen
-                </Text>
-                <TouchableOpacity
-                  style={{
-                    height: 30,
-                    borderRadius: 10,
-                    marginLeft: 10,
-                    width: 70,
-                    padding: 5,
-                    paddingLeft: 10,
-                    backgroundColor: '#0DF5E3'
-                  }}
-                  onPress={text => this._joinClub(this.state.selected_club, 1)}>
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      fontFamily: 'Poppins-Bold',
-                      color: '#1e1e1e'
-                    }}>FERTIG</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View
-                style={{
-                  marginLeft: -20,
-                  height: 0.5,
-                  marginBottom: 20,
-                  backgroundColor: '#1e1e1e',
-                  width: '140%'
-                }}/>
-
-              <ScrollView showsVerticalScrollIndicator={false} style={{
-                  marginBottom: 20
-                }}>
-                {
-                  preSelectedGroupsList.length > 0
-                    ? <View style={{
-                          marginTop: 20,
-                          marginBottom: 20
-                        }}>{preSelectedGroupsList}</View>
-                    : void 0
-                }
-                {groupsList}
-              </ScrollView>
-            </View>
-          </Modal>
-
-          <View
-            style={{
-              width: '100%',
-              flexWrap: 'wrap',
-              alignItems: 'flex-start',
-              flexDirection: 'row'
-            }}>
-            {
-              this.state.account_type == 'manager'
-                ? <TouchableOpacity
-                    style={{
-                      zIndex: 20,
-                      marginTop: s_width * 0.14,
-                      marginLeft: 20,
-                      position: 'absolute'
-                    }}
-                    onPress={() => this.props.navigation.navigate('ScreenHandler')}>
-                    <FontAwesomeIcon style={{
-                        zIndex: 0
-                      }} size={29} color="#F5F5F5" icon={faChevronCircleLeft}/>
-                  </TouchableOpacity>
-                : void 0
-            }
-            <Text style={[
-                s.pageHeadline, {
-                  marginLeft: s_width * 0.18
-                }
-              ]}>Beitreten</Text>
-            <TouchableOpacity
-              style={([s.headlineIcon], {
-                marginTop: 55,
-                marginLeft: this.state.account_type == 'manager'
-                  ? 70
-                  : 110
-              })
-}
-              onPress={() => this._openModal(0)}>
-              <FontAwesomeIcon size={29} color="#F5F5F5" icon={faCamera}/>
-            </TouchableOpacity>
-          </View>
-          <View style={{
-              marginTop: 20,
-              marginLeft: 20,
-              marginRight: 20
-            }}>
+        <View>
+          <Modal ref={m => {
+              this.scan_qr_code_modal = m;
+            }} headline={"QR-Code scannen"} onDone={() => alert('done')}>
             <Text
               style={{
+                marginTop: 20,
                 opacity: 0.6,
                 color: 'white',
                 fontFamily: 'Poppins-Regular',
                 fontSize: 19
               }}>
-              Du kannst nach öffentlichen Vereinen suchen, oder einen Einladungcode eingeben.
+              Du kannst einem Verein per QR-Code beitreten. Halte dazu deine Kamera auf den QR-Code des Vereins.
             </Text>
+            <View style={{
+                marginTop: 20,
+                marginLeft: -20
+              }}>
+              <QRCodeScanner reactivate={true} reactivateTimeout={1700} onRead={this._qrCodeScanned.bind(this)}></QRCodeScanner>
+            </View>
+            {
+              qrc_r
+                ? <Animated.View
+                    style={{
+                      marginTop: margin,
+                      borderRadius: 13,
+                      //backgroundColor: '#34c759',
+                      backgroundColor: qrc_r.ok
+                        ? '#0DF5E3'
+                        : '#ff3d00',
+                      justifyContent: 'center',
+                      alignItems: 'center',
 
-            <View
+                      shadowColor: qrc_r.ok
+                        ? '#0DF5E3'
+                        : '#ff3d00',
+                      shadowOffset: {
+                        width: 0,
+                        height: 0
+                      },
+                      shadowOpacity: 0.5,
+                      shadowRadius: 10.00
+                    }}>
+                    <TouchableOpacity
+                      style={{
+                        padding: 12,
+                        paddingLeft: 15,
+                        paddingRight: 15,
+                        flexWrap: 'wrap',
+                        alignItems: 'flex-start',
+                        flexDirection: 'row'
+                      }}
+                      onPress={() => {
+                        if (qrc_r.ok) {
+                          this.scan_qr_code_modal.close();
+                          this.showJoinClubModal(qrc_r.id, qrc_r.groups);
+                        }
+                      }}>
+                      {
+                        !qrc_r.ok
+                          ? <FontAwesomeIcon
+                              style={{
+                                opacity: 0.95,
+                                marginTop: 3,
+                                marginRight: 15
+                              }}
+                              size={25}
+                              color="#121212"
+                              icon={faExclamationCircle}/>
+                          : void 0
+                      }
+                      <Text
+                        style={{
+                          marginRight: 15,
+                          opacity: 0.8,
+                          color: '#121212',
+                          fontFamily: 'Poppins-Bold',
+                          fontSize: 26
+                        }}
+                        numberOfLines={1}>
+                        {qrc_r.name}
+                      </Text>
+
+                      {
+                        qrc_r.ok
+                          ? <FontAwesomeIcon
+                              style={{
+                                opacity: 0.95,
+                                marginTop: 3
+                              }}
+                              size={25}
+                              color="#121212"
+                              icon={faChevronCircleRight}/>
+                          : void 0
+                      }
+
+                    </TouchableOpacity>
+                  </Animated.View>
+                : void 0
+            }
+          </Modal>
+          <Modal
+            ref={m => {
+              this.select_groups_modal = m;
+            }}
+            headline={"Rollen auswählen"}
+            onDone={() => this.joinClub(this.state.selected_club_id, this.state.joinable_groups)}>
+            <ScrollView showsVerticalScrollIndicator={false} style={{
+                paddingBottom: 80,
+                paddingTop: 30
+              }}>
+              {
+                preSelectedGroupsList.length > 0
+                  ? <View style={{
+                        marginTop: 20,
+                        marginBottom: 20
+                      }}>{preSelectedGroupsList}</View>
+                  : void 0
+              }
+              {groupsList}
+            </ScrollView>
+          </Modal>
+          <HeaderScrollView
+            headline="Beitreten"
+            headlineFontSize={38}
+            backButton={false}
+            showHeadline={false}
+            actionButton={(
+              <TouchableOpacity onPress={() => this.scan_qr_code_modal.open()}>
+                <Theme.Icon size={26} color="#F5F5F5" icon={faCamera}/>
+              </TouchableOpacity>
+            )}>
+            <Theme.Text style={{
+                opacity: .8,
+                fontFamily: 'Poppins-Medium',
+                fontSize: 19
+              }}>
+              Du kannst nach öffentlichen Vereinen suchen, oder einen Einladungcode eingeben.
+            </Theme.Text>
+
+            <Theme.View
               style={{
                 marginTop: 30,
                 borderTopLeftRadius: 10,
@@ -569,55 +455,31 @@ class AddClubScreen extends React.Component {
                   : 10,
                 backgroundColor: '#1e1e1e'
               }}>
-              <TextInput
-                multiline="multiline"
-                returnKeyType="search"
-                blurOnSubmit={true}
-                onFocus={() => this._onTextInputFocus(true)}
-                onBlur={() => this._onTextInputFocus(false)}
+              <InputBox icon={faSearch} placeholder={"Name oder Code eingeben ..."} onChange={(v) => this.searchClub(v)}/>
+              <Theme.ActivityIndicator
+                visible={this.state.loading}
                 style={{
-                  paddingRight: 55,
-                  maxHeight: 70,
-                  fontFamily: 'Poppins-Medium',
-                  marginTop: 8,
-                  padding: 15,
-                  fontSize: 17,
-                  color: '#D5D3D9'
+                  marginTop: 10,
+                  marginBottom: 10
                 }}
-                value={this.state.search_value}
-                placeholderTextColor="#665F75"
-                placeholder="NAME ODER CODE EINGEBEN ..."
-                onChangeText={text => this.onChangeText(text)}/>
-              <TouchableOpacity
-                onPress={() => this._doSearch()}
-                style={{
-                  position: 'absolute',
-                  marginTop: 12,
-                  marginLeft: 290
-                }}>
-                <FontAwesomeIcon size={23} color={this.state.text_input_focused
-                    ? 'white'
-                    : '#665F75'} icon={faSearch}/>
-              </TouchableOpacity>
-            </View>
-          </View>
-          {
-            searchResults.length > 0
-              ? <View
-                  style={{
-                    paddingBottom: 20,
-                    marginBottom: 20,
-                    marginLeft: 20,
-                    marginRight: 20,
-                    marginTop: 0,
-                    borderBottomLeftRadius: 10,
-                    borderBottomRightRadius: 10,
-                    backgroundColor: '#1e1e1e'
-                  }}>
-                  {searchResults}
-                </View>
-              : void 0
-          }
+                scale={1}/>
+            </Theme.View>
+            {
+              searchResults.length > 0
+                ? <Theme.View
+                    style={{
+                      paddingBottom: 20,
+                      marginBottom: 20,
+                      marginTop: 0,
+                      borderBottomLeftRadius: 10,
+                      borderBottomRightRadius: 10,
+                      backgroundColor: '#1e1e1e'
+                    }}>
+                    {searchResults}
+                  </Theme.View>
+                : void 0
+            }
+          </HeaderScrollView>
 
         </View>
       );
@@ -649,12 +511,24 @@ const styles = StyleSheet.create({
 });
 
 class SearchResult extends React.Component {
+  name = "";
+  img = "";
   constructor(props) {
     super(props);
+
+    database().ref('clubs/' + props.club_id + '/logo').once('value', (function(snap) {
+      this.img = snap.val();
+      this.forceUpdate();
+    }).bind(this));
+
+    database().ref('clubs/' + props.club_id + '/name').once('value', (function(snap) {
+      this.name = snap.val();
+      this.forceUpdate();
+    }).bind(this));
   }
 
   render() {
-    if (this.props.name && this.props.img) 
+    if (this.name) 
       return (
         <TouchableOpacity
           style={{
@@ -666,11 +540,11 @@ class SearchResult extends React.Component {
             alignItems: 'flex-start',
             flexDirection: 'row'
           }}
-          onPress={() => this.props.onPress(this.props.club_id, this.props.groups)}>
+          onPress={() => this.props.onPress(this.props.club_id)}>
           <AutoHeightImage style={{
               borderRadius: 40
             }} width={40} source={{
-              uri: this.props.img
+              uri: this.img
             }}/>
           <View
             style={{
@@ -683,7 +557,7 @@ class SearchResult extends React.Component {
                 fontFamily: 'Poppins-SemiBold',
                 color: '#C5C3CB',
                 fontSize: 16
-              }}>{this.props.name}</Text>
+              }}>{this.name}</Text>
           </View>
         </TouchableOpacity>
       );

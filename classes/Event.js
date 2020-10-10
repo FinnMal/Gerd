@@ -60,8 +60,6 @@ export class Event {
       this.uid = uid;
       database().ref("clubs/" + club_id + "/events/" + event_id).once("value", function(snap) {
         this.data = snap.val();
-        console.log("DATA:")
-        console.log(this.data);
         this.data.id = event_id;
         this.data.club_id = club_id;
         this.downloadStorageImage(function() {
@@ -79,7 +77,6 @@ export class Event {
   async downloadStorageImage(cb) {
     if (this.getValue("image_name")) {
       const url = await storage().ref('fallback_images/' + this.getValue("image_name")).getDownloadURL();
-      console.log(url);
       this.setImage(url);
       cb();
     } else 
@@ -178,8 +175,6 @@ export class Event {
           if (this.readyListener) 
             this.readyListener();
           this.data.utils.getUser().getDatabaseValue("events/" + this.getClubID() + "_" + this.getID(), function(value) {
-            console.log(this.getID() + ": " + value)
-
             this.calculateTextColor(function() {
               if (this.renderListerner) 
                 this.renderListerner(this)
@@ -195,10 +190,8 @@ export class Event {
   calculateTextColor(cb) {
     getColorFromURL(this.getImage()).then(colors => {
       var rgb = this.hexToRGBA(colors.background)
-      console.log(rgb)
 
       const brightness = Math.round(((parseInt(rgb[0]) * 299) + (parseInt(rgb[1]) * 587) + (parseInt(rgb[2]) * 114)) / 1000);
-      console.log(brightness)
       this.text_color = (brightness > 125)
         ? 'black'
         : 'white';
@@ -231,7 +224,6 @@ export class Event {
   }
 
   getTitle() {
-    console.log("GET TITLE")
     return this.getValue('title');
   }
   setTitle(v, store = false) {
@@ -499,7 +491,7 @@ export class Event {
     .bind(this))
   }
 
-  getRenderForPreview() {
+  getRenderForPreview(width = -1) {
     const event = this.data;
     const club = this.club;
     const user = this.data.utils.getUser();
@@ -538,7 +530,7 @@ export class Event {
       return <View style={{
           flex: 1,
           height: "100%",
-          width: s_width * .9466
+          width: width
         }}>
         <View
           style={{
@@ -638,8 +630,7 @@ export class Event {
           </Animated.View>
         </Theme.LinearGradient>
       </View>;
-    } else 
-      console.log('ERROR: EVENT IS NULL')
+    }
     return null;
   }
 
@@ -733,8 +724,7 @@ export class Event {
           </View>
         </Theme.TouchableOpacity>
       </View>;
-    } else 
-      console.log('ERROR: EVENT IS NULL')
+    }
     return null;
   }
 
