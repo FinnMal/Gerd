@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Text,
   View,
-  Button,
   TouchableOpacity,
   ScrollView,
   Animated,
@@ -14,6 +13,8 @@ import {
   Modal
 } from "react-native";
 import GestureRecognizer, {swipeDirections} from "react-native-swipe-gestures";
+import {Theme} from './../app/index.js';
+import Button from "./../components/Button.js";
 
 export default class GerdModal extends React.Component {
   constructor(props) {
@@ -69,9 +70,8 @@ export default class GerdModal extends React.Component {
         onDismiss={() => console.log("onDismiss")}
         onRequestClose={() => console.log("onRequestClose")}
         onOrientationChange={() => console.log("onOrientationChange")}>
-        <View style={{
+        <Theme.BackgroundView style={{
             padding: 20,
-            backgroundColor: "#121212",
             height: "100%"
           }}>
           <View style={{
@@ -79,7 +79,7 @@ export default class GerdModal extends React.Component {
               flexWrap: "wrap",
               flexDirection: "row"
             }}>
-            <Text
+            <Theme.Text
               style={{
                 height: 30,
                 fontFamily: "Poppins-Bold",
@@ -89,40 +89,19 @@ export default class GerdModal extends React.Component {
               }}
               numberOfLines={1}>
               {this.props.headline}
-            </Text>
-            <TouchableOpacity
-              style={{
-                height: 30,
-                borderRadius: 10,
-                marginLeft: 10,
-                width: 70,
-                padding: 5,
-                paddingLeft: 10,
-                backgroundColor: "#0DF5E3"
-              }}
-              onPress={() => this._onDone()}>
-              <Text
-                style={{
-                  textTransform: "uppercase",
-                  fontSize: 18,
-                  fontFamily: "Poppins-Bold",
-                  color: "#1e1e1e"
-                }}>
-                {this.state.done_text}
-              </Text>
-            </TouchableOpacity>
+            </Theme.Text>
+            <Button size={"small"} color={"primary"} label={this.state.done_text} onPress={() => this._onDone()}/>
           </View>
-          <View
+          <Theme.SelectedView
             style={{
               marginLeft: -20,
               height: 0.5,
               marginTop: 10,
               marginBottom: 0,
-              backgroundColor: "#1e1e1e",
               width: "140%"
             }}/>
           <View>{this.props.children}</View>
-        </View>
+        </Theme.BackgroundView>
       </Modal>
     );
   }

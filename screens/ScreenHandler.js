@@ -33,6 +33,8 @@ import {faHome, faUsers, faComment, faCog, faPlusCircle} from '@fortawesome/free
 import User from "./../classes/User.js";
 import {useDarkMode} from 'react-native-dynamic'
 import Toast from "./../components/Toast.js";
+import {Theme} from './../app/index.js';
+import ReactNativeHapticFeedback from "react-native-haptic-feedback"
 
 function CStatusBar() {
   const isDarkMode = useDarkMode()
@@ -86,28 +88,23 @@ export default class ScreenHandler extends React.Component {
         {
           x: 0,
           active: true,
-          moveTo: 'none',
-          iconColor: 'white'
+          moveTo: 'none'
         }, {
           x: 0,
           active: false,
-          moveTo: 'none',
-          iconColor: 'white'
+          moveTo: 'none'
         }, {
           x: 0,
           active: false,
-          moveTo: 'none',
-          iconColor: 'white'
+          moveTo: 'none'
         }, {
           x: 0,
           active: false,
-          moveTo: 'none',
-          iconColor: 'white'
+          moveTo: 'none'
         }, {
           x: 0,
           active: false,
-          moveTo: 'none',
-          iconColor: 'white'
+          moveTo: 'none'
         }
       ]
     };
@@ -230,25 +227,18 @@ export default class ScreenHandler extends React.Component {
             <SettingsScreen utilsObject={utils} setScrollViewEnabled={this.setScrollViewEnabled} moveTo={this.state.nav[4].moveTo} show={this.state.nav[4].active}/>
           </View>
 
-          <Animated.View style={[
+          <Theme.View style={[
               styles.navigationBar, {
                 bottom: navbarMarginBottom
               }
             ]}>
-            <CNavbar style={styles.navigationBarWhiteBackground}/>
-
-            <Animated.View style={{
-                marginLeft
-              }}>
-              <View style={styles.navigatonBarMarker}/>
-            </Animated.View>
             <View style={styles.navigationBarIcons}>
               <NavItem index={0} label="Home" icon={faHome} active={this.state.nav[0].active} navigate={this.navigate.bind(this)}/>
-              <NavItem index={1} label="Add Club" icon={faPlusCircle} active={this.state.nav[1].active} navigate={this.navigate.bind(this)}/>
               <NavItem index={2} label="Clubs" icon={faUsers} active={this.state.nav[2].active} navigate={this.navigate.bind(this)}/>
               <NavItem index={3} label="Chats" icon={faComment} active={this.state.nav[3].active} navigate={this.navigate.bind(this)}/>
+              <NavItem index={4} label="Settings" icon={faCog} active={this.state.nav[4].active} navigate={this.navigate.bind(this)}/>
             </View>
-          </Animated.View>
+          </Theme.View>
         </this.AppContext.Provider>
       );
     } else {
@@ -261,36 +251,14 @@ export default class ScreenHandler extends React.Component {
     if (this.last_nav_id != id) {
       for (var i = 0; i < 5; i++) {
         if (id != i) {
-          this.state.nav[i].iconColor = '#B4B7CB';
           this.state.nav[i].active = false;
         } else {
-          this.state.nav[i].iconColor = '#474E80';
           this.state.nav[i].active = true;
         }
+        this.forceUpdate();
       }
-
-      this.forceUpdate();
-      /*
-      this.holeMargin.setValue(this.state.hole_margin);
-      Animated.timing(this.holeMargin, {
-        useNativeDriver: false,
-        toValue: this.state.nav[id].x + 47.5,
-        duration: 120,
-        easing: Easing.ease
-      }).start(() => {
-        /*for (var i = 0; i < 5; i++) {
-          if (id != i) {
-            this.state.nav[i].iconColor = '#B4B7CB';
-          } else {
-            this.state.nav[i].iconColor = '#474E80';
-          }
-        }
-        */
-
-      // this.forceUpdate(); }); if(this.last_nav_id > id) this.state.nav[id].moveTo = "left" else this.state.nav[id].moveTo = "right" this.state.hole_margin =
-      // this.state.nav[id].x + 47.5; this.forceUpdate();
+      this.last_nav_id = id;
     }
-    this.last_nav_id = id;
   }
 
   navigateLeft() {
@@ -308,8 +276,8 @@ export default class ScreenHandler extends React.Component {
 const styles = StyleSheet.create({
   navigationBar: {
     ...ifIphoneX({
-      height: 105
-    }, {height: 94}),
+      height: 84
+    }, {height: 60}),
     position: 'absolute',
     width: '100%',
 
@@ -321,32 +289,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.58,
     shadowRadius: 20.00,
 
-    elevation: 30
-  },
-  navigatonBarMarker: {
-    marginTop: 71,
-    //marginTop: 33,
-    opacity: 0.5,
-    backgroundColor: 'white',
-    width: 30,
-    height: 0,
-    borderRadius: 22
-  },
-  navigationBarWhiteBackground: {
-    borderRadius: 0,
+    elevation: 30,
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
     position: 'absolute',
-    marginTop: 25,
-    height: 80,
     width: '100%'
   },
   navigationBarIcons: {
     marginLeft: 15,
     flexDirection: 'row',
     width: '92%',
-    marginTop: 35,
-    position: 'absolute'
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   navigationBarIcon: {
     opacity: 0.90
@@ -354,11 +309,7 @@ const styles = StyleSheet.create({
 });
 
 class NavItem extends React.Component {
-  textOpacity = new Animated.Value(0);
-  marginLeft = new Animated.Value(35);
-  marginRight = new Animated.Value(0);
-  touchableWidth = new Animated.Value(50);
-
+  iconScale = new Animated.Value(1);
   animationDuration = 150;
 
   constructor(props) {
@@ -369,212 +320,70 @@ class NavItem extends React.Component {
       index: this.props.index,
       label_width: -1
     }
+    this.color = "#0B84FF"
+  }
 
-    this.color = "#8ac926";
-    if (this.state.index == 0) 
-      this.color = "#8ac926";
-    else if (this.state.index == 1) 
-      this.color = "#ff595e";
-    else if (this.state.index == 2) 
-      this.color = "#ff595e";
-    else if (this.state.index == 3) 
-      this.color = "#6a4c93";
-    else if (this.state.index == 4) 
-      this.color = "#1982c4";
-    else if (this.state.index == 5) 
-      this.color = "#1982c4";
-    
-    this._startHideAnimation();
+  _getIconScale() {
+    return this.iconScale.interpolate({
+      inputRange: [
+        1, 50, 100
+      ],
+      outputRange: [
+        1, 0.9, 1
+      ],
+      extrapolate: 'clamp',
+      useNativeDriver: true
+    });
   }
 
   _navigate() {
-    this.props.navigate(this.state.index)
-  }
-
-  _startShowAnimation() {
-    this.state.active = true;
+    ReactNativeHapticFeedback.trigger("impactLight");
+    this.iconScale.setValue(1);
+    Animated.timing(this.iconScale, {
+      useNativeDriver: false,
+      toValue: 100,
+      duration: 150,
+      easing: Easing.ease
+    }).start();
+    this.props.navigate(this.state.index);
+    this.props.active = true;
     this.forceUpdate();
-    this.textOpacity.setValue(0);
-    Animated.timing(this.textOpacity, {
-      useNativeDriver: false,
-      toValue: 1,
-      duration: this.animationDuration + this.animationDuration * 0.2,
-      easing: Easing.ease
-    }).start();
-
-    this.marginLeft.setValue(25);
-    Animated.timing(this.marginLeft, {
-      useNativeDriver: false,
-      toValue: 5,
-      duration: this.animationDuration,
-      easing: Easing.ease
-    }).start();
-
-    this.marginRight.setValue(0);
-    Animated.timing(this.marginRight, {
-      useNativeDriver: false,
-      toValue: -20,
-      duration: this.animationDuration,
-      easing: Easing.ease
-    }).start();
-
-    this.touchableWidth.setValue(50);
-    Animated.timing(this.touchableWidth, {
-      useNativeDriver: false,
-      toValue: 60 + this.state.label_width,
-      duration: this.animationDuration,
-      easing: Easing.ease
-    }).start();
-  }
-
-  _startHideAnimation() {
-    this.state.active = false;
-    this.forceUpdate();
-    this.textOpacity.setValue(1);
-    Animated.timing(this.textOpacity, {
-      useNativeDriver: false,
-      toValue: 0,
-      duration: this.animationDuration - this.animationDuration * 0.2,
-      easing: Easing.ease
-    }).start();
-
-    this.marginLeft.setValue(5);
-    Animated.timing(this.marginLeft, {
-      useNativeDriver: false,
-      toValue: 25,
-      duration: this.animationDuration,
-      easing: Easing.ease
-    }).start();
-
-    this.marginRight.setValue(-20);
-    Animated.timing(this.marginRight, {
-      useNativeDriver: false,
-      toValue: 0,
-      duration: this.animationDuration,
-      easing: Easing.ease
-    }).start();
-
-    this.touchableWidth.setValue(60 + this.state.label_width);
-    Animated.timing(this.touchableWidth, {
-      useNativeDriver: false,
-      toValue: 50,
-      duration: this.animationDuration,
-      easing: Easing.ease
-    }).start();
   }
 
   render() {
-    if (this.state.active != this.props.active) {
-      if (this.props.active) 
-        this._startShowAnimation();
-      else 
-        this._startHideAnimation();
-      }
-    
-    const textOpacity = this.textOpacity.interpolate({
-      inputRange: [
-        0, 1
-      ],
-      outputRange: [0, 1]
-    });
-
-    const backgroundOpacity = this.textOpacity.interpolate({
-      inputRange: [
-        0, 1
-      ],
-      outputRange: [0, .24]
-    });
-
-    const touchableWidth = this.touchableWidth.interpolate({
-      inputRange: [
-        0, 100
-      ],
-      outputRange: [0, 100]
-    });
-
-    const marginLeft = this.marginLeft.interpolate({
-      inputRange: [
-        0, 100
-      ],
-      outputRange: [0, 100]
-    });
-
-    const marginRight = this.marginRight.interpolate({
-      inputRange: [
-        0, 100
-      ],
-      outputRange: [0, 100]
-    });
     return (
-      <View>
-        <Animated.View
-          style={{
-            width: 50,
-            //width: touchableWidth,
-            marginLeft: 20,
-            marginRight: 0
-            //marginLeft: marginLeft, marginRight: marginRight
+      <TouchableOpacity
+        onPress={() => this._navigate()}
+        style={{
+          height: 90,
+          width: 80,
+          paddingTop: 8,
+          paddingBottom: 8,
+          flexWrap: 'wrap',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+        <Animated.View style={{
+            transform: [
+              {
+                scale: this._getIconScale()
+              }
+            ]
           }}>
-          <TouchableOpacity
-            onPress={() => this._navigate()}
+          <Theme.Icon
             style={{
-              paddingTop: 8,
-              paddingBottom: 8,
-              flexWrap: 'wrap',
-              alignItems: 'flex-start',
-              flexDirection: 'row'
-            }}>
-            <Animated.View
-              style={{
-                height: 43,
-                width: 50,
-                //width: touchableWidth,
-                borderRadius: 30,
-                marginLeft: 0,
-                position: "absolute",
-                //backgroundColor: this.color,
-                opacity: backgroundOpacity
-              }}/>
-            <Animated.View style={{
-                marginLeft: 10,
-                alignSelf: 'flex-start'
-              }}>
-              <FontAwesomeIcon
-                style={{
-                  opacity: 1
-                }}
-                size={27}
-                color={this.props.active
-                  ? this.color
-                  : "#B4B7CB"}
-                icon={this.props.icon}/>
-            </Animated.View>
-            {
-              false
-                ? <Animated.Text
-                    style={{
-                      position: "absolute",
-                      opacity: textOpacity,
-                      fontSize: 17,
-                      marginTop: 12,
-                      marginLeft: 45,
-                      fontFamily: "Poppins-Medium",
-                      color: this.color
-                    }}
-                    onLayout={(event) => {
-                      if (this.state.label_width == -1) {
-                        this.state.label_width = event.nativeEvent.layout.width;
-                        if (this.state.active) 
-                          this._startShowAnimation()
-                        this.forceUpdate();
-                      }
-                    }}>{this.props.label}</Animated.Text>
-                : void 0
-            }
-
-          </TouchableOpacity>
+              marginTop: 11,
+              alignSelf: 'flex-start',
+              opacity: 1
+            }}
+            size={27}
+            color={this.props.active
+              ? 'primary'
+              : 'inacitve'}
+            icon={this.props.icon}/>
         </Animated.View>
-      </View>
+      </TouchableOpacity>
     );
   }
 }

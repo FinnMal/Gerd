@@ -46,23 +46,31 @@ export default class InputBox extends React.Component {
   
   render() {
     return (
-      <View style={{
-          marginBottom: this.props.marginBottom,
-          marginTop: this.props.marginTop
-        }}>
-        <Text style={{
-            fontFamily: "Poppins-SemiBold",
-            marginLeft: 10,
-            color: "#5C5768"
-          }}>
-          {this.props.label}
-        </Text>
-        <View
-          style={{
+      <View
+        style={[
+          {
             borderRadius: 10,
-            backgroundColor: this.props.color == "dark"
-              ? "#121212"
-              : "#1e1e1e"
+            marginBottom: this.props.marginBottom,
+            marginTop: this.props.marginTop
+          },
+          this.props.style
+        ]}>
+        {
+          this.props.label
+            ? <Theme.Text style={{
+                  opacity: .5,
+                  fontFamily: "Poppins-SemiBold",
+                  marginLeft: 10
+                }}>
+                {this.props.label}
+              </Theme.Text>
+            : void 0
+        }
+
+        <View style={{
+            flexWrap: 'wrap',
+            alignItems: 'flex-start',
+            flexDirection: 'row'
           }}>
           <Theme.TextInput
             onFocus={() => {
@@ -88,6 +96,8 @@ export default class InputBox extends React.Component {
               : "none"}
             secureTextEntry={this.state.secure}
             style={{
+              width: "88%",
+              borderRadius: 10,
               maxHeight: 70,
               fontFamily: "Poppins-Medium",
               padding: 15,
@@ -100,12 +110,13 @@ export default class InputBox extends React.Component {
               ? <TouchableOpacity
                   onPress={() => this._onDone()}
                   style={{
-                    position: 'absolute',
-                    marginTop: 12,
-                    marginLeft: 290
+                    alignSelf: 'flex-end',
+                    marginLeft: 'auto',
+                    marginBottom: 16,
+                    marginRight: 20
                   }}>
                   <Theme.Icon
-                    size={23}
+                    size={20}
                     style={{
                       opacity: this.has_focus
                         ? 1

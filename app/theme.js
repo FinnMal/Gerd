@@ -6,34 +6,53 @@ import {
   TouchableOpacity as ReactTouchableOpacity,
   ActivityIndicator as ReactActivityIndicator,
   StyleSheet,
-  Animated
+  Animated,
+  Switch as ReactSwitch
 } from 'react-native';
 import {useDarkMode} from 'react-native-dynamic'
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import ReactLinearGradient from 'react-native-linear-gradient';
 import {usePalette} from 'react-palette';
 import {BlurView as ReactBlurView} from "@react-native-community/blur";
+import {default as ReactCheckBox} from '@react-native-community/checkbox';
+import ReactNativeHapticFeedback from "react-native-haptic-feedback"
+import {AnimatedCircularProgress as ReactAnimatedCircularProgress} from "react-native-circular-progress";
 
 const colors = {
   "view": [
-    "#2C2C2E", "#E5E5EA"
+    "#1C1C1E", "#FFFFFF"
   ],
-  "primary": ["#0B84FF", "#007AFF"]
+  "background_view": [
+    "black", "#F2F1F6"
+  ],
+  "selected_view": [
+    "#2C2C2E", "#E4E3E9"
+  ],
+  "primary": [
+    "#0B84FF", "#007AFF"
+  ],
+  "danger": [
+    "#FF3B31", "#FF453A"
+  ],
+  "success": [
+    "#30D158", "#33C759"
+  ],
+  "inacitve": ["#B4B7CB", "#B4B7CB"]
 }
 
 function View(props) {
   const isDarkMode = useDarkMode()
   var shadow = {
     "normal": {
-      shadowColor: "#2C2C2E",
+      shadowColor: "#E4E3E9",
       shadowOffset: {
         width: 0,
         height: 0
       },
       shadowOpacity: isDarkMode
         ? 0
-        : .3,
-      shadowRadius: 10.0
+        : 1,
+      shadowRadius: 9.0
     },
     "large": {
       shadowColor: "black",
@@ -48,15 +67,22 @@ function View(props) {
     }
   };
 
-  var color = isDarkMode
-    ? colors["view"][0]
-    : colors["view"][1];
-
-  if (props.color) 
+  var color = props.color;
+  if (!props.color) {
     color = isDarkMode
-      ? colors[props.color][0]
-      : colors[props.color][1];
+      ? colors["view"][0]
+      : colors["view"][1];
+  } else {
+    if (colors[props.color]) 
+      color = isDarkMode
+        ? colors[props.color][0]
+        : colors[props.color][1];
+    }
   
+  if (props.colorOpacity < 1 && props.colorOpacity > 0) {
+    color = hexToRGBA(color, props.colorOpacity, true);
+  }
+
   return <Animated.View style={[
       props.style,
       shadow[props.shadow], {
@@ -69,8 +95,8 @@ function SelectedView(props) {
   const isDarkMode = useDarkMode()
 
   var color = isDarkMode
-    ? "#2C2C2E"
-    : "#E5E5EA";
+    ? colors["selected_view"][0]
+    : colors["selected_view"][1]
 
   if (props.color) 
     color = isDarkMode
@@ -107,8 +133,8 @@ function BackgroundView(props) {
   const isDarkMode = useDarkMode()
 
   var color = isDarkMode
-    ? "#1C1C1E"
-    : "#F2F2F7"
+    ? colors["background_view"][0]
+    : colors["background_view"][1];
 
   if (props.color) 
     color = isDarkMode
@@ -124,15 +150,15 @@ function BackgroundView(props) {
 
 function BlurView(props) {
   const isDarkMode = useDarkMode()
+
+  var blurType = ["xlight", "extraDark"];
+  if (props.blurType) 
+    blurType = props.blurType;
+  
   return (
-    <ReactBlurView
-      onLayout={props.onLayout}
-      blurType={isDarkMode
-        ? "dark"
-        : "regular"}
-      blurAmount={10}
-      reducedTransparencyFallbackColor="#121212"
-      style={props.style}>{props.children}</ReactBlurView>
+    <ReactBlurView onLayout={props.onLayout} blurType={isDarkMode
+        ? blurType[1]
+        : blurType[0]} blurAmount={10} style={props.style}>{props.children}</ReactBlurView>
   );
 }
 
@@ -143,6 +169,12 @@ function Text(props) {
     ? "white"
     : "#1C1C1E";
 
+  var backgroundColor = props.backgroundColor;
+  if (colors[backgroundColor]) 
+    backgroundColor = isDarkMode
+      ? colors[backgroundColor][0]
+      : colors[backgroundColor][1];
+  
   if (props.color) 
     color = isDarkMode
       ? colors[props.color][0]
@@ -150,9 +182,36 @@ function Text(props) {
   
   return <Animated.Text style={[
       props.style, {
-        color: color
+        color: backgroundColor
+          ? calculateTextColor(backgroundColor)
+          : color
       }
     ]}>{props.children}</Animated.Text>;
+}
+
+function TextOnColor(props) {
+  const isDarkMode = useDarkMode()
+
+  var color = props.backgroundColor;
+  if (colors[color]) 
+    color = isDarkMode
+      ? colors[color][0]
+      : colors[color][1];
+  
+  return <Animated.Text style={[
+      props.style, {
+        color: calculateTextColor(color)
+      }
+    ]}>{props.children}</Animated.Text>;
+}
+
+function calculateTextColor(color) {
+  var rgb = hexToRGBA(color)
+
+  const brightness = Math.round(((parseInt(rgb[0]) * 299) + (parseInt(rgb[1]) * 587) + (parseInt(rgb[2]) * 114)) / 1000);
+  return (brightness > 125)
+    ? 'black'
+    : 'white';
 }
 
 function TextInput(props) {
@@ -160,7 +219,7 @@ function TextInput(props) {
 
   var color = isDarkMode
     ? colors["view"][0]
-    : colors["view"][1];
+    : colors["selected_view"][1];
 
   var text_color = isDarkMode
     ? "#ffffff"
@@ -186,7 +245,20 @@ function TextInput(props) {
 
 function TouchableOpacity(props) {
   const isDarkMode = useDarkMode()
-  return <ReactTouchableOpacity onPress={props.onPress} style={[props.style]}>{props.children}</ReactTouchableOpacity>;
+
+  var backgroundColor = "";
+  if (colors[props.color]) {
+    backgroundColor = isDarkMode
+      ? colors[props.color][0]
+      : colors[props.color][1];
+  }
+
+  return <ReactTouchableOpacity onPress={props.onPress} style={[
+      {
+        backgroundColor: backgroundColor
+      },
+      props.style
+    ]}>{props.children}</ReactTouchableOpacity>;
 }
 
 function Icon(props) {
@@ -196,6 +268,12 @@ function Icon(props) {
     ? "#F5F5F5"
     : "#121212";
 
+  var backgroundColor = props.backgroundColor;
+  if (colors[backgroundColor]) 
+    backgroundColor = isDarkMode
+      ? colors[backgroundColor][0]
+      : colors[backgroundColor][1];
+  
   if (props.color) {
     if (colors[props.color]) {
       color = isDarkMode
@@ -203,10 +281,30 @@ function Icon(props) {
         : colors[props.color][1];
     }
   }
+  return <FontAwesomeIcon
+    size={props.size}
+    style={[
+      props.style, {
+        color: backgroundColor
+          ? calculateTextColor(backgroundColor)
+          : color
+      }
+    ]}
+    icon={props.icon}>{props.children}</FontAwesomeIcon>;
+}
 
+function IconOnColor(props) {
+  const isDarkMode = useDarkMode()
+
+  var color = props.backgroundColor;
+  if (colors[color]) 
+    color = isDarkMode
+      ? colors[color][0]
+      : colors[color][1];
+  
   return <FontAwesomeIcon size={props.size} style={[
       props.style, {
-        color: color
+        color: calculateTextColor(color)
       }
     ]} icon={props.icon}>{props.children}</FontAwesomeIcon>;
 }
@@ -240,6 +338,12 @@ function ActivityIndicator(props) {
     ? "#F5F5F5"
     : "#121212"
 
+  var backgroundColor = props.backgroundColor;
+  if (colors[backgroundColor]) 
+    backgroundColor = isDarkMode
+      ? colors[backgroundColor][0]
+      : colors[backgroundColor][1];
+  
   if (props.visible) 
     return <ReactActivityIndicator
       style={[
@@ -247,21 +351,30 @@ function ActivityIndicator(props) {
           transform: [
             {
               scale: props.scale
+                ? props.scale
+                : 1
             }
           ]
         }
       ]}
       size="small"
-      color={color}/>
+      color={backgroundColor
+        ? calculateTextColor(backgroundColor)
+        : color}/>
   return null;
 }
 
-function hexToRGBA(hex, alpha) {
+function hexToRGBA(hex, alpha = 1, returnString = false) {
   if (!/^#([A-Fa-f0-9]{3,4}){1,2}$/.test(hex)) {
     throw new Error("Invalid HEX")
   }
   const hexArr = hex.slice(1).match(new RegExp(`.{${Math.floor((hex.length - 1) / 3)}}`, "g"))
-  return hexArr.map(convertHexUnitTo256)
+  if (!returnString) 
+    return hexArr.map(convertHexUnitTo256)
+  else {
+    var rgba = hexArr.map(convertHexUnitTo256);
+    return 'rgba(' + rgba[0] + ', ' + rgba[1] + ', ' + rgba[2] + ', ' + alpha + ')';
+  }
 }
 
 function convertHexUnitTo256(hexStr) {
@@ -284,6 +397,120 @@ function hexToRgb(hex) {
     : null;
 }
 
+function CheckBox(props) {
+  const isDarkMode = useDarkMode()
+
+  var color = isDarkMode
+    ? colors["primary"][0]
+    : colors["primary"][1]
+
+  var tintColor = isDarkMode
+    ? colors["view"][0]
+    : colors["view"][1]
+
+  return <ReactView
+    style={[
+      props.style, {
+        marginLeft: 5,
+        paddingTop: 14,
+        paddingBottom: 14,
+        flexWrap: 'wrap',
+        alignItems: 'flex-start',
+        flexDirection: 'row'
+      }
+    ]}>
+    <ReactView style={{
+        height: 25,
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+      <ReactCheckBox
+        lineWidth={2}
+        animationDuration={0.12}
+        onCheckColor={color}
+        tintColor={tintColor}
+        value={props.checked}
+        style={{
+          height: 25,
+          width: 25
+        }}
+        onValueChange={(checked) => {
+          ReactNativeHapticFeedback.trigger("impactMedium");
+          if (props.onChange) 
+            props.onChange(checked, false);
+          }}/>
+    </ReactView>
+    <TouchableOpacity
+      style={{
+        marginLeft: 20,
+        height: 25,
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}
+      onPress={() => {
+        ReactNativeHapticFeedback.trigger("impactMedium");
+        if (props.onChange) 
+          props.onChange(!props.checked, true);
+        }}>
+      <Text style={{
+          opacity: 0.85,
+          fontFamily: 'Poppins-Bold',
+          fontSize: 19
+        }}>
+        {props.label}
+      </Text>
+    </TouchableOpacity>
+  </ReactView>
+}
+
+function Switch(props) {
+  const isDarkMode = useDarkMode()
+
+  var color = isDarkMode
+    ? colors["primary"][0]
+    : colors["primary"][1]
+
+  return <ReactSwitch
+    style={[
+      props.style, {
+        transform: [
+          {
+            scale: 0.83
+          }
+        ]
+      }
+    ]}
+    trackColor={{
+      false: "#575757",
+      true: color
+    }}
+    thumbColor={"white"}
+    ios_backgroundColor="#3e3e3e"
+    onValueChange={props.onValueChange}
+    value={props.value}/>
+}
+
+function AnimatedCircularProgress(props) {
+  const isDarkMode = useDarkMode()
+
+  var fillColor = isDarkMode
+    ? colors["primary"][0]
+    : colors["primary"][1]
+
+  var backgroundColor = isDarkMode
+    ? colors["view"][0]
+    : colors["view"][1]
+
+  return <ReactAnimatedCircularProgress
+    size={props.size}
+    width={props.width}
+    style={props.style}
+    fill={props.fill}
+    tintColor={fillColor}
+    onAnimationComplete={props.onAnimationComplete}
+    backgroundColor={backgroundColor}/>
+}
+
 export {
   TouchableOpacity,
   View,
@@ -292,8 +519,13 @@ export {
   BackgroundView,
   BlurView,
   Text,
+  TextOnColor,
   TextInput,
   Icon,
+  IconOnColor,
   LinearGradient,
-  ActivityIndicator
+  ActivityIndicator,
+  CheckBox,
+  Switch,
+  AnimatedCircularProgress
 };

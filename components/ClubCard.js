@@ -37,7 +37,7 @@ export default class ClubCard extends React.Component {
       <Theme.TouchableOpacity
         style={{
           marginBottom: 20,
-          borderRadius: 13,
+          borderRadius: 17,
           padding: 13,
           flexWrap: 'wrap',
           alignItems: 'flex-start',
@@ -63,33 +63,35 @@ export default class ClubCard extends React.Component {
             justifySelf: 'center'
           }}>
           <View>
-            <Theme.Text style={{
+            <Theme.TextOnColor
+              backgroundColor={"#" + this.props.club_color}
+              style={{
                 width: 210,
                 fontSize: 18,
                 fontFamily: 'Poppins-SemiBold'
               }}>
               {this.props.club_name}
-            </Theme.Text>
-            <Theme.Text
+            </Theme.TextOnColor>
+            <Theme.TextOnColor
+              backgroundColor={"#" + this.props.club_color}
               style={{
                 marginTop: -1,
                 fontSize: 13,
-                fontFamily: 'Poppins-SemiBold',
-                color: 'rgba(255, 255, 255, 0.34)'
+                fontFamily: 'Poppins-SemiBold'
               }}>
               {
                 this.props.club_members > 0
                   ? this.props.club_members.toLocaleString() + " Mitglieder"
                   : this.props.club_groups.toLocaleString() + " Gruppen beigetreten"
               }
-            </Theme.Text>
+            </Theme.TextOnColor>
           </View>
           {
             this.props.navigateable
               ? <TouchableOpacity style={{
                     marginLeft: 15
                   }} onPress={() => this.onPress()}>
-                  <Theme.Icon size={19} color="white" icon={faChevronRight}/>
+                  <Theme.IconOnColor backgroundColor={"#" + this.props.club_color} size={19} color="white" icon={faChevronRight}/>
                 </TouchableOpacity>
               : void 0
           }

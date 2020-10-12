@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
 import ReactNativeHapticFeedback from "react-native-haptic-feedback"
+import {Theme} from './../app/index.js';
 
 export default class Button extends React.Component {
   constructor(props) {
@@ -22,7 +23,10 @@ export default class Button extends React.Component {
       normal: [
         7, 20, 18
       ],
-      big: [11, 25, 18]
+      big: [
+        11, 25, 18
+      ],
+      extra_big: [15, 40, 23]
     };
 
     this.state = {
@@ -65,38 +69,6 @@ export default class Button extends React.Component {
     this.state.text_color = "#1e1e1e"
   }
 
-  isValidHex(hex) {
-    return /^#([A-Fa-f0-9]{3,4}){1,2}$/.test(hex)
-  }
-
-  getChunksFromString(st, chunkSize) {
-    return st.match(new RegExp(`.{${chunkSize}}`, "g"))
-  }
-
-  convertHexUnitTo256(hexStr) {
-    return parseInt(hexStr.repeat(2 / hexStr.length), 16)
-  }
-
-  getAlphafloat(a, alpha) {
-    if (typeof a !== "undefined") {
-      return a / 255
-    }
-    if ((typeof alpha != "number") || alpha < 0 || alpha > 1) {
-      return 1
-    }
-    return alpha
-  }
-
-  hexToRGBA(hex, alpha) {
-    if (!this.isValidHex(hex)) {
-      throw new Error("Invalid HEX")
-    }
-    const chunkSize = Math.floor((hex.length - 1) / 3)
-    const hexArr = this.getChunksFromString(hex.slice(1), chunkSize)
-    const [r, g, b, a] = hexArr.map(this.convertHexUnitTo256)
-    return `rgba(${r}, ${g}, ${b}, ${this.getAlphafloat(a, alpha)})`
-  }
-
   _onPress(value) {
     ReactNativeHapticFeedback.trigger("impactMedium");
     if (this.props.onPress) 
@@ -104,16 +76,12 @@ export default class Button extends React.Component {
     }
   
   render() {
-    this.state.background_color = this.props.color
-      ? this.props.color
-      : "#ffffff"
-    if (this.props.color == "danger") {
-      this.state.text_color = "white"
-      this.state.background_color = "red"
-    }
-
+    var color = this.props.color;
+    if (color == undefined) 
+      color = "primary";
+    
     return (
-      <View
+      <Animated.View
         style={[
           this.props.style, {
             flexWrap: "wrap",
@@ -122,19 +90,8 @@ export default class Button extends React.Component {
             justifyContent: "flex-start"
           }
         ]}>
-        <TouchableOpacity
+        <Theme.TouchableOpacity
           style={{
-            paddingTop: this.state.sizes[0],
-            paddingBottom: this.state.sizes[0],
-            paddingLeft: this.props.label
-              ? this.state.sizes[1]
-              : this.state.sizes[0],
-            paddingRight: this.props.label
-              ? this.state.sizes[1]
-              : this.state.sizes[0],
-            borderRadius: this.props.label
-              ? 10
-              : 60,
             width: this.props.size == "large"
               ? "100%"
               : null,
@@ -148,42 +105,86 @@ export default class Button extends React.Component {
               ? 0
               : this.props.marginRight,
             justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: this.hexToRGBA(this.state.background_color, 0.2)
+            alignItems: "center"
           }}
           onPress={text => this._onPress()}>
-          <View style={{
+          <Theme.View
+            colorOpacity={this.props.label
+              ? 1
+              : .2}
+            color={color}
+            style={{
               flexWrap: 'wrap',
               alignItems: 'flex-start',
-              flexDirection: 'row'
+              flexDirection: 'row',
+              paddingTop: this.state.sizes[0],
+              paddingBottom: this.state.sizes[0],
+              paddingLeft: this.props.label
+                ? this.state.sizes[1]
+                : this.state.sizes[0],
+              paddingRight: this.props.label
+                ? this.state.sizes[1]
+                : this.state.sizes[0],
+              borderRadius: this.props.label
+                ? 10
+                : 60
             }}>
             {
-              this.props.icon
-                ? <FontAwesomeIcon
+              this.props.iconPos == "right" && this.props.label
+                ? <Theme.Text
+                    backgroundColor={color}
                     style={{
-                      marginRight: this.props.label
+                      marginRight: this.props.icon
                         ? 15
-                        : 0
-                    }}
+                        : 0,
+                      fontSize: this.state.sizes[2],
+                      fontFamily: "Poppins-Bold"
+                    }}>
+                    {this.props.label}
+                  </Theme.Text>
+                : void 0
+            }
+            {
+              this.props.icon && !this.props.label
+                ? <FontAwesomeIcon
                     size={this.state.iconSize > -1
                       ? this.state.iconSize
                       : this.state.sizes[2]}
-                    color={this.state.background_color}
+                    color={color}
                     icon={this.props.icon}/>
                 : void 0
             }
-            <Text
-              style={{
-                fontSize: this.state.sizes[2],
-                fontFamily: "Poppins-Bold",
-                color: this.state.background_color
-              }}>
-              {this.props.label}
-            </Text>
-          </View>
+            {
+              this.props.icon && this.props.label
+                ? <Theme.IconOnColor
+                    backgroundColor={color}
+                    size={this.state.iconSize > -1
+                      ? this.state.iconSize
+                      : this.state.sizes[2]}
+                    icon={this.props.icon}/>
+                : void 0
+            }
+            {
+              this.props.iconPos != "right" && this.props.label
+                ? <Theme.Text
+                    backgroundColor={color}
+                    style={{
+                      color: 'blue',
+                      marginRight: this.props.icon
+                        ? 15
+                        : 0,
+                      fontSize: this.state.sizes[2],
+                      fontFamily: "Poppins-Bold"
+                    }}>
+                    {this.props.label}
+                  </Theme.Text>
+                : void 0
+            }
 
-        </TouchableOpacity>
-      </View>
+          </Theme.View>
+
+        </Theme.TouchableOpacity>
+      </Animated.View>
     );
   }
 }

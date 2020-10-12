@@ -8,7 +8,6 @@ import {
   View,
   StatusBar,
   Image,
-  Button,
   TouchableOpacity,
   ScrollView,
   Animated,
@@ -45,6 +44,7 @@ import {Theme} from './../app/index.js';
 import HeaderScrollView from './../components/HeaderScrollView.js';
 import InputBox from "./../components/InputBox.js";
 import {default as Modal} from "./../components/Modal.js";
+import Button from "./../components/Button.js";
 
 class AddClubScreen extends React.Component {
   constructor(props) {
@@ -78,7 +78,6 @@ class AddClubScreen extends React.Component {
       this.forceUpdate();
       functions().httpsCallable('searchClub')({search: str}).then(response => {
         console.log(response.data);
-        this.state.search_results = response.data;
         this.state.loading = false;
         this.forceUpdate();
         if (open_result > -1) {
@@ -94,7 +93,8 @@ class AddClubScreen extends React.Component {
             }
           ).bind(this));
 
-        }
+        } else 
+          this.state.search_results = response.data;
         this.forceUpdate();
       });
     }
@@ -109,6 +109,7 @@ class AddClubScreen extends React.Component {
     else {
       res.ok = true;
       this.state.qr_code_result = res;
+      this.state.qr_code_result.name = this.state.qr_code_result.name + " beitreten"
     }
     this.forceUpdate();
     if (dir == 'in') 
@@ -130,6 +131,15 @@ class AddClubScreen extends React.Component {
 
   showJoinClubModal(club_id, preselected_groups = {}) {
     this.state.selected_club_id = club_id;
+
+    // hide result button
+    this.animateQrCodeResult('out');
+
+    // close qr code modal
+    this.scan_qr_code_modal.close();
+    // show the modal
+    this.select_groups_modal.open();
+    this.forceUpdate();
 
     // load all groups of club
     database().ref('clubs/' + club_id + '/groups').once('value', (function(snapshot) {
@@ -153,13 +163,8 @@ class AddClubScreen extends React.Component {
             joinable_groups.push(group);
           }
           console.log(group.key + ": " + preselected)
-          this.forceUpdate();
         });
         this.state.joinable_groups = joinable_groups;
-
-        // show the modal
-        this.select_groups_modal.open();
-
         this.forceUpdate();
       }).bind(this));
     }).bind(this));
@@ -221,7 +226,6 @@ class AddClubScreen extends React.Component {
 
   _selectGroup(key, selected) {
     this.state.joinable_groups[key].selected = selected;
-    this.forceUpdate();
   }
 
   _openModal(modal_id) {
@@ -305,17 +309,17 @@ class AddClubScreen extends React.Component {
         <View>
           <Modal ref={m => {
               this.scan_qr_code_modal = m;
-            }} headline={"QR-Code scannen"} onDone={() => alert('done')}>
-            <Text
+            }} headline={"QR-Code scannen"}>
+            <Theme.Text
               style={{
                 marginTop: 20,
-                opacity: 0.6,
+                opacity: 0.8,
                 color: 'white',
-                fontFamily: 'Poppins-Regular',
+                fontFamily: 'Poppins-Medium',
                 fontSize: 19
               }}>
               Du kannst einem Verein per QR-Code beitreten. Halte dazu deine Kamera auf den QR-Code des Vereins.
-            </Text>
+            </Theme.Text>
             <View style={{
                 marginTop: 20,
                 marginLeft: -20
@@ -324,82 +328,27 @@ class AddClubScreen extends React.Component {
             </View>
             {
               qrc_r
-                ? <Animated.View
+                ? <Button
+                    size={"extra_big"}
+                    label={qrc_r.name}
+                    iconPos={"right"}
+                    icon={!qrc_r.ok
+                      ? faExclamationCircle
+                      : faChevronCircleRight}
+                    color={qrc_r.ok
+                      ? 'primary'
+                      : 'danger'}
                     style={{
                       marginTop: margin,
                       borderRadius: 13,
-                      //backgroundColor: '#34c759',
-                      backgroundColor: qrc_r.ok
-                        ? '#0DF5E3'
-                        : '#ff3d00',
                       justifyContent: 'center',
-                      alignItems: 'center',
-
-                      shadowColor: qrc_r.ok
-                        ? '#0DF5E3'
-                        : '#ff3d00',
-                      shadowOffset: {
-                        width: 0,
-                        height: 0
-                      },
-                      shadowOpacity: 0.5,
-                      shadowRadius: 10.00
-                    }}>
-                    <TouchableOpacity
-                      style={{
-                        padding: 12,
-                        paddingLeft: 15,
-                        paddingRight: 15,
-                        flexWrap: 'wrap',
-                        alignItems: 'flex-start',
-                        flexDirection: 'row'
-                      }}
-                      onPress={() => {
-                        if (qrc_r.ok) {
-                          this.scan_qr_code_modal.close();
-                          this.showJoinClubModal(qrc_r.id, qrc_r.groups);
-                        }
-                      }}>
-                      {
-                        !qrc_r.ok
-                          ? <FontAwesomeIcon
-                              style={{
-                                opacity: 0.95,
-                                marginTop: 3,
-                                marginRight: 15
-                              }}
-                              size={25}
-                              color="#121212"
-                              icon={faExclamationCircle}/>
-                          : void 0
+                      alignItems: 'center'
+                    }}
+                    onPress={() => {
+                      if (qrc_r.ok) {
+                        this.showJoinClubModal(qrc_r.id, qrc_r.groups);
                       }
-                      <Text
-                        style={{
-                          marginRight: 15,
-                          opacity: 0.8,
-                          color: '#121212',
-                          fontFamily: 'Poppins-Bold',
-                          fontSize: 26
-                        }}
-                        numberOfLines={1}>
-                        {qrc_r.name}
-                      </Text>
-
-                      {
-                        qrc_r.ok
-                          ? <FontAwesomeIcon
-                              style={{
-                                opacity: 0.95,
-                                marginTop: 3
-                              }}
-                              size={25}
-                              color="#121212"
-                              icon={faChevronCircleRight}/>
-                          : void 0
-                      }
-
-                    </TouchableOpacity>
-                  </Animated.View>
+                    }}></Button>
                 : void 0
             }
           </Modal>
@@ -410,25 +359,26 @@ class AddClubScreen extends React.Component {
             headline={"Rollen auswählen"}
             onDone={() => this.joinClub(this.state.selected_club_id, this.state.joinable_groups)}>
             <ScrollView showsVerticalScrollIndicator={false} style={{
-                paddingBottom: 80,
                 paddingTop: 30
               }}>
               {
                 preSelectedGroupsList.length > 0
                   ? <View style={{
-                        marginTop: 20,
-                        marginBottom: 20
+                        marginBottom: 30
                       }}>{preSelectedGroupsList}</View>
                   : void 0
               }
-              {groupsList}
+              <View style={{
+                  marginBottom: 80
+                }}>
+                {groupsList}
+              </View>
             </ScrollView>
           </Modal>
           <HeaderScrollView
             headline="Beitreten"
-            headlineFontSize={38}
-            backButton={false}
-            showHeadline={false}
+            headlineFontSize={46}
+            backButton={true}
             actionButton={(
               <TouchableOpacity onPress={() => this.scan_qr_code_modal.open()}>
                 <Theme.Icon size={26} color="#F5F5F5" icon={faCamera}/>
@@ -442,20 +392,12 @@ class AddClubScreen extends React.Component {
               Du kannst nach öffentlichen Vereinen suchen, oder einen Einladungcode eingeben.
             </Theme.Text>
 
-            <Theme.View
-              style={{
+            <Theme.View style={{
                 marginTop: 30,
-                borderTopLeftRadius: 10,
-                borderTopRightRadius: 10,
-                borderBottomLeftRadius: searchResults.length > 0
-                  ? 0
-                  : 10,
-                borderBottomRightRadius: searchResults.length > 0
-                  ? 0
-                  : 10,
+                borderRadius: 10,
                 backgroundColor: '#1e1e1e'
               }}>
-              <InputBox icon={faSearch} placeholder={"Name oder Code eingeben ..."} onChange={(v) => this.searchClub(v)}/>
+              <InputBox icon={faSearch} placeholder={"Name oder Code"} onChange={(v) => this.searchClub(v)}/>
               <Theme.ActivityIndicator
                 visible={this.state.loading}
                 style={{

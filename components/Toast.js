@@ -24,6 +24,7 @@ import RNFS from "react-native-fs";
 import CameraRoll from "@react-native-community/cameraroll";
 import {AnimatedCircularProgress} from "react-native-circular-progress";
 import {Theme} from './../app/index.js';
+import ReactNativeHapticFeedback from "react-native-haptic-feedback"
 
 export default class Toast extends React.Component {
   visible = false;
@@ -34,6 +35,7 @@ export default class Toast extends React.Component {
       pressed: false,
       text: this.props.text,
       btn_visible: true,
+      btn_text: '',
       icon: this.props.icon
     };
 
@@ -51,12 +53,13 @@ export default class Toast extends React.Component {
   }
 
   show() {
+    ReactNativeHapticFeedback.trigger("notificationWarning");
     if (this.type == "timeout") {
       this.reamingBarWidth.setValue(100);
       Animated.timing(this.reamingBarWidth, {
         useNativeDriver: false,
         toValue: 0,
-        duration: 3300,
+        duration: 4000,
         easing: Easing.linear
       }).start(() => {
         this.hide();
@@ -75,6 +78,8 @@ export default class Toast extends React.Component {
   }
 
   hide(animated = true) {
+    if (animated) 
+      ReactNativeHapticFeedback.trigger("notificationSuccess");
     this.reamingBarWidth.setValue(0);
 
     this.marginTop.setValue(725);
@@ -108,8 +113,9 @@ export default class Toast extends React.Component {
     }
   
   _onAction() {
-    if (this.props.onAction) 
-      this.props.onAction();
+    ReactNativeHapticFeedback.trigger("impactHeavy");
+    if (this.buttonCallback) 
+      this.buttonCallback();
     }
   
   _callback(action) {
@@ -131,9 +137,18 @@ export default class Toast extends React.Component {
     this.forceUpdate();
   }
 
+  setButtonText(text) {
+    this.state.btn_text = text;
+    this.forceUpdate();
+  }
+
   setIcon(icon) {
     this.state.icon = icon;
     this.forceUpdate();
+  }
+
+  setButtonCallback(cb) {
+    this.buttonCallback = cb;
   }
 
   render() {
@@ -227,7 +242,7 @@ export default class Toast extends React.Component {
                         color: "white",
                         opacity: 0.77
                       }}>
-                      {this.props.action}
+                      {this.state.btn_text}
                     </Theme.Text>
                   </TouchableOpacity>
                 : void 0
