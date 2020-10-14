@@ -96,7 +96,6 @@ export default class NewMessageScreen extends React.Component {
 
     database().ref('users/' + this.state.uid + '/clubs').once('value', (function(snap) {
       var clubs = snap.val();
-      console.log(clubs);
       var i = 0;
       Object.keys(clubs).map(key => {
         var club = clubs[key];
@@ -128,8 +127,6 @@ export default class NewMessageScreen extends React.Component {
         type: [DocumentPicker.types.allFiles]
       });
       for (const res of results) {
-        console.log(res.uri, res.type, // mime type
-            res.name, res.size);
 
         if (!res.type) 
           alert('Fehler: Unbekanntes Dateiformat');
@@ -157,24 +154,6 @@ export default class NewMessageScreen extends React.Component {
       }
     };
 
-    /**
- * The first arg is the options object for customization (it can also be null or omitted for default options),
- * The second arg is the callback which sends object: response (more info in the API Reference)
- */
-    /*
-    ImagePicker.showImagePicker(options, response => {
-      console.log('Response = ', response);
-
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.error) {
-        console.log('ImagePicker Error: ', response.error);
-      } else if (response.customButton) {
-        console.log('User tapped custom button: ', response.customButton);
-      } else {}
-    });
-    */
-
     ImagePicker.openPicker({
       cropperToolbarTitle: "Bild zuschneiden",
       width: 1800,
@@ -185,7 +164,6 @@ export default class NewMessageScreen extends React.Component {
       cropperChooseText: "Fertig",
       cropperCancelText: "Abbrechen"
     }).then(image => {
-      console.log(image.path);
       var response = {
         path: image.path,
         name: "image_" + new Date().getTime() + ".jpg",
@@ -253,7 +231,6 @@ export default class NewMessageScreen extends React.Component {
 
     task.on('state_changed', taskSnapshot => {
       if (this.state.files[pos]) {
-        console.log(taskSnapshot);
         if (taskSnapshot.metadata.name) {
           if (this.state.files[pos].storage_path == taskSnapshot.metadata.name) {
             this.state.files[pos].uploaded_percentage = taskSnapshot.bytesTransferred / taskSnapshot.totalBytes * 100;
@@ -915,7 +892,6 @@ export default class NewMessageScreen extends React.Component {
 
       if (modal_club_key && modal_group_key) {
         linkingGroupsList = Object.keys(club.groups).map(g_key => {
-          console.log('group_key: ' + g_key);
           if (g_key != modal_group_key) {
             var group = club.groups[g_key];
 

@@ -125,7 +125,6 @@ class SettingsScreen extends React.Component {
                           }}
                           fill={this.state.image_upload.progress}
                           tintColor="#0DF5E3"
-                          onAnimationComplete={() => console.log("onAnimationComplete")}
                           backgroundColor="#201A30"/>
                       )
                       : (void 0)
@@ -322,8 +321,6 @@ class ClubsSetting extends React.Component {
     if (this.state.clubs) {
       if (this.state.selected_club) {
         if (this.state.clubs[this.state.selected_club]) {
-          console.log('SELECTED')
-          console.log(this.state.clubs[this.state.selected_club])
           if (Object.keys(this.state.clubs[this.state.selected_club].groups)) {
             groupsList = Object.keys(this.state.clubs[this.state.selected_club].groups).map(key => {
               var group = this.state.clubs[this.state.selected_club].groups[key];

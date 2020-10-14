@@ -76,7 +76,6 @@ export default class User {
 
   getDatabaseValue(path, cb) {
     database().ref("users/" + this.uid + "/" + path).once("value", function(snap) {
-      console.log('in getDatabaseValue: ' + path)
       this.setValue(snap.val(), path);
       cb(snap.val());
     }.bind(this));
@@ -250,7 +249,6 @@ export default class User {
       var clubs = snap.val();
       if (clubs) {
         Object.keys(clubs).forEach((key, i) => {
-          console.log("KEY: " + key);
           if (clubs[key]) {
             database().ref("clubs/" + key + "/name").once("value", function(snap) {
               clubs[key].name = snap.val();

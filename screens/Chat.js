@@ -29,6 +29,7 @@ import {faChevronCircleLeft, faChevronLeft, faChevronRight, faPaperPlane} from '
 import HeaderScrollView from './../components/HeaderScrollView.js';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback"
 import Chat from './../classes/Chat.js';
+import InputBox from './../components/InputBox.js';
 import {Theme} from './../app/index.js';
 
 class ChatScreen extends React.Component {
@@ -37,24 +38,39 @@ class ChatScreen extends React.Component {
   constructor(props) {
     super(props);
     const utils = this.props.navigation.getParam('utils', null);
-    const chat_id = this.props.navigation.getParam('chat_id', null);
-    const partner_name = this.props.navigation.getParam('partner_name', null);
+    const chat = this.props.navigation.getParam('chat', null);
     const focused = this.props.navigation.getParam('focused', null);
 
-    var chat = new Chat(chat_id, utils.getUserID());
     this.state = {
       chat: chat,
       uid: utils.getUserID(),
-      partner_name: partner_name,
+      partner_name: chat.getPartnerUser().getName(),
       cur_message: '',
+      last_typed: -1,
+      typing: false,
       messages: [],
       keyboardVisibe: false,
-      focused: focused === true
+      focused: focused === true,
+      headerScrollView: null
     };
+
+    setInterval(function() {
+      var now = Date.now();
+      var last = this.state.last_typed;
+      if (now - last < 1000) {
+        this.state.chat.setTyping(true);
+      } else 
+        this.state.chat.setTyping(false);
+      }
+    .bind(this), 3000)
+
     chat.startMessagesListener(function(mes) {
-      // add message
-      if (this.state.messages.indexOf(mes) == -1) {
-        this.state.messages.push(mes);
+      mes.setReadyListener(function() {
+        this.state.headerScrollView.addItemToFlatList(mes)
+      }.bind(this))
+      // add message if (this.state.messages.indexOf(mes) == -1) { this.state.messages.push(mes);
+
+      /*
         this.state.messages.sort(
           (a, b) => (a.getSendAt() < b.getSendAt())
             ? 1
@@ -65,13 +81,21 @@ class ChatScreen extends React.Component {
             )
         );
         this.forceUpdate();
-      }
+        */
+      //}
     }.bind(this), function(mes) {
       //remove message
-      var index = this.state.messages.indexOf(mes);
-      this.state.messages.splice(index, 1);
-      this.forceUpdate();
+      this.state.headerScrollView.removeItemFromFlatList(mes)
     }.bind(this));
+
+    chat.startListener('last_message_id', function() {
+      chat.loadLastMessage(function(mes) {
+        if (this.state.headerScrollView) {
+          this.state.headerScrollView.addItemToFlatList(mes, false)
+        }
+      }.bind(this));
+    }.bind(this));
+
   }
 
   _getChatInfos() {}
@@ -80,42 +104,16 @@ class ChatScreen extends React.Component {
 
   _onChangeText(value) {
     this.state.cur_message = value;
+    this.state.last_typed = Date.now();
     this.forceUpdate();
   }
 
-  /*componentDidMount() {
-    // this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', this._keyboardDidShow.bind(this)); this.keyboardDidHideListener =
-    // Keyboard.addListener('keyboardDidHide', this._keyboardDidHide.bind(this));
-  }*/
-
-  /*componentWillUnmount() {
-    //this.keyboardDidShowListener.remove(); this.keyboardDidHideListener.remove();
-  }*/
-
   _keyboardDidShow() {
-    this.headerScrollView.keyboardDidShow()
-    /*
-    this.scrollViewHeight.setValue(90);
-    Animated.timing(this.scrollViewHeight, {
-      useNativeDriver: false,
-      toValue: 51,
-      duration: 150,
-      easing: Easing.ease
-    }).start(() => {});
-    */
+    this.state.headerScrollView.keyboardDidShow()
   }
 
   _keyboardDidHide() {
-    this.headerScrollView.keyboardDidHide()
-    /*
-    this.scrollViewHeight.setValue(51);
-    Animated.timing(this.scrollViewHeight, {
-      useNativeDriver: false,
-      toValue: 90,
-      duration: 150,
-      easing: Easing.ease
-    }).start(() => {});
-    */
+    this.state.headerScrollView.keyboardDidHide()
   }
 
   render() {
@@ -124,6 +122,7 @@ class ChatScreen extends React.Component {
     const utils = this.props.navigation.getParam('utils', null)
 
     const s_height = Dimensions.get("window").height;
+    const s_width = Dimensions.get("window").width;
     var partner_user_name = null;
     var partner = chat.getPartnerUser();
     if (partner) 
@@ -140,121 +139,55 @@ class ChatScreen extends React.Component {
         }}>
         <HeaderScrollView
           onRef={view => {
-            this.headerScrollView = view;
             if (view) {
-              this._onFlatListScroll = view.getScrollCallback();
+              this.state.headerScrollView = view;
+              chat.setTypingListener(function(typing) {
+                if (typing) 
+                  view.showSubheadline()
+                else 
+                  view.hideSubheadline()
+              }.bind(this))
             }
           }}
-          keyboardVisibleHeight={47}
-          showHeadlineJustInHeader={true}
+          keyboardVisibleHeight={51}
           scrollToEnd={true}
           headline={this.state.partner_name}
-          marginTop={50}
-          height={86}
+          subheadline={"schreibt ..."}
+          height={90}
           headlineFontSize={47}
           backButton={true}
-          flatList={<Animated.FlatList
-          onScroll = {
-            this._onFlatListScroll
-          }
-          onEndReached = {
-            () => {
-              this.state.chat._setLimit(10);
-            }
-          }
-          onEndReachedThreshold = {
-            10
-          }
-          inverted = {
-            true
-          }
-          initialNumToRender = {
-            10
-          }
-          style = {{
-                zIndex: -20,
-                marginLeft: 20,
-                paddingRight: 20,
-                marginTop: 40
-              }}
-          data = {
-            this.state.messages
-          }
-          renderItem = {
-            ({item}) => {
-              return item.getRender();
-            }
-          }
-          keyExtractor = {
-            (item, index) => index.toString()
-          } />
-}/>
+          hasFlatList={true}
+          onEndReached={() => {
+            chat.setLimit(10)
+          }}/>
         <View
           style={{
-            marginTop: 10,
-            marginLeft: 20,
-            marginRight: 20,
+            flexWrap: 'wrap',
+            flexDirection: 'row',
+            alignItems: 'center',
             justifyContent: 'center',
-            alignItems: 'center'
+            width: s_width
           }}>
-          <View style={{
-              borderRadius: 40,
-              backgroundColor: '#1e1e1e',
-              width: '100%',
-              padding: 15
-            }}>
-            <TouchableOpacity
-              style={{
-                marginTop: 4,
-                marginLeft: 287,
-                position: 'absolute',
-                borderRadius: 50,
-                width: 43,
-                height: 43,
-                backgroundColor: '#121212',
-                padding: 5,
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}
-              onPress={() => {
-                this.state.chat.sendMessage(this.state.cur_message)
-                this.state.cur_message = '';
-                this.forceUpdate();
-              }}>
-              <FontAwesomeIcon style={{
-                  zIndex: 0
-                }} size={20} color="#F5F5F5" icon={faPaperPlane}/>
-            </TouchableOpacity>
-            <TextInput
-              ref={(input) => {
-                this.textInput = input;
-              }}
-              multiline="multiline"
-              style={{
-                marginRight: 40,
-                maxHeight: 25,
-                fontFamily: 'Poppins-Medium',
-                paddingTop: -2,
-                paddingLeft: 5,
-                fontSize: 17,
-                color: '#D5D3D9'
-              }}
-              placeholderTextColor="#665F75"
-              placeholder="Nachricht schreiben ..."
-              value={this.state.cur_message}
-              onFocus={() => {
-                setTimeout((function() {
-                  if (this.scrollView) 
-                    this.scrollView.scrollToEnd({animated: true});
-                  }
-                ).bind(this), 200);
-                this._keyboardDidShow();
-              }}
-              onBlur={() => this._keyboardDidHide()}
-              onChangeText={text => {
-                this._onChangeText(text);
-              }}/>
-          </View>
+          <InputBox
+            icon={faPaperPlane}
+            showButton={true}
+            onDone={(message) => {
+              this.state.chat.sendMessage(message)
+            }}
+            onFocus={() => {
+              setTimeout((function() {
+                if (this.scrollView) 
+                  this.scrollView.scrollToEnd({animated: true});
+                }
+              ).bind(this), 200);
+              this._keyboardDidShow();
+            }}
+            onBlur={() => this._keyboardDidHide()}
+            onChangeText={text => {
+              this._onChangeText(text);
+            }}
+            width={s_width * .9}
+            borderRadius={50}/>
         </View>
       </Theme.BackgroundView>
     );

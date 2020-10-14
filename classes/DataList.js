@@ -46,11 +46,9 @@ export class DataList {
   }
 
   _setLimit(increase) {
-    console.log("_setLimit")
     var old_limit = this.limit;
     if (this.limit == Object.keys(this.messages).length) {
       this.limit = old_limit + increase;
-      console.log('NEW LIMIT: ' + this.limit);
       this._updateMessageList();
     }
   }

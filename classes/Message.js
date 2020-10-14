@@ -317,7 +317,6 @@ export class Message {
   }
 
   getEvents() {
-    console.log("GET EVENTS")
     var events = [];
     if (this.getValue('events')) {
       Object.keys(this.getValue('events')).map(event_id => {
@@ -348,7 +347,6 @@ export class Message {
   }
 
   getFiles() {
-    console.log("GET FILES")
     var files = [];
     if (this.getValue('files')) {
       Object.keys(this.getValue('files')).map(file_id => {

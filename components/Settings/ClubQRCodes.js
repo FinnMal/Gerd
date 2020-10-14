@@ -124,11 +124,7 @@ export default class ClubQRCodes extends React.Component {
           appendExt: "image"
         }).fetch("GET", invite.img, {"Cache-Control": "no-store"}).progress({
           count: 1000
-        }, (received, total) => {
-          console.log("progress: " + (
-            received / total
-          ) * 100 + "%");
-        }).then(res => {
+        }, (received, total) => {}).then(res => {
           FileViewer.open(
             Platform.OS === "android"
               ? "file://" + res.path()

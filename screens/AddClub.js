@@ -73,7 +73,6 @@ class AddClubScreen extends React.Component {
 
   searchClub(str, open_result = -1) {
     if (str && str != '' && str != ' ') {
-      console.log('searching');
       this.state.loading = true;
       this.forceUpdate();
       functions().httpsCallable('searchClub')({search: str}).then(response => {
@@ -162,7 +161,6 @@ class AddClubScreen extends React.Component {
             group.selected = preselected;
             joinable_groups.push(group);
           }
-          console.log(group.key + ": " + preselected)
         });
         this.state.joinable_groups = joinable_groups;
         this.forceUpdate();
@@ -244,7 +242,6 @@ class AddClubScreen extends React.Component {
   }
 
   _qrCodeScanned(e) {
-    console.log(e.data);
     this.searchClub(e.data, 0);
     this.forceUpdate();
   }

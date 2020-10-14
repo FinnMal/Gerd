@@ -180,7 +180,9 @@ function Text(props) {
       ? colors[props.color][0]
       : colors[props.color][1];
   
-  return <Animated.Text style={[
+  return <Animated.Text
+    numberOfLines={props.numberOfLines}
+    style={[
       props.style, {
         color: backgroundColor
           ? calculateTextColor(backgroundColor)

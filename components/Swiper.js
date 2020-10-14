@@ -57,7 +57,6 @@ export default class Swiper extends React.Component {
     const s_width = Dimensions.get("window").width;
     var index = Math.round(x_pos / (s_width * .8936))
     if (this.cur_index != index) {
-      console.log(index)
       this.data[this.cur_index].onHide();
       this.data[index].onShow(
         this.cur_index < index

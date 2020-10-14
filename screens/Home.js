@@ -89,7 +89,6 @@ class HomeScreen extends React.Component {
 
     this.state.messagesList.startMessagesListener(function(mes) {
       // message added
-      console.log('ADDED -> ' + this.state.messages.length)
       if (this.state.messages.indexOf(mes) == -1) {
         const mes_index = this.state.messages.length;
         mes.setRenderListerner(function(new_mes) {

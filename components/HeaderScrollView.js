@@ -43,8 +43,11 @@ import ReactNativeHapticFeedback from "react-native-haptic-feedback"
 class HeaderScrollView extends React.Component {
   lastScrollTick: 0;
   isDarkMode: false;
-
   viewHeight = null;
+  subheadlineMarginTop = new Animated.Value(15)
+  subheadlineOpacity = new Animated.Value(0)
+  headerMarginTop = new Animated.Value(0)
+
   constructor(props) {
     super(props);
 
@@ -73,16 +76,18 @@ class HeaderScrollView extends React.Component {
       showHeader: this.props.showHeader === false
         ? false
         : true,
-      hasFlatList: this.props.flatList != null,
-      flatList: this.props.flatList,
       keyboardVisibleHeight: this.props.keyboardVisibleHeight
         ? this.props.keyboardVisibleHeight
         : 0,
       scrollY: this.props.scrollY
         ? this.props.scrollY
         : new Animated.Value(0),
-      blur_view_height: 20
+      blur_view_height: -1,
+      flatListData: []
     };
+
+    if (this.props.hasFlatList) 
+      this.state.scrollY.setValue(100)
   }
 
   getScrollCallback() {
@@ -98,6 +103,31 @@ class HeaderScrollView extends React.Component {
       useNativeDriver: false,
       listener: event => this._onScroll(event.nativeEvent.contentOffset.y)
     }).bind(this);
+  }
+
+  addItemToFlatList(item, toStart = true) {
+    if (toStart) 
+      this.state.flatListData.push(item);
+    else 
+      this.state.flatListData.unshift(item);
+    
+    /*
+      this.state.flatListData.sort(
+        (a, b) => (a.getSendAt() < b.getSendAt())
+          ? 1
+          : (
+            (b.getSendAt() < a.getSendAt())
+              ? -1
+              : 0
+          )
+      );
+      */
+    this.forceUpdate();
+  }
+
+  removeItemFromFlatList(item) {
+    this.state.flatListData.splice(this.state.flatListData.indexOf(item), 1);
+    this.forceUpdate();
   }
 
   componentDidMount() {
@@ -127,7 +157,6 @@ class HeaderScrollView extends React.Component {
   }
 
   _onScroll(y) {
-    console.log(y);
     /*
     this.forceUpdate();
     if (this.props.setNavbarPos || this.props.loadItems) {
@@ -215,90 +244,198 @@ class HeaderScrollView extends React.Component {
     });
   };
 
+  _getHeaderSubheadlineMarginTop = () => {
+    const {scrollY} = this.state;
+    return this.subheadlineMarginTop.interpolate({
+      inputRange: [
+        -100, 100
+      ],
+      outputRange: [
+        -100, 100
+      ],
+      extrapolate: "clamp",
+      useNativeDriver: true
+    });
+  };
+
+  _getHeaderSubheadlineOpacity = () => {
+    const {scrollY} = this.state;
+    return this.subheadlineOpacity.interpolate({
+      inputRange: [
+        0, 1
+      ],
+      outputRange: [
+        0, 1
+      ],
+      extrapolate: "clamp",
+      useNativeDriver: true
+    });
+  };
+
+  _getHeaderMarginTop = () => {
+    const {scrollY} = this.state;
+    return this.headerMarginTop.interpolate({
+      inputRange: [
+        -100, 100
+      ],
+      outputRange: [
+        -100, 100
+      ],
+      extrapolate: "clamp",
+      useNativeDriver: true
+    });
+  };
+
+  showSubheadline() {
+    Animated.timing(this.headerMarginTop, {
+      useNativeDriver: false,
+      toValue: -10,
+      duration: 190,
+      easing: Easing.ease
+    }).start();
+    Animated.timing(this.subheadlineMarginTop, {
+      useNativeDriver: false,
+      toValue: -2,
+      duration: 190,
+      easing: Easing.ease
+    }).start();
+  }
+
+  hideSubheadline() {
+    Animated.timing(this.headerMarginTop, {
+      useNativeDriver: false,
+      toValue: 0,
+      duration: 190,
+      easing: Easing.ease
+    }).start();
+    Animated.timing(this.subheadlineMarginTop, {
+      useNativeDriver: false,
+      toValue: 15,
+      duration: 190,
+      easing: Easing.ease
+    }).start();
+  }
+
   render() {
     const s_width = Dimensions.get("window").width;
     const s_height = Dimensions.get("window").height;
 
     const viewHeight = this._getViewHeight();
-    return (
-      <Theme.BackgroundView>
-        <Animated.ScrollView
-          ref={component => {
-            this._scrollView = component;
-            if (this.props.scrollToEnd && this._scrollView) 
-              this._scrollView.scrollToEnd({animated: true});
-            }}
-          refreshControl={this.props.refreshControl}
-          showsVerticalScrollIndicator={false}
-          style={[{
-              paddingLeft: 15,
-              paddingRight: 15,
-              height: s_height * (this.state.height / 100)
-            }
-          ]}
-          onScroll={this.getScrollCallback()}
-          onContentSizeChange={() => {
-            if (this._scrollView && this.props.scrollToEnd) 
-              this._scrollView.scrollToEnd({animated: true});
-            }}>
-          {
-            this.state.showHeader || this.props.headline
-              ? <View
-                  style={{
-                    zIndex: 100,
-                    marginTop: this.state.showHeader
-                      ? this.state.blur_view_height / 1.2
-                      : 10,
-                    marginBottom: 30,
-                    flexWrap: "wrap",
-                    flexDirection: "row",
-                    alignItems: 'center'
-                  }}>
-                  <Theme.Text
-                    style={{
-                      marginRight: 'auto',
-                      alignSelf: 'flex-start',
-                      fontSize: this.state.headlineFontSize,
-                      fontFamily: "Poppins-ExtraBold",
-                      opacity: .9
-                    }}>
-                    {this.props.headline}
-                  </Theme.Text>
-                  {
-                    this.props.actionButtonIcon && !this.state.backButton
-                      ? <TouchableOpacity onPress={this.props.actionButtonOnPress}>
-                          <Theme.Icon style={{
-                              opacity: .96
-                            }} size={25} icon={this.props.actionButtonIcon}/>
-                        </TouchableOpacity>
-                      : void 0
-                  }
-                </View>
-              : void 0
-          }
 
-          <Theme.BackgroundView
-            style={{
-              marginTop: !this.props.showHeader
-                ? 10
-                : this.state.blur_view_height,
-              paddingBottom: 50
-            }}
-            onLayout={event => {
-              var {
-                x,
-                y,
-                width,
-                height
-              } = event.nativeEvent.layout;
-              if (this._scrollView) {
-                var enabled = height + y + 100 > Dimensions.get("window").height;
-                this._scrollView.setNativeProps({scrollEnabled: enabled});
-              }
-            }}>
-            {this.props.children}
-          </Theme.BackgroundView>
-        </Animated.ScrollView>
+    return (
+      <Theme.BackgroundView
+        style={[{
+            height: viewHeight,
+            flexWrap: 'wrap',
+            alignItems: 'flex-start',
+            flexDirection: 'row'
+          }
+        ]}>
+        {
+          !this.props.hasFlatList
+            ? <Animated.ScrollView
+                style={{
+                  paddingLeft: 15,
+                  paddingRight: 15
+                }}
+                ref={component => {
+                  this._scrollView = component;
+                  if (this.props.scrollToEnd && this._scrollView) 
+                    this._scrollView.scrollToEnd({animated: true});
+                  }}
+                refreshControl={this.props.refreshControl}
+                showsVerticalScrollIndicator={false}
+                onScroll={this.getScrollCallback()}
+                onContentSizeChange={() => {
+                  if (this._scrollView && this.props.scrollToEnd) 
+                    this._scrollView.scrollToEnd({animated: true});
+                  }}>
+                {
+                  this.state.showHeader || this.props.headline
+                    ? <View
+                        style={{
+                          zIndex: 100,
+                          marginTop: this.state.showHeader
+                            ? this.state.blur_view_height / 1.2
+                            : 10,
+                          marginBottom: 30,
+                          flexWrap: "wrap",
+                          flexDirection: "row",
+                          alignItems: 'center'
+                        }}>
+                        <Theme.Text
+                          style={{
+                            marginRight: 'auto',
+                            alignSelf: 'flex-start',
+                            fontSize: this.state.headlineFontSize,
+                            fontFamily: "Poppins-ExtraBold",
+                            opacity: .9
+                          }}>
+                          {this.props.headline}
+                        </Theme.Text>
+                        {
+                          this.props.actionButtonIcon && !this.state.backButton
+                            ? <TouchableOpacity onPress={this.props.actionButtonOnPress}>
+                                <Theme.Icon style={{
+                                    opacity: .96
+                                  }} size={25} icon={this.props.actionButtonIcon}/>
+                              </TouchableOpacity>
+                            : void 0
+                        }
+                      </View>
+                    : void 0
+                }
+
+                <Theme.BackgroundView
+                  style={{
+                    marginTop: !this.props.showHeader
+                      ? 10
+                      : this.state.blur_view_height,
+                    paddingBottom: 50
+                  }}
+                  onLayout={event => {
+                    var {
+                      x,
+                      y,
+                      width,
+                      height
+                    } = event.nativeEvent.layout;
+                    if (this._scrollView) {
+                      var enabled = height + y + 100 > Dimensions.get("window").height;
+                      this._scrollView.setNativeProps({scrollEnabled: enabled});
+                    }
+                  }}>
+                  {this.props.children}
+                </Theme.BackgroundView>
+              </Animated.ScrollView>
+            : <View style={{}}>
+                <Animated.FlatList
+                  onEndReached={() => {
+                    this.props.onEndReached()
+                  }}
+                  onEndReachedThreshold={10}
+                  inverted={true}
+                  initialNumToRender={100}
+                  style={{
+                    width: s_width,
+                    paddingLeft: 15,
+                    paddingRight: 15
+                  }}
+                  data={this.state.flatListData}
+                  renderItem={({item, index}) => {
+                    return <View
+                      style={{
+                        marginTop: index == this.state.flatListData.length - 1
+                          ? this.state.blur_view_height + 20
+                          : 0,
+                        marginBottom: index == 0
+                          ? -40
+                          : 0
+                      }}>{item.getRender()}</View>
+                  }}
+                  keyExtractor={(item, index) => index.toString()}/>
+              </View>
+        }
 
         <Animated.View
           style={{
@@ -322,11 +459,13 @@ class HeaderScrollView extends React.Component {
           style={{
             flex: 1,
             minHeight: 40,
+            maxHeight: this.state.blur_view_height,
             width: s_width,
             flexWrap: 'wrap',
             alignItems: 'flex-start',
             flexDirection: 'row',
-            position: "absolute"
+            position: "absolute",
+            overflow: 'hidden'
           }}
           onLayout={event => {
             var {
@@ -335,8 +474,10 @@ class HeaderScrollView extends React.Component {
               width,
               height
             } = event.nativeEvent.layout;
-            this.state.blur_view_height = height;
-            this.forceUpdate();
+            if (this.state.blur_view_height == -1) {
+              this.state.blur_view_height = height;
+              this.forceUpdate();
+            }
           }}>
           {
             this.state.backButton && this.state.showHeader
@@ -361,7 +502,7 @@ class HeaderScrollView extends React.Component {
                   <Animated.View
                     style={{
                       flex: 1,
-                      marginTop: this._getHeaderHeadlineMarginTop(),
+                      marginTop: this._getHeaderMarginTop(),
                       position: "absolute",
                       justifyContent: 'center',
                       width: s_width * .89,
@@ -371,8 +512,21 @@ class HeaderScrollView extends React.Component {
                       style={{
                         fontSize: 23,
                         fontFamily: 'Poppins-Bold',
+                        marginTop: this._getHeaderHeadlineMarginTop(),
                         opacity: this._getHeaderHeadlineOpacity()
                       }}>{this.props.headline}</Theme.Text>
+                    {
+                      this.props.subheadline
+                        ? <Theme.Text
+                            color={"primary"}
+                            style={{
+                              fontSize: 16,
+                              fontFamily: 'Poppins-SemiBold',
+                              marginTop: this._getHeaderSubheadlineMarginTop()
+                            }}>{this.props.subheadline}</Theme.Text>
+                        : void 0
+                    }
+
                   </Animated.View>
                   {
                     this.props.actionButtonIcon

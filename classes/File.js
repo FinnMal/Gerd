@@ -144,8 +144,6 @@ export class File {
         this.data = snap.val();
         if (!this.data) 
           return;
-        console.log("FILE DATA:")
-        console.log(this.data);
         this.data.id = file_id;
         this.data.club_id = club_id;
         if (this.readyListener) 
@@ -375,7 +373,6 @@ export class File {
       }, (received, total) => {
         this.download_progress = received / total * 100;
         this.renderListerner()
-        console.log('progress: ' + received / total * 100 + '%');
       }).then(res => {
         this.downloaded = true;
         this.download_progress = 0;
@@ -465,7 +462,6 @@ export class File {
                       }}
                       fill={this.download_progress}
                       tintColor={"blue"}
-                      onAnimationComplete={() => console.log('onAnimationComplete')}
                       backgroundColor="#121212"/>
                   : void 0
               }

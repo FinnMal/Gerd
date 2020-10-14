@@ -176,7 +176,6 @@ export default class MessageScreen extends React.Component {
     this.eventCards = null;
     if (mes.getEvents().length > 0) {
       this.eventCards = [];
-      console.log(mes.getEvents())
       mes.getEvents().forEach((event, i) => {
         event.setReadyListener(function() {
           this.eventCards.push(event.getRender())
@@ -582,7 +581,6 @@ export default class MessageScreen extends React.Component {
           text={this.state.toast.text}
           action={this.state.toast.action}
           callback={(function(action) {
-            console.log('CALLBACK: ' + action);
             if (action == 'button_pressed') 
               this.state.toast.pressed = true;
             else if (action == 'toast_invisible') {

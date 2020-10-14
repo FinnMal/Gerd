@@ -114,7 +114,6 @@ export default class ScreenHandler extends React.Component {
       database().ref('users/' + user.uid + '/account_type').once('value', (function(snap) {
         if (!snap.val()) {
           // account does not exist
-          console.log('account does not exist');
           this.props.navigation.navigate('FirstStartScreen', {
             utils: utils,
             uid: user.uid,
@@ -137,7 +136,6 @@ export default class ScreenHandler extends React.Component {
   }
 
   _onAuthDone() {
-    console.log('onDone');
     this.props.navigation.navigate('ScreenHandler');
     this.state.nav[0].visible = true;
     this.state.first_start_done = true;
@@ -276,7 +274,7 @@ export default class ScreenHandler extends React.Component {
 const styles = StyleSheet.create({
   navigationBar: {
     ...ifIphoneX({
-      height: 84
+      height: 78
     }, {height: 60}),
     position: 'absolute',
     width: '100%',
@@ -357,7 +355,7 @@ class NavItem extends React.Component {
         style={{
           height: 90,
           width: 80,
-          paddingTop: 8,
+          paddingTop: 5,
           paddingBottom: 8,
           flexWrap: 'wrap',
           flexDirection: 'row',

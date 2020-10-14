@@ -45,11 +45,8 @@ class ManagmentScreen extends React.Component {
         var club_info = clubs[key];
         if (club_info) {
           if (club_info.role == 'admin') {
-            console.log(club_info.club_id);
             var club = new Club(club_info.club_id);
             club.setReadyListener(function(club) {
-              console.log('CLUB ' + club.getID() + ' is ready')
-
               // club is ready and infos are loaded
               this.state.clubs[club.getID()] = club;
               this.forceUpdate();

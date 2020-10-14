@@ -70,7 +70,6 @@ export function showToast(text, icon = false, has_btn = false, cb) {
 export function startChat(partner_id, navigation) {
   var partner = new User(partner_id)
   partner.getValue('name', function(name) {
-    console.log("NAME: " + name)
     USER.getChatsList(function(list) {
       list.forEach((item, i) => {
         if (item.user_id_1 == partner_id || item.user_id_2 == partner_id) {
@@ -87,12 +86,8 @@ export function startChat(partner_id, navigation) {
           };
 
           var chatRef = database().ref("chats").push(new_chat);
-          console.log("chats/" + chatRef.key + "/id")
           database().ref("chats/" + chatRef.key + "/id").set(chatRef.key);
-
-          console.log("users/" + USER_ID + "/chats/" + chatRef.key)
           database().ref("users/" + USER_ID + "/chats/" + chatRef.key).set(true);
-          console.log("users/" + partner_id + "/chats/" + chatRef.key)
           database().ref("users/" + partner_id + "/chats/" + chatRef.key).set(true);
           navigation.navigate('ChatScreen', {
             focused: true,

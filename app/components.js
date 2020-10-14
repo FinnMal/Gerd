@@ -636,7 +636,6 @@ export class FileCard extends React.Component {
     }, (received, total) => {
       this.state.download_progress = received / total * 100;
       this.forceUpdate();
-      console.log('progress: ' + received / total * 100 + '%');
     }).then(res => {
       this.state.downloaded = true;
       this.state.path = res.path();
@@ -831,7 +830,6 @@ export class FileCard extends React.Component {
                       }}
                       fill={this.state.download_progress}
                       tintColor="#0DF5E3"
-                      onAnimationComplete={() => console.log('onAnimationComplete')}
                       backgroundColor="#121212"/>
                   : void 0
               }

@@ -46,10 +46,8 @@ export class MessagesList {
   }
 
   _setLimit(increase) {
-    console.log("_setLimit")
     var old_limit = this.limit;
     this.limit = old_limit + increase;
-    console.log('NEW LIMIT: ' + this.limit);
     this._updateMessageList();
   }
 

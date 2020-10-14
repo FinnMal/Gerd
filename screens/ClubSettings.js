@@ -206,7 +206,7 @@ class ClubSettings extends React.Component {
                 </View>
               </View>
             </Theme.View>
-            <Theme.View style={{
+            <View style={{
                 marginTop: 40
               }}>
               <Setting
@@ -220,25 +220,25 @@ class ClubSettings extends React.Component {
                 icon={club.isPublic()
                   ? faUnlock
                   : faLock}/>
-            </Theme.View>
-            <Theme.View style={{
+            </View>
+            <View style={{
                 marginTop: 40
               }}>
               <Setting label="Gruppen" icon={faLayerGroup} utils={this.state.utils}><GroupsSetting club={this.state.club}/></Setting>
               <Setting label="QR-Codes" icon={faQrcode} utils={this.state.utils}><QRCodesSetting club={this.state.club}/></Setting>
-            </Theme.View>
-            <Theme.View style={{
+            </View>
+            <View style={{
                 marginTop: 40
               }}>
               <Setting setting="logo" imagePicker={this.openImagePicker.bind(this)} label="Logo" icon={faImage} utils={this.state.utils} club={club}/>
               <Setting label="Name" icon={faPen} utils={this.state.utils}><NameSetting club={this.state.club}/></Setting>
               <Setting label="Farbe" icon={faTint} utils={this.state.utils}><ColorSetting club={this.state.club}/></Setting>
-            </Theme.View>
-            <Theme.View style={{
+            </View>
+            <View style={{
                 marginTop: 40
               }}>
               <Setting color="red" label="Verein löschen" icon={faTrash} iconColor="light" type="action" onPress={() => alert("setting")}/>
-            </Theme.View>
+            </View>
           </View>
         </HeaderScrollView>
 
