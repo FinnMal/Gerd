@@ -26,17 +26,37 @@ import {Theme} from './../app/index.js';
 import DatabaseConnector from "./../classes/database/DatabaseConnector";
 
 export default class ChatMessage extends DatabaseConnector {
-  id = null;
-  data = {};
   chat = null;
   listener = {};
   viewOpacity = new Animated.Value(1);
-  constructor(chat, id) {
-    super("chats/" + chat.getID() + '/messages', id, ["text", "send_at", "sender"])
-    this.id = id;
+  constructor(chat, data = false, saved_local = true, cb = false) {
+    super("chats/" + chat.getID() + '/messages', null)
     this.chat = chat;
 
-    //console.log('MESSAGE CREATED')
+    this.setValue(data.text, 'text');
+
+    if (data.is_own == undefined) {
+      data.is_own = data.sender == this.chat.getUID()
+        ? 1
+        : 0
+    }
+    this.setValue(parseInt(data.send_at), 'send_at');
+    this.setValue(data.is_own, 'is_own');
+
+    if (!saved_local) {
+      this.saveLocal(data, cb)
+    }
+  }
+
+  saveLocal(data, cb) {
+    console.log('saving local ...')
+    this.executeSQL('INSERT INTO chat_messages VALUES (?, ?, ?, ?)', [
+      data.send_at, this.chat.getID(), data.text, data.is_own
+    ], function() {
+      console.log("saved " + data.send_at + " into local database")
+      if (cb) 
+        cb(this)
+    }.bind(this))
   }
 
   _onLongPress() {
@@ -85,8 +105,8 @@ export default class ChatMessage extends DatabaseConnector {
     var today = new Date().setHours(0, 0, 0, 0);
     var yesterday = today - 86400000;
     var last_week = today - 604800000;
-    var send_at = new Date(this.getSendAt() * 1000);
-    var send_at_midnight = new Date(this.getSendAt() * 1000).setHours(0, 0, 0, 0)
+    var send_at = new Date(this.getSendAt());
+    var send_at_midnight = new Date(this.getSendAt()).setHours(0, 0, 0, 0)
 
     if (today == send_at_midnight) {
       // message send today
@@ -119,12 +139,8 @@ export default class ChatMessage extends DatabaseConnector {
     }
   }
 
-  getID() {
-    return this.id;
-  }
-
   getSendAt() {
-    return this.data.send_at;
+    return this.getValue('send_at');
   }
 
   getAgoText() {
@@ -132,11 +148,12 @@ export default class ChatMessage extends DatabaseConnector {
   }
 
   isOwnMessage() {
+    return this.getValue('is_own')
     return this.chat.getUID() == this.getValue('sender')
   }
 
   getText() {
-    return this.data.text;
+    return this.getValue('text');
   }
 
   setRead(read) {
@@ -174,69 +191,71 @@ export default class ChatMessage extends DatabaseConnector {
       ],
       outputRange: [0, 1]
     });
-
-    const isEmoji = this.isEmoji(this.getText())
-    return (
-      <Animated.View
-        key={this.getID()}
-        style={{
-          minWidth: 90,
-          marginBottom: 15,
-          marginLeft: !this.isOwnMessage()
-            ? 0
-            : 'auto',
-          marginRight: this.isOwnMessage()
-            ? 0
-            : 'auto',
-          opacity: opacity
-        }}>
-        <Theme.View
-          color={this.isOwnMessage()
-            ? "primary"
-            : "selected_view"}
+    if (this.getText() && this.getSendAt() > 0) {
+      const isEmoji = this.isEmoji(this.getText())
+      return (
+        <Animated.View
+          key={this.getSendAt()}
           style={{
-            padding: 10,
-            paddingLeft: 15,
-            paddingRight: 15,
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            borderBottomLeftRadius: this.isOwnMessage()
-              ? 20
-              : 0,
-            borderBottomRightRadius: this.isOwnMessage()
-              ? 0
-              : 20,
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'row'
-          }}>
-          <Theme.Text
-            backgroundColor={this.isOwnMessage()
-              ? "primary"
-              : ""}
-            style={{
-              fontFamily: 'Poppins-Medium',
-              fontSize: isEmoji && this.getText().length == 2
-                ? 65
-                : 17
-            }}>{this.getText()}</Theme.Text>
-        </Theme.View>
-        <Theme.Text
-          style={{
-            marginTop: 3,
+            minWidth: 90,
+            marginBottom: 15,
             marginLeft: !this.isOwnMessage()
-              ? 10
+              ? 0
               : 'auto',
             marginRight: this.isOwnMessage()
-              ? 10
+              ? 0
               : 'auto',
-            color: "white",
-            opacity: 0.5,
-            fontSize: 12,
-            fontFamily: 'Poppins-SemiBold'
-          }}>{this._getSendAtString()}</Theme.Text>
-      </Animated.View>
-    );
+            opacity: opacity
+          }}>
+          <Theme.View
+            color={this.isOwnMessage()
+              ? "primary"
+              : "selected_view"}
+            style={{
+              padding: 10,
+              paddingLeft: 15,
+              paddingRight: 15,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              borderBottomLeftRadius: this.isOwnMessage()
+                ? 20
+                : 0,
+              borderBottomRightRadius: this.isOwnMessage()
+                ? 0
+                : 20,
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexDirection: 'row'
+            }}>
+            <Theme.Text
+              backgroundColor={this.isOwnMessage()
+                ? "primary"
+                : ""}
+              style={{
+                fontFamily: 'Poppins-Medium',
+                fontSize: isEmoji && this.getText().length == 2
+                  ? 65
+                  : 17
+              }}>{this.getText()}</Theme.Text>
+          </Theme.View>
+          <Theme.Text
+            style={{
+              marginTop: 3,
+              marginLeft: !this.isOwnMessage()
+                ? 10
+                : 'auto',
+              marginRight: this.isOwnMessage()
+                ? 10
+                : 'auto',
+              color: "white",
+              opacity: 0.5,
+              fontSize: 12,
+              fontFamily: 'Poppins-SemiBold'
+            }}>{this._getSendAtString()}</Theme.Text>
+        </Animated.View>
+      );
+    }
+    return null
   }
 }

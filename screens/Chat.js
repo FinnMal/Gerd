@@ -51,7 +51,9 @@ class ChatScreen extends React.Component {
       messages: [],
       keyboardVisibe: false,
       focused: focused === true,
-      headerScrollView: null
+      headerScrollView: null,
+      flatListData: [],
+      sending: false
     };
 
     setInterval(function() {
@@ -64,36 +66,18 @@ class ChatScreen extends React.Component {
       }
     .bind(this), 3000)
 
-    chat.startMessagesListener(function(mes) {
-      mes.setReadyListener(function() {
-        this.state.headerScrollView.addItemToFlatList(mes)
-      }.bind(this))
-      // add message if (this.state.messages.indexOf(mes) == -1) { this.state.messages.push(mes);
-
-      /*
-        this.state.messages.sort(
-          (a, b) => (a.getSendAt() < b.getSendAt())
-            ? 1
-            : (
-              (b.getSendAt() < a.getSendAt())
-                ? -1
-                : 0
-            )
-        );
-        this.forceUpdate();
-        */
-      //}
-    }.bind(this), function(mes) {
-      //remove message
-      this.state.headerScrollView.removeItemFromFlatList(mes)
-    }.bind(this));
-
-    chat.startListener('last_message_id', function() {
-      chat.loadLastMessage(function(mes) {
-        if (this.state.headerScrollView) {
-          this.state.headerScrollView.addItemToFlatList(mes, false)
+    chat.startMessagesListener(function(messages, addToStart = true) {
+      messages.forEach((mes, i) => {
+        if (addToStart) 
+          this.state.flatListData.push(mes);
+        else 
+          this.state.flatListData.unshift(mes);
         }
-      }.bind(this));
+      );
+      this.forceUpdate();
+
+    }.bind(this), function(mes) {
+      this.state.headerScrollView.removeItemFromFlatList(mes)
     }.bind(this));
 
   }
@@ -157,6 +141,7 @@ class ChatScreen extends React.Component {
           headlineFontSize={47}
           backButton={true}
           hasFlatList={true}
+          flatListData={this.state.flatListData}
           onEndReached={() => {
             chat.setLimit(10)
           }}/>
@@ -168,26 +153,36 @@ class ChatScreen extends React.Component {
             justifyContent: 'center',
             width: s_width
           }}>
-          <InputBox
-            icon={faPaperPlane}
-            showButton={true}
-            onDone={(message) => {
-              this.state.chat.sendMessage(message)
-            }}
-            onFocus={() => {
-              setTimeout((function() {
-                if (this.scrollView) 
-                  this.scrollView.scrollToEnd({animated: true});
-                }
-              ).bind(this), 200);
-              this._keyboardDidShow();
-            }}
-            onBlur={() => this._keyboardDidHide()}
-            onChangeText={text => {
-              this._onChangeText(text);
-            }}
-            width={s_width * .9}
-            borderRadius={50}/>
+          {
+            !this.state.sending
+              ? <InputBox
+                  returnKeyType={"send"}
+                  icon={faPaperPlane}
+                  showButton={true}
+                  clearOnDone={true}
+                  onDone={(message) => {
+                    console.log('onDone')
+                    //this.state.sending = false; this.forceUpdate();
+
+                    this.state.chat.sendMessage(message)
+                  }}
+                  onFocus={() => {
+                    setTimeout((function() {
+                      if (this.scrollView) 
+                        this.scrollView.scrollToEnd({animated: true});
+                      }
+                    ).bind(this), 200);
+                    this._keyboardDidShow();
+                  }}
+                  onBlur={() => this._keyboardDidHide()}
+                  onChangeText={text => {
+                    this._onChangeText(text);
+                  }}
+                  width={s_width * .9}
+                  borderRadius={50}/>
+              : void 0
+          }
+
         </View>
       </Theme.BackgroundView>
     );

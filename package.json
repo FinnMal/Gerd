@@ -60,6 +60,7 @@
     "react-native-screens": "~2.11.0",
     "react-native-share": "^3.8.3",
     "react-native-shared-element": "^0.7.0",
+    "react-native-sqlite-storage": "^5.0.0",
     "react-native-svg": "^12.1.0",
     "react-native-swipe-gestures": "^1.0.5",
     "react-native-swiper": "^1.6.0",

@@ -34,7 +34,7 @@ import {LogBox, AppRegistry} from "react-native";
 import database from "@react-native-firebase/database";
 import Firebase from "firebase";
 import auth from "@react-native-firebase/auth";
-
+import {openDatabase} from 'react-native-sqlite-storage';
 import {useDarkMode} from 'react-native-dynamic'
 const firebaseConfig = {
   apiKey: "AIzaSyA8WgcS53qQskfdqzJInCK-VlBOU_gPMYI",
@@ -49,6 +49,17 @@ const firebaseConfig = {
 const app = Firebase.initializeApp(firebaseConfig);
 
 AppRegistry.registerComponent("app", () => App);
+
+//create database if not exists
+var db = openDatabase('gerd.db');
+db.transaction(function(txn) {
+  //txn.executeSql('DROP TABLE chat_messages')
+  txn.executeSql(
+    'CREATE TABLE IF NOT EXISTS "chat_messages" ("send_at"	INTEGER NOT NULL,"chat_id"	TEXT,"text"	TEXT,"is_own"	NUMERIC,PRIMARY KEY("send_at"));',
+    []
+  );
+  txn.executeSql('CREATE TABLE IF NOT EXISTS "chats" ("ID"	TEXT NOT NULL,"partner_uid"	INTEGER NOT NULL,PRIMARY KEY("ID"));', []);
+});
 
 auth().signInAnonymously().then(() => {
   console.log("User signed in anonymously");

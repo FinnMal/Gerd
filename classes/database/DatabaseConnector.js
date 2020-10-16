@@ -1,8 +1,10 @@
 import React from "react";
 import database from "@react-native-firebase/database";
+import {openDatabase} from 'react-native-sqlite-storage';
 
 export default class DatabaseConnector {
   id = null;
+  db = null;
   data = {};
   listener = {};
   ready = false;
@@ -23,6 +25,18 @@ export default class DatabaseConnector {
     if (data !== false) {
       this.data = data;
     }
+  }
+
+  executeSQL(s, p = [], cb) {
+    var db = openDatabase('gerd.db');
+    db.transaction(function(txn) {
+      //txn.executeSql('INSERT INTO chat_messages VALUES ("MES_ID", "-MIAN2v5d1Bs4WTf7AUI", 100, "Text", 1);', [])
+      txn.executeSql(s, p, (tx, results) => {
+        if (cb) 
+          cb(tx, results);
+        }
+      );
+    });
   }
 
   getValue(path, cb = null) {
@@ -150,15 +164,19 @@ export default class DatabaseConnector {
           this.setValue(snap.val(), path);
         }.bind(this));
       } else {
-        console.log(path + ' listener exists')
         this.listener[path].callbacks.push(cb);
         this._triggerCallbacks(path);
       }
     }
   }
 
-  _stopListener(path) {
-    this.listener[path].ref.off();
+  stopListener(path) {
+    if (this.listener) {
+      if (this.listener[path]) {
+        if (this.listener[path].ref) 
+          this.listener[path].ref.off();
+        }
+      }
   }
 
   _triggerCallbacks(path, value = null) {

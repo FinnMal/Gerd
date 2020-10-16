@@ -106,23 +106,14 @@ class HeaderScrollView extends React.Component {
   }
 
   addItemToFlatList(item, toStart = true) {
+    var list = this.state.flatListData;
     if (toStart) 
-      this.state.flatListData.push(item);
+      list.push(item);
     else 
-      this.state.flatListData.unshift(item);
-    
-    /*
-      this.state.flatListData.sort(
-        (a, b) => (a.getSendAt() < b.getSendAt())
-          ? 1
-          : (
-            (b.getSendAt() < a.getSendAt())
-              ? -1
-              : 0
-          )
-      );
-      */
-    this.forceUpdate();
+      list.unshift(item);
+    console.log('mes added')
+    this.setState({flatListData: list})
+    //this.forceUpdate();
   }
 
   removeItemFromFlatList(item) {
@@ -316,6 +307,18 @@ class HeaderScrollView extends React.Component {
     }).start();
   }
 
+  renderItem = ({item, index}) => (
+    <View
+      style={{
+        marginTop: index == this.state.flatListData.length - 1
+          ? this.state.blur_view_height + 20
+          : 0,
+        marginBottom: index == 0
+          ? -40
+          : 0
+      }}>{item.getRender()}</View>
+  );
+
   render() {
     const s_width = Dimensions.get("window").width;
     const s_height = Dimensions.get("window").height;
@@ -413,19 +416,19 @@ class HeaderScrollView extends React.Component {
                   onEndReached={() => {
                     this.props.onEndReached()
                   }}
-                  onEndReachedThreshold={10}
+                  onEndReachedThreshold={0.5}
                   inverted={true}
-                  initialNumToRender={100}
+                  initialNumToRender={1}
                   style={{
                     width: s_width,
                     paddingLeft: 15,
                     paddingRight: 15
                   }}
-                  data={this.state.flatListData}
+                  data={this.props.flatListData}
                   renderItem={({item, index}) => {
                     return <View
                       style={{
-                        marginTop: index == this.state.flatListData.length - 1
+                        marginTop: index == this.props.flatListData.length - 1
                           ? this.state.blur_view_height + 20
                           : 0,
                         marginBottom: index == 0

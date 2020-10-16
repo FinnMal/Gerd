@@ -53,15 +53,17 @@ export default class InputBox extends React.Component {
   render() {
     const s_width = Dimensions.get("window").width;
     return (
-      <View
+      <Theme.View
         style={[
           {
-            height: 52,
             width: this.props.width
               ? this.props.width
               : s_width * 0.8,
             marginBottom: this.props.marginBottom,
-            marginTop: this.props.marginTop
+            marginTop: this.props.marginTop,
+            borderRadius: this.props.borderRadius
+              ? this.props.borderRadius
+              : 10
           },
           this.props.style
         ]}>
@@ -77,12 +79,17 @@ export default class InputBox extends React.Component {
             : void 0
         }
 
-        <View style={{
+        <View
+          style={{
+            flex: 1,
+            minHeight: 60,
             flexWrap: 'wrap',
-            alignItems: 'flex-start',
-            flexDirection: 'row'
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center'
           }}>
           <Theme.TextInput
+            multiline={true}
             onFocus={() => {
               this.has_focus = true;
               if (this.props.onFocus) 
@@ -95,14 +102,9 @@ export default class InputBox extends React.Component {
                 this.props.onBlur();
               this.forceUpdate()
             }}
-            keyboardType={this.props.keyboardType
-              ? this.props.keyboardType
-              : "default"
-}
-            returnKeyType={this.props.returnKeyType
-              ? this.props.returnKeyType
-              : ""
-}
+            numberOfLines={4}
+            keyboardType={this.props.keyboardType}
+            returnKeyType={this.props.returnKeyType}
             placeholderTextColor="#665F75"
             placeholder={this.props.placeholder}
             textContentType={this.props.type
@@ -111,17 +113,17 @@ export default class InputBox extends React.Component {
             secureTextEntry={this.state.secure}
             onEndEditing={this.props.onEndEditing}
             style={{
-              position: "absolute",
-              width: this.props.width
-                ? this.props.width
-                : s_width * 0.8,
+              flex: 1,
+              marginLeft: 20,
+              fontFamily: "Poppins-Medium",
+              marginRight: this.props.showButton
+                ? 0
+                : 15,
+              fontSize: 17,
+
               borderRadius: this.props.borderRadius
                 ? this.props.borderRadius
-                : 10,
-              maxHeight: 70,
-              fontFamily: "Poppins-Medium",
-              padding: 15,
-              fontSize: 17
+                : 10
             }}
             value={this.state.value}
             onChangeText={v => this._onChange(v)}></Theme.TextInput>
@@ -151,10 +153,8 @@ export default class InputBox extends React.Component {
               ? <Theme.View
                   color={"primary"}
                   style={{
-                    alignSelf: 'flex-end',
                     marginLeft: 'auto',
                     borderRadius: 50,
-                    marginTop: 4,
                     marginRight: 4,
                     width: 43,
                     height: 43,
@@ -183,7 +183,7 @@ export default class InputBox extends React.Component {
               : void 0
           }
         </View>
-      </View>
+      </Theme.View>
     );
   }
 }

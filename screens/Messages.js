@@ -51,12 +51,15 @@ class MessagesScreen extends React.Component {
               this.forceUpdate()
             }.bind(this))
 
-            chat.startListener('last_message_id', function() {
-              console.log('last message id changed')
-              chat.loadLastMessage(function(message) {
-                this.forceUpdate();
-              }.bind(this));
+            chat.startUnreadMessagesCountListener(function(count) {
+              console.log("UNREAD: " + count)
+              this.forceUpdate();
             }.bind(this))
+
+            chat.startLastMessageListener(function(mes) {
+              console.log('new last message: ' + mes.getText())
+              this.forceUpdate();
+            }.bind(this));
 
           }.bind(this))
           chat.startUnreadMessagesCountListener(function(count) {
@@ -172,7 +175,7 @@ class ChatCard extends React.Component {
                         : 'italic'
                     }}>
                     {
-                      last_message
+                      last_message && last_message != {}
                         ? last_message.getText()
                         : "Keine Nachrichten"
                     }
@@ -200,10 +203,10 @@ class ChatCard extends React.Component {
                       fontFamily: 'Poppins-Regular',
                       alignSelf: 'flex-end'
                     }}>
-                    {chat.getLastMessage().getAgoText()}
+                    {last_message.getAgoText()}
                   </Theme.Text>
                   {
-                    chat.getUnreadMessagesCount()
+                    chat.getUnreadMessagesCount() > 0
                       ? <Theme.View
                           color={"primary"}
                           style={{

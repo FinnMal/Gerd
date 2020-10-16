@@ -228,6 +228,8 @@ function TextInput(props) {
     : "#1C1C1E";
 
   return <ReactTextInput
+    multiline={props.multiline}
+    numberOfLines={props.numberOfLines}
     onFocus={props.onFocus}
     onBlur={props.onBlur}
     keyboardType={props.keyboardType}

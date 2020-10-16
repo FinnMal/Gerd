@@ -27,35 +27,29 @@ import ReactNativeHapticFeedback from "react-native-haptic-feedback"
 
 export default class Chat extends DatabaseConnector {
   id = null;
+  db = null;
   uid = null;
-  load = 0;
-  load_to_page = 0;
-  current_page = -1;
+  offset = 0;
+  limit = 500;
   messages = {};
-  message_keys: null;
-  page_refs = {};
   partner_user = null;
-  last_message = {};
+  last_message = null;
   partnerUserCreatedCb: null;
   unreadMessagesCount = 0;
   _unreadMessagesCountListener: null;
   last_message_id = null;
-
+  message_added_cb = null;
+  message_removed_cb = null;
+  last_message_cb = null;
+  unread_messages_count_cb = null;
   constructor(id, uid) {
-    super("chats", id, ["user_id_1", "user_id_2", "current_page", "last_message_id"])
+    super("chats", id, ["user_id_1", "user_id_2"])
     this.id = id;
     this.uid = uid;
-    this.message_keys = [];
 
-    this.state = {
-      message_added_cb: null,
-      message_removed_cb: null
-    }
+    this.state = {}
 
-    this.startListener('current_page', function(value) {
-      this.current_page = value
-      this.loadPageMessages(value);
-    }.bind(this))
+    //load read messages this.loadMessagesFromSQL();
   }
 
   getUID() {
@@ -104,32 +98,22 @@ export default class Chat extends DatabaseConnector {
       }
     }
 
-  getUnreadMessagesCount(cb) {
-    if (this.unreadMessagesCount == 0) 
-      return false;
-    
-    return this.unreadMessagesCount > 39
-      ? this.unreadMessagesCount + "+"
-      : this.unreadMessagesCount;
+  setUnreadMessagesCount(value) {
+    this.unreadMessagesCount = value;
+    if (this.unread_messages_count_cb) 
+      this.unread_messages_count_cb(value)
+  }
+
+  countUpUnreadMessages(value) {
+    this.setUnreadMessagesCount(this.unreadMessagesCount + value)
+  }
+
+  getUnreadMessagesCount() {
+    return this.unreadMessagesCount
   }
 
   startUnreadMessagesCountListener(cb) {
-    // count unread messages (max=40)
-    var unreadMessagesCount = 0;
-    var ref = database().ref('chats/' + this.id + '/messages').orderByChild('send_at').limitToLast(40);
-    ref.on('value', function(snap) {
-      this.unreadMessagesCount = 0;
-      var messages = snap.val();
-      if (messages) {
-        Object.keys(messages).forEach((key, i) => {
-          var mes = messages[key];
-          var unread = mes.read === false && mes.receiver == this.getUID();
-          if (unread) 
-            this.unreadMessagesCount++;
-          cb(this.unreadMessagesCount);
-        });
-      }
-    }.bind(this));
+    this.unread_messages_count_cb = cb;
   }
 
   getLimit() {
@@ -137,128 +121,128 @@ export default class Chat extends DatabaseConnector {
   }
 
   setLimit(increase) {
-    this.load_to_page = this.load_to_page + 1;
-    this._updateMessageList();
+    //this.offest = this.offest + this.limit;
+    this.loadMessagesFromSQL();
   }
 
   startMessagesListener(added, removed) {
     this.messages = {};
-    this.page_refs = {};
+    this.offset = 0;
     this.load_to_page = 0;
-    this.state.message_added_cb = added;
-    this.state.message_removed_cb = removed;
-    this._updateMessageList();
+    this.message_added_cb = added;
+    this.message_removed_cb = removed;
+    this.startUnreadMessagesLister();
+    this.loadMessagesFromSQL();
   }
 
-  _updateMessageList() {
-    var page = this.current_page - this.load_to_page;
+  loadMessagesFromSQL() {
+    var message_added_cb = this.message_added_cb;
+    var sql_start_time = Date.now();
+    this.executeSQL('SELECT send_at, text, is_own FROM chat_messages WHERE chat_id=? ORDER BY send_at DESC LIMIT ? OFFSET ?', [
+      this.getID(), this.limit, this.offset
+    ], function(tx, results) {
+      this.offset = this.offset + this.limit;
+      var sql_end_time = Date.now();
+      var diff = sql_end_time - sql_start_time;
+      console.log("fetched " + results.rows.length + " messages in " + (
+        diff / 1000
+      ) + ' Sek.')
 
-    if (page > -1) {
-      this.loadPageMessages(page);
-    }
-  }
-
-  loadPageMessages(page) {
-    if (page != undefined || page == 0) {
-      if (this.page_refs[page]) 
-        this.page_refs[page].off();
-      
-      console.log("LOADING PAGE " + page)
-
-      var message_added_cb = this.state.message_added_cb;
-      this.page_refs[page] = database().ref('chats/' + this.getID() + '/pages/' + page + '/messages');
-      this.page_refs[page].once("value", function(snap) {
-        var messages = snap.val();
-        if (messages) {
-          Object.keys(messages).reverse().forEach((key, i) => {
-            var mes_id = messages[key];
-            if (!this.messages[mes_id] && mes_id != this.getValue('last_message_id')) {
-              var mes = new ChatMessage(this, mes_id);
-              this.messages[mes_id] = mes;
-              if (message_added_cb) 
-                message_added_cb(mes);
-              }
-            });
-        } else {
-
-          this.getDatabaseValue('pages/' + page + '/count', function(count) {
-            if (count < 20 && page > 0) {
-              this.load_to_page++;
-              this.loadPageMessages(page - 1);
-            }
-          }.bind(this))
+      var new_messages = [];
+      this.setUnreadMessagesCount(0);
+      results.rows.raw(0).forEach((data, i) => {
+        if (!this.messages[data.send_at]) {
+          this.messages[data.send_at] = true;
+          var mes = new ChatMessage(this, data)
+          new_messages.push(mes);
         }
-      }.bind(this));
-
-      this.page_refs[page].on('child_removed', function(snap) {
-        console.log('child_removed')
-        var mes = this.messages[snap.val()]
-        if (mes) {
-          if (this.state.message_removed_cb) {
-            mes.animateOut(function() {
-              this.state.message_removed_cb(mes);
-            }.bind(this));
-          } else 
-            alert('has no callback')
-
-        }
-      }.bind(this));
-    }
-
-  }
-
-  getMessage(id, cb = false) {
-    return this.getValue('messages/' + id, cb);
-  }
-
-  removeMessage(id) {
-    this.getValue('messages/' + id + '/page', function(page) {
-      this.removeValue('pages/' + page.id + '/messages/' + page.index);
-
-      var mes_ids = Object.keys(this.messages);
-      var last_mes_id = mes_ids[mes_ids.length - 1];
-      if (last_mes_id == id && mes_ids.length > 1) 
-        mes_ids[mes_ids.length - 2];
-      this.setValue(last_mes_id, 'last_message_id', true)
+      });
+      message_added_cb(new_messages);
+      //if (results.rows.length > 0) this.loadMessagesFromSQL();
     }.bind(this))
   }
 
-  loadLastMessage(cb) {
-    var mes_id = this.getValue('last_message_id');
-    if (mes_id !== -1) {
-      if (!this.messages[mes_id]) {
-        var mes = new ChatMessage(this, mes_id);
-        mes.setReadyListener(function() {
-          this.messages[mes_id] = mes;
-          if (cb) 
-            cb(mes)
-        }.bind(this));
+  startUnreadMessagesLister() {
+    this.stopListener('unread_by_' + this.getUID())
+
+    // load unread messages
+    this.startListener('unread_by_' + this.getUID(), function(messages) {
+      if (messages) {
+        var total_unread = Object.keys(messages).length;
+        this.countUpUnreadMessages(total_unread);
+        Object.keys(messages).forEach((send_at, i) => {
+          var mes_id = messages[send_at];
+          this.removeValue('unread_by_' + this.getUID() + '/' + send_at)
+          // download message from firebase
+          this.getDatabaseValue('messages/' + mes_id, function(mes) {
+            // delete message
+            this.removeValue('messages/' + mes_id)
+            if (mes) {
+              var data = {}
+              data.send_at = send_at;
+              data.text = mes.text;
+              data.is_own = mes.sender == this.getUID()
+              new ChatMessage(this, data, false, function(mes) {
+                this.messages[send_at] = mes;
+
+                if (i == total_unread - 1) {
+                  this.setLastMessage(mes)
+                }
+
+                if (this.message_added_cb) 
+                  this.message_added_cb([mes], false);
+                }
+              .bind(this))
+            }
+          }.bind(this))
+        });
       }
-    }
+    }.bind(this))
+  }
+
+  startLastMessageListener(cb) {
+    this.last_message_cb = cb;
+    this.startUnreadMessagesLister();
+  }
+
+  getMessages() {
+    return this.messages;
   }
 
   getLastMessage() {
-    return this.messages[this.getValue('last_message_id')]
+    return this.last_message;
   }
 
+  setLastMessage(mes) {
+    this.last_message = mes;
+    if (this.last_message_cb) 
+      this.last_message_cb(mes);
+    }
+  
   getCurrentPage(cb) {
     return this.getValue('current_page');
   }
 
-  sendMessage(text) {
+  sendMessage(text, cb) {
     if (text) {
-      this.setTyping(false)
-      var mes = {
+      //this.setTyping(false)
+      var data = {
         text: text,
-        send_at: new Date().getTime() / 1000,
+        send_at: new Date().getTime(),
         sender: this.getUID(),
         receiver: this.getPartnerUserId()
       }
 
+      var mes = new ChatMessage(this, data, false)
+      this.messages[data.send_at] = mes;
+      this.last_message_cb(mes);
+      this.message_added_cb([mes], false)
+
       console.log('sending chat message ...')
-      functions().httpsCallable('sendChatMessage')({chat_id: this.getID(), message: mes}).then(response => {
-        console.log(response.data);
-      });
+      this.pushValue(data, 'messages', function(mes_id) {
+        console.log('message send')
+        this.setValue(mes_id, 'unread_by_' + this.getPartnerUserId() + '/' + data.send_at)
+      }.bind(this))
     }
   }
 }
