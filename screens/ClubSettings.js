@@ -8,7 +8,6 @@ import {
   View,
   StatusBar,
   Image,
-  Button,
   TouchableOpacity,
   ScrollView,
   Animated,
@@ -18,6 +17,8 @@ import {
 
 import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
 import {
+  faFolder,
+  faCalendar,
   faPlusCircle,
   faChevronCircleLeft,
   faLayerGroup,
@@ -36,12 +37,21 @@ import {withNavigation} from "react-navigation";
 import ClubCard from "./../components/ClubCard.js";
 import Setting from "./../components/Setting.js";
 import Toast from "./../components/Toast.js";
+import InputBox from "./../components/InputBox.js";
+import Button from "./../components/Button.js";
 import database from "@react-native-firebase/database";
 import storage from "@react-native-firebase/storage";
 import ImagePicker from "react-native-image-crop-picker";
-
-import {AnimatedCircularProgress} from "react-native-circular-progress";
+import {Theme} from './../app/index.js';
 import HeaderScrollView from "./../components/HeaderScrollView.js";
+
+// Setting
+import {default as FilesSetting} from './../components/Settings/ClubFiles.js';
+import {default as EventsSetting} from './../components/Settings/ClubEvents.js';
+import {default as GroupsSetting} from './../components/Settings/ClubGroups.js';
+import {default as QRCodesSetting} from './../components/Settings/ClubQRCodes.js';
+import {default as NameSetting} from './../components/Settings/ClubName.js';
+import {default as ColorSetting} from './../components/Settings/ClubColor.js';
 
 class ClubSettings extends React.Component {
   constructor(props) {
@@ -65,6 +75,14 @@ class ClubSettings extends React.Component {
         callback: null
       }
     };
+
+    club.startListener([
+      'name', 'logo', 'public'
+    ], function(name) {
+      this.forceUpdate();
+    }.bind(this))
+
+    club.setReadyListener(function(club) {}.bind(this))
   }
 
   openImagePicker() {
@@ -90,7 +108,6 @@ class ClubSettings extends React.Component {
       cropperChooseText: "Fertig",
       cropperCancelText: "Abbrechen"
     }).then(image => {
-      console.log(image.path);
       var response = {
         uri: `data:image/jpg;base64,${image.data}`
       };
@@ -105,7 +122,6 @@ class ClubSettings extends React.Component {
       const task = reference.putFile(image.path);
 
       task.on("state_changed", taskSnapshot => {
-        console.log((taskSnapshot.bytesTransferred / taskSnapshot.totalBytes) * 100);
         this.state.image_upload.active = true;
         this.state.image_upload.progress = (taskSnapshot.bytesTransferred / taskSnapshot.totalBytes) * 100;
         this.forceUpdate();
@@ -113,8 +129,7 @@ class ClubSettings extends React.Component {
 
       task.then(async () => {
         const url = await storage().ref(storage_path).getDownloadURL();
-        database().ref("clubs/" + club.id + "/logo").set(url);
-        this.state.club.logo = url;
+        this.state.club.updateImage(url);
         this.state.image_upload.active = false;
         this.forceUpdate();
       });
@@ -129,13 +144,12 @@ class ClubSettings extends React.Component {
     const club = this.state.club;
     return (
       <View>
-        <HeaderScrollView headline={club.name} margin={0}>
+        <HeaderScrollView headline={"Verwaltung"} margin={0}>
           <View style={{
               marginLeft: -20,
               marginRight: -20
             }}>
-            <View style={{
-                backgroundColor: "#1e1e1e",
+            <Theme.View style={{
                 padding: 15
               }}>
               <View style={{
@@ -147,7 +161,7 @@ class ClubSettings extends React.Component {
                   {
                     this.state.image_upload.active
                       ? (
-                        <AnimatedCircularProgress
+                        <Theme.AnimatedCircularProgress
                           size={57}
                           width={3}
                           style={{
@@ -155,10 +169,7 @@ class ClubSettings extends React.Component {
                             marginTop: -3.5,
                             marginLeft: -3.5
                           }}
-                          fill={this.state.image_upload.progress}
-                          tintColor="#0DF5E3"
-                          onAnimationComplete={() => console.log("onAnimationComplete")}
-                          backgroundColor="#121212"/>
+                          fill={this.state.image_upload.progress}/>
                       )
                       : (void 0)
                   }
@@ -169,7 +180,7 @@ class ClubSettings extends React.Component {
                     }}
                     width={50}
                     source={{
-                      uri: club.logo
+                      uri: club.getImage()
                     }}/>
                 </TouchableOpacity>
                 <View
@@ -179,92 +190,62 @@ class ClubSettings extends React.Component {
                     justifyContent: "center",
                     maxWidth: 275
                   }}>
-                  <Text
+                  <Theme.Text
                     style={{
                       textTransform: "uppercase",
                       fontSize: 21,
-                      color: "white",
                       fontFamily: "Poppins-SemiBold"
                     }}>
-                    {club.name}
-                  </Text>
-                  <Text
+                    {club.getName()}
+                  </Theme.Text>
+                  <Theme.Text
                     style={{
                       fontSize: 15,
-                      color: "white",
                       opacity: 0.6,
                       fontFamily: "Poppins-Medium"
                     }}>
-                    {club.members.toLocaleString()}
+                    {club.getMembersCount().toLocaleString() + ' '}
                     Mitglieder
-                  </Text>
+                  </Theme.Text>
                 </View>
               </View>
-            </View>
-            <View
-              style={{
-                marginTop: 40,
-                backgroundColor: "#1e1e1e",
-                padding: 3,
-                paddingLeft: 15
+            </Theme.View>
+            <View style={{
+                marginTop: 40
               }}>
               <Setting
                 type="switch"
-                isEnabled={club.public}
+                isEnabled={club.isPublic()}
                 onSwitch={() => {
-                  database().ref("clubs/" + club.id + "/public").set(!club.public);
-                  this.state.club.public = !club.public;
+                  this.state.club.togglePublic();
                   this.forceUpdate();
                 }}
                 label="Öffentlich"
-                icon={club.public
+                icon={club.isPublic()
                   ? faUnlock
                   : faLock}/>
             </View>
-            <View
-              style={{
-                marginTop: 40,
-                backgroundColor: "#1e1e1e",
-                padding: 3,
-                paddingLeft: 15
+            <View style={{
+                marginTop: 40
               }}>
-              <Setting setting="groups" label="Gruppen" icon={faLayerGroup} utils={this.state.utils} club={club}/>
-              <Setting setting="qrcodes" utils={this.state.utils} club={club} label="QR-Codes" icon={faQrcode}/>
+              <Setting label="Dateien" icon={faFolder} utils={this.state.utils}><FilesSetting club={this.state.club}/></Setting>
+              <Setting label="Veranstaltungen" icon={faCalendar} utils={this.state.utils}><EventsSetting club={this.state.club}/></Setting>
             </View>
-            <View
-              style={{
-                marginTop: 40,
-                backgroundColor: "#1e1e1e",
-                padding: 3,
-                paddingLeft: 15
+            <View style={{
+                marginTop: 40
+              }}>
+              <Setting label="Gruppen" icon={faLayerGroup} utils={this.state.utils}><GroupsSetting club={this.state.club}/></Setting>
+              <Setting label="QR-Codes" icon={faQrcode} utils={this.state.utils}><QRCodesSetting club={this.state.club}/></Setting>
+            </View>
+            <View style={{
+                marginTop: 40
               }}>
               <Setting setting="logo" imagePicker={this.openImagePicker.bind(this)} label="Logo" icon={faImage} utils={this.state.utils} club={club}/>
-              <Setting
-                setting="name"
-                label="Name"
-                icon={faPen}
-                utils={this.state.utils}
-                club={club}
-                callback={(old_name, new_name) => {
-                  this.state.club.name = new_name;
-                  this.state.toast.visible = true;
-                  this.state.toast.text = "Name geändert";
-                  this.state.toast.action = "Rückgänig";
-                  this.state.toast.callback = function() {
-                    this.state.club.name = old_name;
-                    this.forceUpdate();
-                  }.bind(this);
-                  this.forceUpdate();
-                }}/>
-              <Setting setting="color" label="Farbe" icon={faTint} utils={this.state.utils} club={club}/>
+              <Setting label="Name" icon={faPen} utils={this.state.utils}><NameSetting club={this.state.club}/></Setting>
+              <Setting label="Farbe" icon={faTint} utils={this.state.utils}><ColorSetting club={this.state.club}/></Setting>
             </View>
-            <View
-              style={{
-                marginBottom: 75,
-                marginTop: 40,
-                backgroundColor: "#1e1e1e",
-                padding: 5,
-                paddingLeft: 15
+            <View style={{
+                marginTop: 40
               }}>
               <Setting color="red" label="Verein löschen" icon={faTrash} iconColor="light" type="action" onPress={() => alert("setting")}/>
             </View>

@@ -16,9 +16,11 @@ import {
   Animated,
   Easing,
   Dimensions,
-  RefreshControl
+  RefreshControl,
+  Pressable
 } from 'react-native';
 import HomeScreen from './Home';
+import EventsScreen from './Events';
 import ManagmentScreen from './Managment';
 import MessagesScreen from './Messages';
 import SettingsScreen from './Settings';
@@ -28,12 +30,56 @@ import {ifIphoneX} from 'react-native-iphone-x-helper';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
-import {faHome, faUsers, faComment, faCog, faPlusCircle} from '@fortawesome/free-solid-svg-icons';
+import {
+  faHome,
+  faUsers,
+  faComment,
+  faCog,
+  faPlusCircle,
+  faPlus,
+  faPlusSquare
+} from '@fortawesome/free-solid-svg-icons';
 import User from "./../classes/User.js";
+import {useDarkMode} from 'react-native-dynamic'
+import Toast from "./../components/Toast.js";
+import {Theme} from './../app/index.js';
+import ReactNativeHapticFeedback from "react-native-haptic-feedback"
+
+function CStatusBar() {
+  const isDarkMode = useDarkMode()
+  return <StatusBar hidden={false} barStyle={isDarkMode
+      ? "light-content"
+      : "dark-content"}/>
+}
+
+function CView(props) {
+  const isDarkMode = useDarkMode()
+  return <View style={[
+      {
+        backgroundColor: isDarkMode
+          ? "#121212"
+          : "#C7C7CC"
+      },
+      props.style
+    ]}>{props.children}</View>;
+}
+
+function CNavbar(props) {
+  const isDarkMode = useDarkMode()
+  return <View style={[
+      {
+        backgroundColor: isDarkMode
+          ? "#3A3A3C"
+          : "#F2F2F7"
+      },
+      props.style
+    ]}>{props.children}</View>;
+}
 
 export default class ScreenHandler extends React.Component {
   navVisible: true;
   lastScrollPos: 0;
+  AppContext = null;
   constructor() {
     super();
     this.animation_pos = 0;
@@ -50,29 +96,24 @@ export default class ScreenHandler extends React.Component {
       nav: [
         {
           x: 0,
-          visible: false,
-          moveTo: 'none',
-          iconColor: 'white'
+          active: true,
+          moveTo: 'none'
         }, {
           x: 0,
-          visible: false,
-          moveTo: 'none',
-          iconColor: 'white'
+          active: false,
+          moveTo: 'none'
         }, {
           x: 0,
-          visible: false,
-          moveTo: 'none',
-          iconColor: 'white'
+          active: false,
+          moveTo: 'none'
         }, {
           x: 0,
-          visible: false,
-          moveTo: 'none',
-          iconColor: 'white'
+          active: false,
+          moveTo: 'none'
         }, {
           x: 0,
-          visible: false,
-          moveTo: 'none',
-          iconColor: 'white'
+          active: false,
+          moveTo: 'none'
         }
       ]
     };
@@ -82,7 +123,6 @@ export default class ScreenHandler extends React.Component {
       database().ref('users/' + user.uid + '/account_type').once('value', (function(snap) {
         if (!snap.val()) {
           // account does not exist
-          console.log('account does not exist');
           this.props.navigation.navigate('FirstStartScreen', {
             utils: utils,
             uid: user.uid,
@@ -94,6 +134,7 @@ export default class ScreenHandler extends React.Component {
           utils.setUserID(user.uid);
           utils.setAccountType(snap.val());
           utils.setNavigation(this.props.navigation);
+          this.AppContext = React.createContext(utils);
           this.state.nav[0].visible = true;
           this.state.first_start_done = true;
           this.state.account_type = snap.val();
@@ -104,7 +145,6 @@ export default class ScreenHandler extends React.Component {
   }
 
   _onAuthDone() {
-    console.log('onDone');
     this.props.navigation.navigate('ScreenHandler');
     this.state.nav[0].visible = true;
     this.state.first_start_done = true;
@@ -125,11 +165,9 @@ export default class ScreenHandler extends React.Component {
       }
     } else 
       dir = pos;
-    console.log(this.lastScrollPos + ' > ' + pos + ' > ' + dir);
     this.lastScrollPos = pos;
 
     if (dir == 'show' && !this.navVisible) {
-      console.log('startNavbarAnimation show');
       this.navbarMarginBottom.setValue(-100);
       Animated.timing(this.navbarMarginBottom, {
         useNativeDriver: false,
@@ -140,7 +178,6 @@ export default class ScreenHandler extends React.Component {
         this.navVisible = true;
       });
     } else if (dir == 'hide' && this.navVisible) {
-      console.log('startNavbarAnimation hide');
       this.navbarMarginBottom.setValue(0);
       Animated.timing(this.navbarMarginBottom, {
         useNativeDriver: false,
@@ -168,7 +205,6 @@ export default class ScreenHandler extends React.Component {
       ],
       outputRange: [-100, 0]
     });
-    console.log(navbarMarginBottom);
     const marginLeft = this.holeMargin.interpolate({
       inputRange: [
         0, 2000
@@ -177,9 +213,13 @@ export default class ScreenHandler extends React.Component {
     });
 
     if (this.state.first_start_done) {
+      console.log('first start is done 1')
       return (
-        <View style={s.container}>
-          <StatusBar hidden={false} barStyle="light-content"/>
+        <this.AppContext.Provider style={s.container}>
+          <CStatusBar/>
+          <Toast ref={(toast) => {
+              utils.setToast(toast)
+            }}/>
           <View style={{
               marginTop: 0
             }} showsHorizontalScrollIndicator={false} scrollEnabled={true}>
@@ -188,85 +228,49 @@ export default class ScreenHandler extends React.Component {
               startNavbarAnimation={this.startNavbarAnimation}
               setScrollViewEnabled={this.setScrollViewEnabled}
               moveTo={this.state.nav[0].moveTo}
-              show={this.state.nav[0].visible}/>
-            <ManagmentScreen utilsObject={utils} setScrollViewEnabled={this.setScrollViewEnabled} moveTo={this.state.nav[1].moveTo} show={this.state.nav[1].visible}/>
-            <AddClubScreen utilsObject={utils} setScrollViewEnabled={this.setScrollViewEnabled} moveTo={this.state.nav[2].moveTo} show={this.state.nav[2].visible}/>
-            <MessagesScreen utilsObject={utils} setScrollViewEnabled={this.setScrollViewEnabled} moveTo={this.state.nav[3].moveTo} show={this.state.nav[3].visible}/>
-            <SettingsScreen utilsObject={utils} setScrollViewEnabled={this.setScrollViewEnabled} moveTo={this.state.nav[4].moveTo} show={this.state.nav[4].visible}/>
+              show={this.state.nav[0].active}/>
+            <ManagmentScreen utilsObject={utils} setScrollViewEnabled={this.setScrollViewEnabled} moveTo={this.state.nav[1].moveTo} show={this.state.nav[1].active}/>
+            <MessagesScreen utilsObject={utils} setScrollViewEnabled={this.setScrollViewEnabled} moveTo={this.state.nav[3].moveTo} show={this.state.nav[3].active}/>
+            <SettingsScreen utilsObject={utils} setScrollViewEnabled={this.setScrollViewEnabled} moveTo={this.state.nav[4].moveTo} show={this.state.nav[4].active}/>
           </View>
 
-          <Animated.View style={[
+          <Theme.View style={[
               styles.navigationBar, {
                 bottom: navbarMarginBottom
               }
             ]}>
-            <View style={styles.navigationBarWhiteBackground}/>
-
-            <Animated.View style={{
-                marginLeft
-              }}>
-              <View style={styles.navigatonBarMarker}/>
-            </Animated.View>
             <View style={styles.navigationBarIcons}>
-              <TouchableOpacity
-                onLayout={event => {
-                  const layout = event.nativeEvent.layout;
-                  this.state.nav[0].x = layout.x;
-                  if (this.state.nav[0].visible) 
-                    this.navigate(0);
-                  }}
-                onPress={() => this.navigate(0)}>
-                <FontAwesomeIcon style={styles.navigationBarIcon} size={29} color={this.state.nav[0].iconColor} icon={faHome}/>
-              </TouchableOpacity>
+              <NavItem index={0} label="Home" icon={faHome} active={this.state.nav[0].active} navigate={this.navigate.bind(this)}/>
+              <NavItem index={1} label="Clubs" icon={faUsers} active={this.state.nav[1].active} navigate={this.navigate.bind(this)}></NavItem>
               {
-                this.state.account_type == 'manager'
-                  ? <TouchableOpacity
-                      onLayout={event => {
-                        const layout = event.nativeEvent.layout;
-                        this.state.nav[1].x = layout.x;
-                        if (this.state.nav[1].visible) 
-                          this.navigate(1);
-                        }}
-                      onPress={() => this.navigate(1)}>
-                      <FontAwesomeIcon style={styles.navigationBarIcon} size={29} color={this.state.nav[1].iconColor} icon={faUsers}/>
-                    </TouchableOpacity>
-                  : <TouchableOpacity
-                      onLayout={event => {
-                        const layout = event.nativeEvent.layout;
-                        this.state.nav[2].x = layout.x;
-                        if (this.state.nav[2].visible) 
-                          this.navigate(2);
-                        }}
-                      onPress={() => this.navigate(2)}>
-                      <FontAwesomeIcon style={styles.navigationBarIcon} size={29} color={this.state.nav[2].iconColor} icon={faPlusCircle}/>
-                    </TouchableOpacity>
+                utils.getUser().isManager()
+                  ? <NavItem
+                      onPress={() => this.props.navigation.navigate('NewMessageScreen', {
+                        transition: 'horizontal',
+                        utils: utils
+                      })}
+                      isBtn={true}
+                      active={false}
+                      icon={faPlusCircle}
+                      navigate={this.navigate.bind(this)}/>
+                  : <NavItem
+                      onPress={() => this.props.navigation.navigate('NewMessageScreen', {
+                        transition: 'horizontal',
+                        utils: utils
+                      })}
+                      active={false}
+                      isBtn={true}
+                      icon={faPlusCircle}
+                      navigate={this.navigate.bind(this)}/>
               }
-
-              <TouchableOpacity
-                onLayout={event => {
-                  const layout = event.nativeEvent.layout;
-                  this.state.nav[3].x = layout.x;
-                  if (this.state.nav[3].visible) 
-                    this.navigate(3);
-                  }}
-                onPress={() => this.navigate(3)}>
-                <FontAwesomeIcon style={styles.navigationBarIcon} size={28} color={this.state.nav[3].iconColor} icon={faComment}/>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onLayout={event => {
-                  const layout = event.nativeEvent.layout;
-                  this.state.nav[4].x = layout.x;
-                  if (this.state.nav[4].visible) 
-                    this.navigate(4);
-                  }}
-                onPress={() => this.navigate(4)}>
-                <FontAwesomeIcon style={styles.navigationBarIcon} size={28} color={this.state.nav[4].iconColor} icon={faCog}/>
-              </TouchableOpacity>
+              <NavItem index={3} label="Chats" icon={faComment} active={this.state.nav[3].active} navigate={this.navigate.bind(this)}/>
+              <NavItem index={4} label="Settings" icon={faCog} active={this.state.nav[4].active} navigate={this.navigate.bind(this)}/>
             </View>
-          </Animated.View>
-        </View>
+          </Theme.View>
+        </this.AppContext.Provider>
       );
     } else {
+      //<NavItem index={2} label="Hinzufügen" icon={faPlusCircle} active={this.state.nav[2].active} navigate={this.navigate.bind(this)}/>
       return null;
     }
   }
@@ -275,34 +279,12 @@ export default class ScreenHandler extends React.Component {
     if (this.last_nav_id != id) {
       for (var i = 0; i < 5; i++) {
         if (id != i) {
-          this.state.nav[i].iconColor = 'white';
-          this.state.nav[i].visible = false;
+          this.state.nav[i].active = false;
         } else {
-          this.state.nav[i].visible = true;
+          this.state.nav[i].active = true;
         }
-      }
-
-      this.holeMargin.setValue(this.state.hole_margin);
-      Animated.timing(this.holeMargin, {
-        useNativeDriver: false,
-        toValue: this.state.nav[id].x + 44,
-        duration: 120,
-        easing: Easing.ease
-      }).start(() => {
-        for (var i = 0; i < 5; i++) {
-          if (id != i) {
-            this.state.nav[i].iconColor = 'white';
-          } else {
-            this.state.nav[i].iconColor = '#242a38';
-          }
-        }
-
         this.forceUpdate();
-      });
-
-      //if(this.last_nav_id > id) this.state.nav[id].moveTo = "left" else this.state.nav[id].moveTo = "right"
-      this.state.hole_margin = this.state.nav[id].x + 44;
-      this.forceUpdate();
+      }
       this.last_nav_id = id;
     }
   }
@@ -322,12 +304,12 @@ export default class ScreenHandler extends React.Component {
 const styles = StyleSheet.create({
   navigationBar: {
     ...ifIphoneX({
-      height: 105
-    }, {height: 94}),
+      height: 78
+    }, {height: 60}),
     position: 'absolute',
     width: '100%',
 
-    shadowColor: '#1e1e1e',
+    shadowColor: '#3A3A3C',
     shadowOffset: {
       width: 0,
       height: 9
@@ -335,31 +317,109 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.58,
     shadowRadius: 20.00,
 
-    elevation: 30
-  },
-  navigatonBarMarker: {
-    marginTop: 33,
-    backgroundColor: '#0DF5E3',
-    width: 40,
-    height: 40,
-    borderRadius: 22
-  },
-  navigationBarWhiteBackground: {
-    borderTopLeftRadius: 45,
-    borderTopRightRadius: 45,
+    elevation: 30,
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
     position: 'absolute',
-    marginTop: 20,
-    height: 95,
-    width: '100%',
-    backgroundColor: '#1e1e1e'
+    width: '100%'
   },
   navigationBarIcons: {
+    marginLeft: 15,
     flexDirection: 'row',
-    width: '100%',
-    marginTop: 39,
-    position: 'absolute'
+    width: '92%',
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   navigationBarIcon: {
-    marginLeft: 50
+    opacity: 0.90
   }
 });
+
+class NavItem extends React.Component {
+  iconScale = new Animated.Value(1);
+  animationDuration = 150;
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      active: false,
+      index: this.props.index,
+      label_width: -1,
+      color: this.props.active
+        ? 'primary'
+        : 'inacitve'
+    }
+  }
+
+  _getIconScale() {
+    return this.iconScale.interpolate({
+      inputRange: [
+        1, 50, 100
+      ],
+      outputRange: [
+        1, 0.9, 1
+      ],
+      extrapolate: 'clamp',
+      useNativeDriver: true
+    });
+  }
+
+  _navigate() {
+    this.state.color = 'primary';
+    ReactNativeHapticFeedback.trigger("impactLight");
+    this.iconScale.setValue(1);
+    Animated.timing(this.iconScale, {
+      useNativeDriver: false,
+      toValue: 100,
+      duration: 150,
+      easing: Easing.ease
+    }).start();
+    if (!this.props.isBtn) {
+      this.props.navigate(this.state.index);
+    } else 
+      this.props.onPress()
+    this.forceUpdate();
+  }
+
+  render() {
+    var color = this.props.active
+      ? 'primary'
+      : 'inacitve'
+    return (
+      <Pressable
+        onPress={() => this._navigate()}
+        style={{
+          height: 90,
+          width: 65,
+          paddingTop: 5,
+          paddingBottom: 8,
+          flexWrap: 'wrap',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+        <Animated.View style={{
+            transform: [
+              {
+                scale: this._getIconScale()
+              }
+            ]
+          }}>
+          <Theme.Icon
+            style={{
+              marginTop: 11,
+              alignSelf: 'flex-start',
+              opacity: 1
+            }}
+            size={!this.props.isBtn
+              ? 27
+              : 33}
+            color={color}
+            icon={this.props.icon}/>
+        </Animated.View>
+      </Pressable>
+    );
+  }
+}

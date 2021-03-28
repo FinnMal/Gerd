@@ -55,79 +55,154 @@ import CameraRoll from "@react-native-community/cameraroll";
 import {AnimatedCircularProgress} from "react-native-circular-progress";
 import database from "@react-native-firebase/database";
 import EventCard from "./../components/EventCard.js";
+import {SharedElement} from 'react-navigation-shared-element';
+import {useDarkMode} from 'react-native-dynamic'
+import Event from './Event.js';
+import File from './File.js';
 
-export class Message extends React.Component {
-  utils: null;
-  constructor(props) {
-    super(props);
+function CView(props) {
+  const isDarkMode = useDarkMode()
+  return <View style={[
+      props.style, {
+        shadowOpacity: isDarkMode
+          ? 0
+          : 0.6
+      }
+    ]}>{props.children}</View>;
+}
 
-    const utils = this.props.utils;
-    this.utils = utils;
+export class Message {
+  data = {};
+  club = {};
+  user = null;
+  listener = {};
+  author_info = {};
 
-    this.state = {
-      read: null,
-      utils: utils,
-      user: utils.getUser(),
-      uid: utils.getUserID(),
-      nav: utils.getNavigation(),
-      club_id: this.props.club_id,
-      mes_id: this.props.mes_id,
-      ref: database().ref("clubs/" + this.props.club_id + "/messages/" + this.props.mes_id),
-      data: {},
-      club: {}
-    };
+  constructor(data) {
+    this.data = data;
+    this.user = data.utils.getUser();
 
-    this._startListener();
+    // set ago text
+    this.data.ago = this.data.utils.getAgoText(this.data.send_at);
+    this.data.ago_sec = this.data.utils.getAgoSec(this.data.send_at);
+
+    if (this.data.ago_sec < 3600) 
+      this.startAgoCounter();
+    
+    this._loadClub();
   }
 
-  _startListener() {
-    const utils = this.state.utils;
-    database().ref("clubs/" + this.state.club_id + "/color").on("value", function(snap) {
+  getValue(path, cb = null) {
+    var obj = this.data;
+    if (obj) {
+      path_arr = path.split("/");
+      if (path_arr) {
+        for (i = 0; i < path_arr.length - 1; i++) 
+          obj = obj[path_arr[i]];
+        
+        if (obj && path_arr && path_arr[i]) 
+          var value = obj[path_arr[i]];
+        
+        if (value) 
+          return value;
+        if (cb) 
+          this.getDatabaseValue(path, cb);
+        }
+      }
+  }
+
+  setValue(value, path, store = false) {
+    path_arr = path.split("/");
+
+    if (path_arr) {
+      var obj = this.data;
+      if (obj) {
+        for (i = 0; i < path_arr.length - 1; i++) 
+          obj = obj[path_arr[i]];
+        obj[path_arr[i]] = value;
+
+        if (store) {
+          database().ref("clubs/" + this.data.club_id + "/messages/" + this.data.id + '/' + path).set(value);
+        } else 
+          this._triggerCallbacks(path, value);
+        }
+      }
+  }
+
+  hasValue(path, cb) {
+    if (!cb) 
+      return this.getValue(path) !== null && this.getValue(path) !== "";
+    else {
+      this.getValue(path, cb);
+    }
+  }
+
+  getDatabaseValue(path, cb) {
+    database().ref("clubs/" + this.data.club_id + "/messages/" + this.data.id + '/' + path).once("value", function(snap) {
+      this.setValue(snap.val(), path);
+      cb(snap.val());
+    }.bind(this));
+  }
+
+  startListener(path, cb) {
+    if (!this.listener[path]) {
+      this.listener[path] = {
+        callbacks: [cb]
+      };
+      this.setValue(this.getValue(path), path)
+    } else {
+      this.listener[path].callbacks.push(cb);
+    }
+  }
+
+  setReadyListener(cb) {
+    this.readyListener = cb;
+  }
+
+  _triggerCallbacks(path, value = null) {
+    if (this.listener[path]) {
+      if (this.listener[path].callbacks) {
+        this.listener[path].callbacks.forEach((cb, i) => {
+          cb(
+            value
+              ? value
+              : this.getValue(path)
+          );
+        });
+      }
+    }
+  }
+
+  _isReady() {
+    return this.data.headline && this.data.short_text && this.club.color && this.club.logo && this.club.name;
+  }
+
+  _loadClub() {
+    this.club = {}
+    database().ref("clubs/" + this.data.club_id + "/color").on("value", function(snap) {
       database().ref("colors/" + snap.val()).on("value", function(snap) {
         var color = snap.val();
-        this.state.club.color = "#" + color.hex;
-        this.state.club.text_color = "#" + color.font_hex;
-        this.forceUpdate();
-      }.bind(this));
-
-      this.forceUpdate();
+        this.club.color = "#" + color.hex;
+        this.club.text_color = "#" + color.font_hex;
+        if (this._isReady() && this.readyListener) 
+          this.readyListener();
+        }
+      .bind(this));
     }.bind(this));
 
-    database().ref("clubs/" + this.state.club_id + "/logo").on("value", function(snap) {
-      this.state.club.logo = snap.val();
-      this.forceUpdate();
-    }.bind(this));
+    database().ref("clubs/" + this.data.club_id + "/logo").on("value", function(snap) {
+      this.club.logo = snap.val();
+      if (this._isReady() && this.readyListener) 
+        this.readyListener();
+      }
+    .bind(this));
 
-    database().ref("clubs/" + this.state.club_id + "/name").on("value", function(snap) {
-      this.state.club.name = snap.val();
-      this.forceUpdate();
-    }.bind(this));
-
-    database().ref("users/" + this.state.uid + "/messages/" + this.state.mes_id + "/read").once("value", function(snap) {
-      this.state.read = snap.val() === true;
-      this.forceUpdate();
-    }.bind(this));
-
-    this.refresh();
-  }
-
-  _stopListener() {
-    this.state.ref.off();
-  }
-
-  _onDataChange(message, cb) {
-    const utils = this.state.utils;
-    message.id = this.state.mes_id;
-
-    message.ago = utils.getAgoText(message.send_at);
-    message.ago_seconds = utils.getAgoSec(message.send_at);
-
-    message.read = this.state.read;
-
-    this.state.data = message;
-    if (cb) 
-      cb();
-    this.forceUpdate();
+    database().ref("clubs/" + this.data.club_id + "/name").on("value", function(snap) {
+      this.club.name = snap.val();
+      if (this._isReady() && this.readyListener) 
+        this.readyListener();
+      }
+    .bind(this));
   }
 
   delete(cb) {
@@ -137,275 +212,344 @@ export class Message extends React.Component {
       if (cb) 
         cb(btn_id == 0);
       if (btn_id == 0) {
-        this.state.ref.child("visible").set(false);
+        this.setValue(false, "visible", true)
       }
     }.bind(this), true, false);
   }
 
-  set(values) {
-    Object.keys(values).map(key => {
-      this.state.ref.child(key).set(values[key]);
-    });
+  getID() {
+    return this.data.id;
+  }
+
+  getClubID() {
+    return this.data.club_id;
+  }
+
+  getUID() {
+    return this.data.uid;
+  }
+
+  getSendAt() {
+    return this.data.send_at;
   }
 
   setHeadline(value) {
-    this.state.ref.child("headline").set(value);
+    setValue(value, "headline", true);
   }
 
   setLongText(value) {
-    this.state.ref.child("long_text").set(value);
+    setValue(value, "long_text", true);
   }
 
   setShortText(value) {
-    this.state.ref.child("short_text").set(value);
+    setValue(value, "short_text", true);
   }
 
-  setFileName(pos, name) {
-    this.state.ref.child("files/" + pos + "/name").set(name);
-  }
-
-  _getDifference(o1, o2) {
-    var diff = {};
-    var tmp = null;
-    if (JSON.stringify(o1) === JSON.stringify(o2)) 
-      return;
-    
-    for (var k in o1) {
-      if (Array.isArray(o1[k]) && Array.isArray(o2[k])) {
-        tmp = o1[k].reduce(function(p, c, i) {
-          var _t = this._getDifference(c, o2[k][i]);
-          if (_t) 
-            p.push(_t);
-          return p;
-        }, []);
-        if (Object.keys(tmp).length > 0) 
-          diff[k] = tmp;
-        }
-      else if (typeof o1[k] === "object" && typeof o2[k] === "object") {
-        tmp = this._getDifference(o1[k], o2[k]);
-        if (tmp && Object.keys(tmp) > 0) 
-          diff[k] = tmp;
-        }
-      else if (o1[k] !== o2[k]) {
-        diff[k] = o2[k];
-      }
+  startAgoCounter(delay = 1000) {
+    if (this.data.ago_sec < 3600) {
+      setTimeout(function() {
+        this.data.ago_sec = this.data.ago_sec + delay / 1000;
+        if (this.data.ago_sec > 60) 
+          delay = 60000;
+        this.data.ago = this.data.utils.getAgoText(this.data.send_at);
+        if (this.renderListerner) 
+          this.renderListerner(this);
+        this.startAgoCounter(delay);
+      }.bind(this), delay)
     }
-    return diff;
   }
 
-  refresh(cb) {
-    this.state.ref.once("value", function(snap) {
-      this._onDataChange(snap.val(), cb);
-    }.bind(this));
+  setRenderListerner(cb) {
+    this.renderListerner = cb;
   }
 
-  render() {
-    const club = this.state.club;
-    const mes = this.state.data;
+  getAgoText() {
+    return this.data.ago;
+  }
+
+  getAuthor() {
+    return this.getValue('author')
+  }
+
+  getAuthorInfo(cb) {
+    if (this.author_info.name) 
+      return cb(this.author_info);
+    else {
+      database().ref('users/' + this.getAuthor() + '/name').once('value', (function(snap) {
+        this.author_info.name = snap.val();
+        database().ref('users/' + this.getAuthor() + '/img').once('value', (function(snap) {
+          this.author_info.img = snap.val();
+          cb(this.author_info);
+        }).bind(this));
+      }).bind(this));
+    }
+  }
+
+  showAuthor() {
+    return this.getValue('show_author') === true;
+  }
+
+  isOwnMessage() {
+    return this.getAuthor() == this.getUID();
+  }
+
+  getLongText() {
+    return this.getValue('long_text')
+  }
+
+  getHeadline() {
+    return this.getValue('headline');
+  }
+
+  getImage() {
+    return this.getValue('img');
+  }
+
+  hasEvents() {
+    var has_events = false;
+    if (this.getValue('events')) {
+      Object.keys(this.getValue('events')).map(event_id => {
+        if (this.getValue('events/' + event_id)) 
+          has_events = true;
+        }
+      );
+    }
+    return has_events;
+  }
+
+  getEvents() {
+    var events = [];
+    if (this.getValue('events')) {
+      Object.keys(this.getValue('events')).map(event_id => {
+        if (this.getValue('events/' + event_id)) {
+          if (!this.getValue('event_objects')) 
+            this.setValue({}, 'event_objects')
+          if (!this.getValue('event_objects/' + event_id)) {
+            var event = new Event(event_id, this.getClubID(), this.getUID());
+            this.setValue(event, 'event_objects/' + event_id);
+          }
+          events.push(this.getValue('event_objects/' + event_id))
+        }
+      });
+    }
+    return events;
+  }
+
+  hasFiles() {
+    var has_files = false;
+    if (this.getValue('files')) {
+      Object.keys(this.getValue('files')).map(file_id => {
+        if (this.getValue('files/' + file_id)) 
+          has_files = true;
+        }
+      );
+    }
+    return has_files;
+  }
+
+  getFiles() {
+    var files = [];
+    if (this.getValue('files')) {
+      Object.keys(this.getValue('files')).map(file_id => {
+        if (this.getValue('files/' + file_id)) {
+          if (!this.getValue('file_objects')) 
+            this.setValue({}, 'file_objects')
+          if (!this.getValue('file_objects/' + file_id)) {
+            var file = new File(file_id, this.getClubID(), this.user);
+            this.setValue(file, 'file_objects/' + file_id);
+          }
+          files.push(this.getValue('file_objects/' + file_id))
+        }
+      });
+    }
+    return files;
+  }
+
+  getRender() {
+    const mes = this.data;
+    const club = this.club;
     const s_width = Dimensions.get("window").width;
     var s = require("./../app/style.js");
-    this.props.onVisibilityChange(this.state.mes_id, false);
-    if (this.state.read != null && mes.visible !== false) {
-      mes.section = 2;
-      if (!this.state.read) 
-        mes.section = 0;
-      else if (mes.ago_seconds / 60 / 60 < 24) 
-        mes.section = 1;
-      
-      this.props.onVisibilityChange(this.state.mes_id, this.props.showIfSectionIs == mes.section);
-      if (this.props.showIfSectionIs == mes.section) {
-        if (mes) {
-          if (mes.headline && mes.short_text && club.color && club.logo && club.name) {
+    if (mes) {
+      if (mes.headline && mes.short_text && club.color && club.logo && club.name) {
 
-            //groupCards
-            var groupCards = [];
-            if (this.state.user.getOption('show_groups')) {
-              groupCards = Object.keys(mes.groups).map(key => {
-                return <GroupCard key={key} club_id={this.state.club_id} group_id={key}/>
-              });
-            }
-
-            return (
-              <TouchableOpacity
-                style={{
-                  width: s_width * 0.875,
-                  height: "auto",
-                  backgroundColor: club.color,
-                  alignSelf: "flex-start",
-                  marginTop: 40,
-                  marginLeft: 23,
-                  marginRight: 23,
-
-                  borderRadius: 10,
-
-                  shadowColor: club.color,
-                  shadowOffset: {
-                    width: 0,
-                    height: 0
-                  },
-                  shadowOpacity: 0.5,
-                  shadowRadius: 14.0
-                }}
-                onPress={() => {
-                  this.state.nav.navigate("MessageScreen", {
-                    club: club,
-                    mes: mes,
-                    mesObj: this,
-                    utils: this.state.utils
-                  });
-                }}>
-                <View
-                  style={{
-                    marginTop: 20,
-                    marginLeft: 15,
-                    display: "flex",
-                    flexDirection: "row"
-                  }}>
-                  <FontAwesomeIcon
-                    style={{
-                      marginTop: -3,
-                      marginLeft: 270,
-                      position: "absolute",
-                      marginBottom: 7
-                    }}
-                    size={25}
-                    color={club.text_color}
-                    icon={faChevronCircleRight}/>
-                  <Text
-                    style={{
-                      marginRight: 42,
-                      alignSelf: "flex-start",
-                      fontFamily: "Poppins-Bold",
-                      fontSize: 30,
-                      color: club.text_color,
-                      lineHeight: 33
-                    }}>
-                    {mes.headline}
-                  </Text>
-                </View>
-                <View style={{
-                    marginTop: 5,
-                    marginLeft: 15,
-                    marginRight: 35
-                  }}>
-                  {
-                    false
-                      ? <AutoHeightImage
-                          style={{
-                            borderRadius: 10,
-                            marginBottom: 10,
-
-                            shadowColor: "#000000",
-                            shadowOffset: {
-                              width: 0,
-                              height: 0
-                            },
-                            shadowOpacity: 1,
-                            shadowRadius: 30.0
-                          }}
-                          width={s_width - 80}
-                          source={{
-                            uri: mes.img
-                          }}/>
-                      : void 0
-                  }
-
-                  <Text
-                    style={{
-                      textAlign: "justify",
-                      fontSize: 20,
-                      fontFamily: "Poppins-Regular",
-                      color: club.text_color
-                    }}>
-                    {mes.short_text}
-                  </Text>
-                </View>
-
-                {
-                  groupCards.length > 0
-                    ? <View
-                        style={{
-                          marginRight: 20,
-                          marginLeft: 15,
-                          marginTop: 10,
-                          marginBottom: 10,
-                          flexWrap: 'wrap',
-                          alignItems: 'flex-start',
-                          flexDirection: 'row'
-                        }}>
-                        {groupCards}
-                      </View>
-                    : void 0
-                }
-
-                <View
-                  style={{
-                    marginTop: 20,
-                    marginBottom: 20,
-                    marginLeft: 15,
-                    display: "flex",
-                    flexDirection: "row"
-                  }}>
-                  <AutoHeightImage
-                    style={{
-                      borderRadius: 36
-                    }}
-                    width={36}
-                    source={{
-                      uri: club.logo
-                    }}/>
-                  <View style={{
-                      marginLeft: 15
-                    }}>
-                    <Text
-                      style={{
-                        marginTop: 4,
-                        fontSize: 13,
-                        color: club.text_color
-                      }}>
-                      {mes.ago}
-                    </Text>
-                    <Text
-                      style={{
-                        marginTop: -2,
-                        fontSize: 16,
-                        fontFamily: "Poppins-SemiBold",
-                        color: club.text_color
-                      }}>
-                      {club.name}
-                    </Text>
-                  </View>
-                </View>
-                {
-                  mes.events
-                    ? (
-                      <View
-                        style={{
-                          width: "100%",
-                          backgroundColor: "rgba(255, 255,255,0.25)",
-                          opacity: 0.9,
-                          borderBottomLeftRadius: 10,
-                          borderBottomRightRadius: 10
-                        }}>
-                        <EventCard key={1} pos={1} color={club.text_color} card_type="preview" editable={false} date={mes.events[0].date} location={mes.events[0].location}/>
-                      </View>
-                    )
-                    : (void 0)
-                }
-              </TouchableOpacity>
-            );
-          } else 
-            console.log("Missing value");
-          }
-        else 
-          console.log("mes is null");
+        //groupCards
+        var groupCards = [];
+        if (this.user.getOption('show_groups')) {
+          groupCards = Object.keys(mes.groups).map(key => {
+            return <GroupCard textColor={club.text_color} key={key} club_id={this.data.club_id} group_id={key}/>
+          });
         }
-      }
 
+        return (
+          <CView
+            style={{
+              width: s_width * 0.92,
+              height: "auto",
+              backgroundColor: club.color,
+              marginBottom: 40,
+              shadowColor: club.color,
+              shadowOffset: {
+                width: 0,
+                height: 0
+              },
+              shadowRadius: 20.0,
+              padding: 15,
+              paddingTop: 22,
+              borderRadius: 22
+            }}>
+            <TouchableOpacity
+              style={{
+                zIndex: 100,
+                borderRadius: 17,
+                backgroundColor: "rgba(0, 0,0,0)"
+              }}
+              onPress={() => {
+                this.data.utils.getNavigation().push('MessageScreen', {
+                  club: club,
+                  mes: this,
+                  utils: this.data.utils
+                })
+              }}>
+
+              <View style={{
+                  display: "flex",
+                  flexDirection: "row"
+                }}>
+                <FontAwesomeIcon
+                  style={{
+                    top: 0,
+                    right: 0,
+                    position: "absolute",
+                    marginBottom: 7,
+                    opacity: 0.93
+                  }}
+                  size={25}
+                  color={club.text_color}
+                  icon={faChevronCircleRight}/>
+
+                <View>
+                  <SharedElement id={"headline_" + this.getID()}>
+                    <Text
+                      style={{
+                        marginTop: -5,
+                        alignSelf: "flex-start",
+                        fontFamily: "Poppins-Bold",
+                        color: club.text_color,
+                        lineHeight: 40,
+                        fontSize: 31
+                      }}>
+                      {this.getHeadline()}
+                    </Text>
+                  </SharedElement>
+                </View>
+              </View>
+              <View style={{
+                  marginTop: 5
+                }}>
+                <Text
+                  style={{
+                    textAlign: "justify",
+                    fontSize: 20,
+                    fontFamily: "Poppins-Regular",
+                    color: club.text_color,
+                    opacity: 0.8
+                  }}>
+                  {mes.short_text}
+                </Text>
+              </View>
+
+              {
+                groupCards.length > 0
+                  ? <View
+                      style={{
+                        marginRight: 20,
+                        marginTop: 10,
+                        marginBottom: 10,
+                        flexWrap: 'wrap',
+                        alignItems: 'flex-start',
+                        flexDirection: 'row'
+                      }}>
+                      {groupCards}
+                    </View>
+                  : void 0
+              }
+
+              <View style={{
+                  marginTop: 20,
+                  display: "flex",
+                  flexDirection: "row"
+                }}>
+                <AutoHeightImage
+                  style={{
+                    borderRadius: 36
+                  }}
+                  width={40}
+                  source={{
+                    uri: club.logo
+                  }}/>
+                <View style={{
+                    marginLeft: 15
+                  }}>
+                  <Text
+                    style={{
+                      marginTop: 3,
+                      fontSize: 16,
+                      fontFamily: "Poppins-SemiBold",
+                      color: club.text_color,
+
+                      opacity: 0.8
+                    }}>
+                    {club.name}
+                  </Text>
+                  <Text
+                    style={{
+                      marginTop: -2,
+                      fontSize: 13,
+                      color: club.text_color,
+                      opacity: 0.7
+                    }}>
+                    {mes.ago}
+                  </Text>
+                </View>
+              </View>
+              {
+                false
+                  ? (
+                    <View
+                      style={{
+                        width: "100%",
+                        backgroundColor: "rgba(255, 255,255,0.25)",
+                        opacity: 0.85,
+                        borderBottomLeftRadius: 10,
+                        borderBottomRightRadius: 10
+                      }}>
+                      <EventCard key={1} pos={1} color={club.text_color} card_type="preview" editable={false} date={mes.events[0].date} location={mes.events[0].location}/>
+                    </View>
+                  )
+                  : (void 0)
+              }
+            </TouchableOpacity>
+          </CView>
+        );
+      } else {
+        mes.headline && mes.short_text && club.color && club.logo && club.name
+        if (!mes.headline) 
+          console.log('headline is null')
+        if (!mes.short_text) 
+          console.log('short_text is null')
+        if (!club.color) 
+          console.log('club.color is null')
+        if (!club.logo) 
+          console.log('club.logo is null')
+        if (!club.name) 
+          console.log('club.name is null')
+      }
+    } else 
+      console.log('ERROR: MES IS NULL')
     return null;
   }
 }
-
 class GroupCard extends React.Component {
   name = "";
   name_fetched = false;
@@ -432,10 +576,11 @@ class GroupCard extends React.Component {
             marginRight: 15,
             backgroundColor: "rgba(255, 255,255,0.25)"
           }}>
-          <Text style={{
-              opacity: 0.7,
+          <Text
+            style={{
+              opacity: 0.8,
               fontFamily: 'Poppins-Bold',
-              color: "black",
+              color: this.props.textColor,
               fontSize: 17
             }}>{this.name}</Text>
         </View>

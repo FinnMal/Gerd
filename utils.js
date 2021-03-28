@@ -4,11 +4,13 @@ import auth from "@react-native-firebase/auth";
 import database from "@react-native-firebase/database";
 import storage from "@react-native-firebase/storage";
 import ImagePicker from "react-native-image-crop-picker";
+import User from './classes/User.js';
 
 var USER = null;
 var USER_ID = "0";
 var ACCOUNT_TYPE = "0";
 var NAVIGATION = null;
+var TOAST = null;
 this.state = {};
 
 auth().onAuthStateChanged(function(user) {
@@ -49,21 +51,20 @@ export function getNavigation() {
   return NAVIGATION;
 }
 
-export function startChat(user_id, cb) {
-  //TODO: check if a chat with this user already exists
-  var new_chat = {
-    user_id_1: USER_ID,
-    user_id_2: user_id
-  };
+export function setToast(pToast) {
+  TOAST = pToast
+}
 
-  var chatRef = database().ref("chats").push(new_chat);
-  database().ref("chats/" + chatRef.key + "/id").set(chatRef.key);
+export function getToast() {
+  return TOAST;
+}
 
-  database().ref("users/" + USER_ID + "/chats/" + chatRef.key + "/chat_id").set(chatRef.key);
-  database().ref("users/" + user_id + "/chats/" + chatRef.key + "/chat_id").set(chatRef.key);
-
-  if (cb) 
-    cb();
+export function showToast(text, icon = false, has_btn = false, cb) {
+  TOAST.setText(text);
+  TOAST.setButtonVisible(has_btn)
+  TOAST.setIcon(icon)
+  if (!TOAST.isVisible()) 
+    TOAST.show();
   }
 
 export async function setMessageRead(mes_id, read = true) {

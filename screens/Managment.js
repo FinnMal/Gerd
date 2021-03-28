@@ -23,6 +23,8 @@ import {withNavigation} from 'react-navigation';
 import ClubCard from './../components/ClubCard.js';
 import database from '@react-native-firebase/database';
 import HeaderScrollView from './../components/HeaderScrollView.js';
+import {Theme} from './../app/index.js';
+import Club from './../classes/Club.js';
 
 class ManagmentScreen extends React.Component {
   uid: null;
@@ -31,34 +33,24 @@ class ManagmentScreen extends React.Component {
     var utils = this.props.utilsObject;
     this.uid = utils.getUserID();
     this.state = {
-      clubsList: [],
+      clubs: {},
       moveTo: 'none'
     };
     this.margin = new Animated.Value(0);
 
     database().ref('users/' + this.uid + '/clubs').once('value', (function(snap) {
       var clubs = snap.val();
-
       var i = 0;
       Object.keys(clubs).map(key => {
-        var club = clubs[key];
-        if (club) {
-          if (club.role == 'admin') {
-            database().ref('clubs/' + club.club_id).once('value', (function(snap) {
-              var info = snap.val();
-              club.id = club.club_id;
-              club.name = info.name;
-              club.logo = info.logo;
-              club.members = info.members;
-              club.color = info.color;
-              club.selected = false;
-              club.groups = info.groups;
-              club.invite_codes = info.invite_codes;
-
-              this.state.clubsList[i] = club;
+        var club_info = clubs[key];
+        if (club_info) {
+          if (club_info.role == 'admin') {
+            var club = new Club(club_info.club_id);
+            club.setReadyListener(function(club) {
+              // club is ready and infos are loaded
+              this.state.clubs[club.getID()] = club;
               this.forceUpdate();
-              i++;
-            }).bind(this));
+            }.bind(this))
           }
         }
       });
@@ -83,15 +75,16 @@ class ManagmentScreen extends React.Component {
       outputRange: [0, 2000]
     });
 
-    const clubCards = Object.keys(this.state.clubsList).map(key => {
-      var club = this.state.clubsList[key];
+    const clubCards = Object.keys(this.state.clubs).map(club_id => {
+      var club = this.state.clubs[club_id];
       return (
         <ClubCard
-          key={key}
+          key={club_id}
           navigateable={true}
-          club_name={club.name}
-          club_members={club.members}
-          club_img={club.logo}
+          club_color={club.getColor()}
+          club_name={club.getName()}
+          club_members={club.getMembersCount()}
+          club_img={club.getImage()}
           color="#1e1e1e"
           onNavigate={() => this.props.navigation.navigate('ClubSettingsScreen', {
             club: club,
@@ -104,23 +97,19 @@ class ManagmentScreen extends React.Component {
       return (
         <HeaderScrollView
           headline="Verwaltung"
-          headlineFontSize={47}
+          headlineFontSize={46}
           backButton={false}
-          showHeadline={false}
-          actionButton={(
-            <TouchableOpacity style={{
-                marginLeft: 20
-              }} onPress={() => this._openAddClub()}>
-              <FontAwesomeIcon size={29} color="#F5F5F5" icon={faPlusCircle}/>
-            </TouchableOpacity>
-          )
-}>
-          <View style={{
-              flex: 1,
-              marginTop: 40
-            }}>
-            {clubCards}
-          </View>
+          showHeader={false}
+          actionButtonIcon={faPlusCircle}
+          actionButtonOnPress={() => this._openAddClub()}>
+          {clubCards}
+          {clubCards}
+          {clubCards}
+          {clubCards}
+          {clubCards}
+          {clubCards}
+          {clubCards}
+          {clubCards}
         </HeaderScrollView>
       );
     }

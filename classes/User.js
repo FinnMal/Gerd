@@ -19,94 +19,17 @@ import {faChevronCircleRight} from "@fortawesome/free-solid-svg-icons";
 import {withNavigation} from "react-navigation";
 import {useNavigation} from "@react-navigation/native";
 import database from "@react-native-firebase/database";
+import OneSignal from "react-native-onesignal";
+import DatabaseConnector from "./database/DatabaseConnector";
+import Chat from './Chat.js';
+import Club from './Club.js';
 
-export default class User {
+export default class User extends DatabaseConnector {
   uid = null;
-  data = {};
-  listener = {};
 
   constructor(uid) {
+    super('users', uid, ['name', 'account_type'])
     this.uid = uid;
-  }
-
-  getValue(path, cb = null) {
-    var obj = this.data;
-    if (obj) {
-      path_arr = path.split("/");
-      if (path_arr) {
-        for (i = 0; i < path_arr.length - 1; i++) 
-          obj = obj[path_arr[i]];
-        
-        if (obj && path_arr && path_arr[i]) 
-          var value = obj[path_arr[i]];
-        
-        if (value) 
-          return value;
-        if (cb) 
-          getDatabaseValue(path, cb);
-        }
-      }
-  }
-
-  setValue(value, path, store = false) {
-    console.log("SET_VALUE: " + path);
-    path_arr = path.split("/");
-
-    if (path_arr) {
-      var obj = this.data;
-      if (obj) {
-        for (i = 0; i < path_arr.length - 1; i++) 
-          obj = obj[path_arr[i]];
-        obj[path_arr[i]] = value;
-
-        if (store) {
-          database().ref("users/" + this.uid + "/" + path).set(value);
-        } else 
-          this._triggerCallbacks(path, value);
-        
-        console.log(this.data);
-      }
-    }
-  }
-
-  getDatabaseValue(path, cb) {
-    database().ref("users/" + this.uid + "/" + path).once("value", function(snap) {
-      this.setValue(snap.val(), path);
-      cb(snap.val());
-    }.bind(this));
-  }
-
-  startListener(path, cb) {
-    if (!this.listener[path]) {
-      this.listener[path] = {
-        callbacks: [cb]
-      };
-
-      this.listener[path].ref = database().ref("users/" + this.uid + "/" + path);
-      this.listener[path].ref.on("value", function(snap) {
-        this.setValue(snap.val(), path);
-      }.bind(this));
-    } else {
-      this.listener[path].callbacks.push(cb);
-    }
-  }
-
-  _stopListener(path) {
-    this.listener[path].off();
-  }
-
-  _triggerCallbacks(path, value = null) {
-    if (this.listener[path]) {
-      if (this.listener[path].callbacks) {
-        this.listener[path].callbacks.forEach((cb, i) => {
-          cb(
-            value
-              ? value
-              : this.getValue(path)
-          );
-        });
-      }
-    }
   }
 
   getUID() {
@@ -175,5 +98,139 @@ export default class User {
 
   setImage(url) {
     this.setValue(url, 'img', true);
+  }
+
+  isManager() {
+    return this.getValue('account_type') === 'manager'
+  }
+
+  hasEventSubscribed(club_id, event_id) {
+    if (!this.getValue('events')) 
+      this.setValue({}, 'events')
+    if (!this.getValue('events/' + club_id + "_" + event_id)) {
+      this.setValue({
+        notification_subscribed: true
+      }, 'events/' + club_id + "_" + event_id)
+      return true;
+    }
+    return this.getValue('events/' + club_id + "_" + event_id + '/notification_subscribed') === true
+  }
+
+  toggleEventNotification(club_id, event_id, cb = false) {
+    var has_notif = this.hasEventSubscribed(club_id, event_id);
+    this.setValue(!has_notif, 'events/' + club_id + "_" + event_id + '/notification_subscribed', true)
+
+    OneSignal.sendTag(
+      club_id + "_" + event_id + "_before",
+      !has_notif
+        ? "yes"
+        : "no"
+    );
+    OneSignal.sendTag(
+      club_id + "_" + event_id + "_start",
+      !has_notif
+        ? "yes"
+        : "no"
+    );
+
+    if (cb) 
+      cb(!has_notif);
+    }
+  
+  getChats(cb) {
+    database().ref("users/" + this.uid + "/chats").once("value", function(snap) {
+      var chats = [];
+      var chat_ids = snap.val();
+      var d = 0;
+      if (chat_ids) {
+        Object.keys(chat_ids).forEach((chat_id, i) => {
+          var chat = new Chat(chat_id, this.getUID());
+          chat.setReadyListener(function() {
+            chats.push(chat);
+            if (d == Object.keys(chat_ids).length - 1) 
+              cb(chats);
+            d++;
+          })
+        })
+      } else 
+        cb([null]);
+      }
+    .bind(this));
+  }
+
+  getClubsList(cb, startListener = false) {
+    if (!startListener) {
+      this.getValue('clubs', function(club_infos) {
+        this._clubInfosToObjects(club_infos, cb);
+      }.bind(this))
+    } else {
+      this.startListener('clubs', function(club_infos) {
+        this._clubInfosToObjects(club_infos, cb);
+      }.bind(this))
+    }
+  }
+
+  _clubInfosToObjects(club_infos, cb) {
+    var clubs_list = [];
+    if (club_infos) {
+      Object.keys(club_infos).forEach((key, i) => {
+        const club_info = club_infos[key];
+        if (club_info) {
+          var club = new Club(club_info.club_id, this);
+          clubs_list.push(club);
+          if (i == Object.keys(club_infos).length - 1) {
+            cb(clubs_list);
+          }
+        }
+      });
+    } else 
+      cb([null]);
+    }
+  
+  /*
+  Starts a new chat, from user to partner_uid
+  @param partner_uid ID of the chat partner
+  */
+  startChat(partner_uid, utils) {
+    var partner = new User(partner_uid)
+    partner.getValue('name', function(name) {
+      // check if any chat with parner exists
+      this.getChats(function(chats) {
+        var chat_found = false;
+        chats.forEach((chat, i) => {
+          //alert(chat.getPartnerUserId())
+          if (chat) {
+            if (chat.getPartnerUserId() == partner.getUID()) {
+              chat_found = true;
+              utils.getNavigation().navigate('ChatScreen', {
+                focused: true,
+                chat: chat,
+                utils: utils,
+                partner_name: name
+              });
+            }
+          }
+
+          if (i == chats.length - 1 && !chat_found) {
+            // create chat if nothing found
+            var new_chat = {
+              user_id_1: this.getUID(),
+              user_id_2: partner.getUID()
+            };
+
+            var chatRef = database().ref("chats").push(new_chat);
+            database().ref("chats/" + chatRef.key + "/id").set(chatRef.key);
+            database().ref("users/" + this.getUID() + "/chats/" + chatRef.key).set(true);
+            database().ref("users/" + partner.getUID() + "/chats/" + chatRef.key).set(true);
+            utils.getNavigation().navigate('ChatScreen', {
+              focused: true,
+              chat: new Chat(chatRef.key, this.getUID()),
+              utils: utils,
+              partner_name: name
+            });
+          }
+        });
+      }.bind(this));
+    }.bind(this))
   }
 }

@@ -8,17 +8,13 @@ import {
   StyleSheet,
   ActivityIndicator,
   Modal,
-  Platform,
-  Switch
+  Platform
 } from "react-native";
 import AutoHeightImage from "react-native-auto-height-image";
 import FileViewer from "react-native-file-viewer";
 import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
-import {
-  faPlusCircle,
-  faChevronCircleLeft,
-  faChevronRight
-} from "@fortawesome/free-solid-svg-icons";
+import {faPlusCircle, faChevronCircleLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
+import {Theme} from './../app/index.js';
 
 import database from "@react-native-firebase/database";
 
@@ -26,89 +22,97 @@ export default class Setting extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-      isEnabled: false
-    };
   }
 
   _onPress() {
-    if (this.props.setting == "logo") {
+    if (this.props.onPress) 
+      this.props.onPress();
+    else if (this.props.setting == "logo") {
       this.props.imagePicker();
     } else if (this.props.setting != "switch") {
-      this.props.utils.getNavigation().navigate("SettingScreen", {
-        type: this.props.setting,
-        headline: this.props.label,
-        club: this.props.club,
-        utils: this.props.utils,
-        callback: this.props.callback,
-        childs: this.props.children
-      });
+      if (this.props.utils) {
+        this.props.utils.getNavigation().navigate("SettingScreen", {
+          headline: this.props.label,
+          club: this.props.club,
+          utils: this.props.utils,
+          childs: this.props.children
+        });
+      }
     }
   }
 
   render() {
     return (
-      <TouchableOpacity
-        style={{
-          marginTop: 7.5,
-          marginBottom: 9,
-          flexWrap: "wrap",
-          alignItems: "flex-start",
-          flexDirection: "row",
-          alignItems: "center"
-        }}
-        onPress={() => this._onPress()}
-      >
+      <Theme.View style={{
+          marginTop: .7
+        }}>
         <TouchableOpacity
           style={{
-            padding: 8,
-            backgroundColor: this.props.color ? this.props.color : "#16FFD7",
-            borderRadius: 11
+            padding: 3,
+            paddingLeft: 20,
+            paddingRight: 20,
+            marginTop: 7.5,
+            marginBottom: 9,
+            flexWrap: "wrap",
+            alignItems: "flex-start",
+            flexDirection: "row",
+            alignItems: "center"
           }}
-          onPress={() => this._onPress()}
-        >
-          <FontAwesomeIcon
-            size={20}
-            color={!this.props.iconColor ? "#1e1e1e" : "white"}
-            icon={this.props.icon}
-          />
-        </TouchableOpacity>
-        <Text
-          style={{
-            width: this.props.type == "switch" ? 238 : 240,
-            marginLeft: 20,
-            fontFamily: "Poppins-SemiBold",
-            fontSize: 20,
-            color: "white"
-          }}
-        >
-          {this.props.label}
-        </Text>
-        {this.props.type == null ? (
-          <TouchableOpacity
-            style={{padding: 8, opacity: 0.77}}
-            onPress={() => this._onPress()}
-          >
-            <FontAwesomeIcon size={20} color="white" icon={faChevronRight} />
-          </TouchableOpacity>
-        ) : (
-          void 0
-        )}
-        {this.props.type == "switch" ? (
-          <Switch
+          onPress={() => this._onPress()}>
+          <Theme.TouchableOpacity color={"primary"} style={{
+              padding: 8,
+              borderRadius: 11
+            }} onPress={() => this._onPress()}>
+            <Theme.IconOnColor
+              backgroundColor={"primary"}
+              size={19}
+              color={!this.props.iconColor
+                ? "#1e1e1e"
+                : "white"}
+              icon={this.props.isEnabled || this.props.isEnabled == null
+                ? this.props.icon
+                : this.props.iconInactive}/>
+          </Theme.TouchableOpacity>
+          <Theme.Text
             style={{
-              transform: [{scale: 0.8}]
-            }}
-            trackColor={{false: "#575757", true: "#16FFD7"}}
-            thumbColor={this.props.isEnabled ? "#1e1e1e" : "#f4f3f4"}
-            ios_backgroundColor="#3e3e3e"
-            onValueChange={() => this.props.onSwitch()}
-            value={this.props.isEnabled}
-          />
-        ) : (
-          void 0
-        )}
-      </TouchableOpacity>
+              marginLeft: 20,
+              opacity: 0.85,
+              fontFamily: "Poppins-SemiBold",
+              fontSize: 19
+            }}>
+            {this.props.label}
+          </Theme.Text>
+          {
+            this.props.type == null
+              ? (
+                <TouchableOpacity
+                  style={{
+                    alignSelf: 'flex-end',
+                    marginLeft: 'auto',
+                    padding: 8,
+                    opacity: 0.77
+                  }}
+                  onPress={() => this._onPress()}>
+                  <Theme.Icon size={16} color="white" icon={faChevronRight}/>
+                </TouchableOpacity>
+              )
+              : (void 0)
+          }
+          {
+            this.props.type == "switch"
+              ? (
+                <Theme.Switch
+                  style={{
+                    alignSelf: 'flex-end',
+                    marginLeft: 'auto'
+                  }}
+                  onValueChange={() => this.props.onSwitch()}
+                  value={this.props.isEnabled}/>
+              )
+              : (void 0)
+          }
+        </TouchableOpacity>
+      </Theme.View>
     );
   }
 }

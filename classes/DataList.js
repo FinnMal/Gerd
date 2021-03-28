@@ -15,9 +15,9 @@ import {Message} from './Message.js';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faInbox, faTimesCircle} from '@fortawesome/free-solid-svg-icons';
 
-export class MessagesList {
-  limit = 5;
-  messages = {};
+export class DataList {
+  limit = 20;
+  list = {};
   utils = null;
   refs = [];
   clubs = {};
@@ -47,8 +47,10 @@ export class MessagesList {
 
   _setLimit(increase) {
     var old_limit = this.limit;
-    this.limit = old_limit + increase;
-    this._updateMessageList();
+    if (this.limit == Object.keys(this.messages).length) {
+      this.limit = old_limit + increase;
+      this._updateMessageList();
+    }
   }
 
   _updateMessageList() {
@@ -61,8 +63,6 @@ export class MessagesList {
     }
     database().ref('users/' + this.uid + '/clubs').once("value", function(snap) {
       this.clubs = snap.val();
-
-      var total_clubs = this.clubs.length;
       Object.keys(this.clubs).map(key => {
         const club = this.clubs[key];
         if (club) {

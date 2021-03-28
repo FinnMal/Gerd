@@ -53,7 +53,7 @@ import {ClubCard, ModalCard, EventCard, FileCard} from './../app/components.js';
 import database from '@react-native-firebase/database';
 import {SafeAreaView} from 'react-navigation'; //added this import
 import DocumentPicker from 'react-native-document-picker';
-import ImagePicker from 'react-native-image-picker';
+import ImagePicker from "react-native-image-crop-picker";
 import CheckBox from '@react-native-community/checkbox';
 
 import storage from '@react-native-firebase/storage';
@@ -96,7 +96,6 @@ export default class NewMessageScreen extends React.Component {
 
     database().ref('users/' + this.state.uid + '/clubs').once('value', (function(snap) {
       var clubs = snap.val();
-      console.log(clubs);
       var i = 0;
       Object.keys(clubs).map(key => {
         var club = clubs[key];
@@ -128,8 +127,6 @@ export default class NewMessageScreen extends React.Component {
         type: [DocumentPicker.types.allFiles]
       });
       for (const res of results) {
-        console.log(res.uri, res.type, // mime type
-            res.name, res.size);
 
         if (!res.type) 
           alert('Fehler: Unbekanntes Dateiformat');
@@ -157,37 +154,32 @@ export default class NewMessageScreen extends React.Component {
       }
     };
 
-    /**
- * The first arg is the options object for customization (it can also be null or omitted for default options),
- * The second arg is the callback which sends object: response (more info in the API Reference)
- */
-    ImagePicker.showImagePicker(options, response => {
-      console.log('Response = ', response);
-
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.error) {
-        console.log('ImagePicker Error: ', response.error);
-      } else if (response.customButton) {
-        console.log('User tapped custom button: ', response.customButton);
-      } else {
-        const source = {
-          uri: response.uri
-        };
-        response.name = 'image_' + new Date().getTime();
-        this.setPicture(response);
-      }
+    ImagePicker.openPicker({
+      cropperToolbarTitle: "Bild zuschneiden",
+      width: 1800,
+      height: 1000,
+      cropping: true,
+      avoidEmptySpaceAroundImage: true,
+      mediaType: "photo",
+      cropperChooseText: "Fertig",
+      cropperCancelText: "Abbrechen"
+    }).then(image => {
+      var response = {
+        path: image.path,
+        name: "image_" + new Date().getTime() + ".jpg",
+        data: `data:image/jpg;base64,${image.data}`
+      };
+      this.setPicture(response);
     });
   }
 
   async setPicture(res) {
     var file = {
       name: res.name,
-      path: res.uri,
-      type: res.type,
+      path: res.path,
       width: res.width,
       height: res.height,
-      data: 'data:' + res.type + ';base64,' + res.data,
+      data: res.data,
       uploading: true,
       uploaded_percentage: 0,
       storage_path: 'userfiles/' + this.state.uid + '/' + res.name
@@ -239,7 +231,6 @@ export default class NewMessageScreen extends React.Component {
 
     task.on('state_changed', taskSnapshot => {
       if (this.state.files[pos]) {
-        console.log(taskSnapshot);
         if (taskSnapshot.metadata.name) {
           if (this.state.files[pos].storage_path == taskSnapshot.metadata.name) {
             this.state.files[pos].uploaded_percentage = taskSnapshot.bytesTransferred / taskSnapshot.totalBytes * 100;
@@ -495,6 +486,7 @@ export default class NewMessageScreen extends React.Component {
         });
 
         var mes = {
+          show_author: true,
           author: this.state.uid,
           headline: this.state.headlineInputValue,
           short_text: this.state.shortTextInputValue,
@@ -901,7 +893,6 @@ export default class NewMessageScreen extends React.Component {
 
       if (modal_club_key && modal_group_key) {
         linkingGroupsList = Object.keys(club.groups).map(g_key => {
-          console.log('group_key: ' + g_key);
           if (g_key != modal_group_key) {
             var group = club.groups[g_key];
 

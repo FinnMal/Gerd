@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Component} from 'react';
 import AutoHeightImage from 'react-native-auto-height-image';
 import {
   Alert,
@@ -17,7 +17,8 @@ import {
   Dimensions,
   Keyboard,
   KeyboardAvoidingView,
-  Vibration
+  Vibration,
+  FlatList
 } from 'react-native';
 
 import {Headlines} from './../app/constants.js';
@@ -26,303 +27,179 @@ import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import database from '@react-native-firebase/database';
 import {faChevronCircleLeft, faChevronLeft, faChevronRight, faPaperPlane} from '@fortawesome/free-solid-svg-icons';
 import HeaderScrollView from './../components/HeaderScrollView.js';
-import ReactNativeHapticFeedback from "react-native-haptic-feedback";
+import ReactNativeHapticFeedback from "react-native-haptic-feedback"
+import Chat from './../classes/Chat.js';
+import InputBox from './../components/InputBox.js';
+import {Theme} from './../app/index.js';
 
 class ChatScreen extends React.Component {
+  typingInverval = null;
+  messageCards = null;
+
   constructor(props) {
     super(props);
     const utils = this.props.navigation.getParam('utils', null);
     const chat = this.props.navigation.getParam('chat', null);
+    const focused = this.props.navigation.getParam('focused', null);
 
     this.state = {
-      chat: '',
+      chat: chat,
       uid: utils.getUserID(),
-      chat_partner: this.props.navigation.getParam('chat_partner', null),
-      cur_message: ''
+      partner_name: chat.getPartnerUser().getName(),
+      cur_message: '',
+      last_typed: -1,
+      typing: false,
+      messages: [],
+      keyboardVisibe: false,
+      focused: focused === true,
+      headerScrollView: null,
+      flatListData: [],
+      sending: false
     };
 
-    this.lastViewHeight = new Animated.Value(630);
-    database().ref('chats/' + chat.id).on('value', (function(snapshot) {
-      this.state.chat = snapshot.val();
-      this.state.chat.user_name = chat.user_name;
+    // TODO: terminate typingInverval if screen gets closed
+    this.typingInverval = setInterval(function() {
+      var now = Date.now();
+      var last = this.state.last_typed;
+      if (now - last < 1000) {
+        this.state.chat.setTyping(true);
+      } else 
+        this.state.chat.setTyping(false);
+      }
+    .bind(this), 3000)
 
-      Object.keys(this.state.chat.messages).map(mes_key => {
-        var message = this.state.chat.messages[mes_key];
-        message.id = mes_key;
-        if (!message.read && message.receiver == this.state.uid) 
-          database().ref('chats/' + chat.id + '/messages/' + mes_key + '/read').set(true);
+    chat.startMessagesListener(function(messages, addToStart = true) {
+      //alert("TEXT: " + messages[0].getText())
+
+      messages.forEach((mes, i) => {
+        if (addToStart) 
+          this.state.flatListData.push(mes);
+        else 
+          this.state.flatListData.unshift(mes);
         }
       );
+      this.forceUpdate();
 
-      var list = Object.values(this.state.chat.messages);
-      list.sort(function(a, b) {
-        return parseInt(a.send_at) - parseInt(b.send_at);
-      });
+    }.bind(this), function(mes) {
+      this.state.headerScrollView.removeItemFromFlatList(mes)
+    }.bind(this));
 
-      this.state.chat.messages = list;
-      if (this.state.chat.messages) 
-        this.forceUpdate();
-      }
-    ).bind(this));
   }
+
+  _getChatInfos() {}
+
+  componentDidMount() {}
 
   _onChangeText(value) {
     this.state.cur_message = value;
+    this.state.last_typed = Date.now();
     this.forceUpdate();
-  }
-
-  _sendMessage() {
-    const chat = this.state.chat;
-
-    var mes = {
-      text: this.state.cur_message,
-      send_at: new Date().getTime() / 1000,
-      read: false,
-      sender: chat.user_id_1 != this.state.uid
-        ? chat.user_id_2
-        : chat.user_id_1,
-      receiver: chat.user_id_1 != this.state.uid
-        ? chat.user_id_1
-        : chat.user_id_2
-    };
-
-    this.state.cur_message = '';
-    this.forceUpdate();
-
-    database().ref('chats/' + chat.id + '/messages').push(mes);
-  }
-
-  componentDidMount() {
-    // this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', this._keyboardDidShow.bind(this)); this.keyboardDidHideListener =
-    // Keyboard.addListener('keyboardDidHide', this._keyboardDidHide.bind(this));
-  }
-
-  componentWillUnmount() {
-    //this.keyboardDidShowListener.remove(); this.keyboardDidHideListener.remove();
   }
 
   _keyboardDidShow() {
-    this.lastViewHeight.setValue(630);
-    Animated.timing(this.lastViewHeight, {
-      useNativeDriver: false,
-      toValue: 320,
-      duration: 150,
-      easing: Easing.ease
-    }).start(() => {});
+    this.state.headerScrollView.keyboardDidShow()
   }
 
   _keyboardDidHide() {
-    this.lastViewHeight.setValue(320);
-    Animated.timing(this.lastViewHeight, {
-      useNativeDriver: false,
-      toValue: 630,
-      duration: 150,
-      easing: Easing.ease
-    }).start(() => {});
+    this.state.headerScrollView.keyboardDidHide()
   }
 
   render() {
     var s = require('./../app/style.js');
     const chat = this.state.chat;
+    const utils = this.props.navigation.getParam('utils', null)
 
-    var messageCards = <Text>No messages</Text>;
-    if (chat.messages) {
-      messageCards = Object.keys(chat.messages).map(key => {
-        var mes = chat.messages[key];
-        mes.chat_id = this.state.chat.id;
-        return <MessageCard uid={this.state.uid} message={mes} key={key}/>;
-      });
+    const s_height = Dimensions.get("window").height;
+    const s_width = Dimensions.get("window").width;
+    var partner_user_name = "";
+    var partner = chat.getPartnerUser();
+    if (partner) 
+      partner_user_name = partner.getName();
+    
+    if (this.state.focused) {
+      setTimeout(function() {
+        if (this.textInput) 
+          this.textInput.focus();
+        }
+      .bind(this), 300)
     }
-
-    const last_view_height = this.lastViewHeight.interpolate({
-      inputRange: [
-        0, 70
-      ],
-      outputRange: [0, 70]
-    });
-    /*
-    <View style={{
-        paddingLeft: 20,
-        paddingRight: 20,
-        marginTop: 45
-      }}>
-      <TouchableOpacity
-        style={{
-          zIndex: 20,
-          marginTop: 4,
-          marginLeft: 20,
-          position: 'absolute'
-        }}
-        onPress={() => this.props.navigation.navigate('ScreenHandler')}>
-        <FontAwesomeIcon style={{
-            zIndex: 0
-          }} size={29} color="#F5F5F5" icon={faChevronCircleLeft}/>
-      </TouchableOpacity>
-      <View style={{
-          width: '100%',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}>
-        <Text style={{
-            fontFamily: 'Poppins-Bold',
-            fontSize: 25,
-            color: 'white'
-          }}>
-          {this.state.chat_partner.getName()}
-        </Text>
-      </View>
-    <Animated.ScrollView
-      showsVerticalScrollIndicator={false}
-      ref={ref => {
-        this.scrollView = ref;
-        if (this.scrollView)
-          this.scrollView.scrollToEnd({animated: true});
-        }}
-      onContentSizeChange={() => {
-        if (this.scrollView)
-          this.scrollView.scrollToEnd({animated: true});
-        }}
-      style={{
-        marginTop: 10,
-        height: last_view_height
-      }}>
-      {messageCards}
-    </Animated.ScrollView>*/
-
     return (
-      <View style={{
-          flex: 1,
-          backgroundColor: '#121212'
+      <Theme.BackgroundView style={{
+          flex: 1
         }}>
-
-        <HeaderScrollView headline={this.state.chat_partner.getName()} marginTop={50} height={90} headlineFontSize={47} backButton={true} showHeadline={true}>
-          <View style={{
-              marginLeft: -20
-            }}>
-            {messageCards}
-          </View>
-        </HeaderScrollView>
-        <View style={{
-            marginLeft: 20,
-            marginRight: 20,
+        <HeaderScrollView
+          onRef={view => {
+            if (view) {
+              this.state.headerScrollView = view;
+              chat.setTypingListener(function(typing) {
+                if (typing) 
+                  view.showSubheadline()
+                else 
+                  view.hideSubheadline()
+              }.bind(this))
+            }
+          }}
+          keyboardVisibleHeight={51}
+          scrollToEnd={true}
+          headline={partner_user_name}
+          subheadline={"schreibt ..."}
+          height={91}
+          headlineFontSize={47}
+          backButton={true}
+          hasFlatList={true}
+          flatListData={this.state.flatListData}
+          onEndReached={() => {
+            chat.setLimit(10)
+          }}/>
+        <View
+          style={{
+            flexWrap: 'wrap',
+            flexDirection: 'row',
+            alignItems: 'center',
             justifyContent: 'center',
-            alignItems: 'center'
+            width: s_width
           }}>
-          <View style={{
-              borderRadius: 40,
-              backgroundColor: '#1e1e1e',
-              width: '100%',
-              padding: 15
-            }}>
-            <TouchableOpacity
-              style={{
-                marginTop: 4,
-                marginLeft: 287,
-                position: 'absolute',
-                borderRadius: 50,
-                width: 43,
-                height: 43,
-                backgroundColor: '#121212',
-                padding: 5,
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}
-              onPress={() => this._sendMessage()}>
-              <FontAwesomeIcon style={{
-                  zIndex: 0
-                }} size={20} color="#F5F5F5" icon={faPaperPlane}/>
-            </TouchableOpacity>
-            <TextInput
-              multiline="multiline"
-              style={{
-                marginRight: 40,
-                maxHeight: 25,
-                fontFamily: 'Poppins-Medium',
-                paddingTop: -2,
-                paddingLeft: 5,
-                fontSize: 17,
-                color: '#D5D3D9'
-              }}
-              placeholderTextColor="#665F75"
-              placeholder="Nachricht schreiben ..."
-              value={this.state.cur_message}
-              onFocus={() => {
-                setTimeout((function() {
-                  if (this.scrollView) 
-                    this.scrollView.scrollToEnd({animated: true});
-                  }
-                ).bind(this), 200);
-                this._keyboardDidShow();
-              }}
-              onBlur={() => this._keyboardDidHide()}
-              onChangeText={text => {
-                this._onChangeText(text);
-              }}/>
-          </View>
+          {
+            !this.state.sending
+              ? <InputBox
+                  onRef={(ref) => {
+                    if (!this.textInput) {
+                      this.textInput = ref;
+                      this.forceUpdate()
+                    }
+                  }}
+                  multiline={true}
+                  showBigBackgroundColor={true}
+                  inputMarginLeft={15}
+                  returnKeyType={"send"}
+                  icon={faPaperPlane}
+                  showButton={true}
+                  clearOnDone={true}
+                  onDone={(message) => {
+                    console.log('onDone')
+                    //this.state.sending = false; this.forceUpdate();
+
+                    this.state.chat.sendMessage(message)
+                  }}
+                  onFocus={() => {
+                    setTimeout((function() {
+                      if (this.scrollView) 
+                        this.scrollView.scrollToEnd({animated: true});
+                      }
+                    ).bind(this), 200);
+                    this._keyboardDidShow();
+                  }}
+                  onBlur={() => this._keyboardDidHide()}
+                  onChangeText={text => {
+                    this._onChangeText(text);
+                  }}
+                  width={s_width * .9}
+                  borderRadius={50}/>
+              : void 0
+          }
+
         </View>
-      </View>
-    );
-  }
-}
-
-class MessageCard extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-
-  _showActionSheet() {
-    ReactNativeHapticFeedback.trigger("impactMedium")
-    ActionSheetIOS.showActionSheetWithOptions({
-      options: [
-        'Abbrechen', 'Nachricht zurückziehen'
-      ],
-      destructiveButtonIndex: 1,
-      cancelButtonIndex: 0
-    }, buttonIndex => {
-      if (buttonIndex === 0) {
-        // cancel
-      } else if (buttonIndex === 1) {
-        // delete message
-        var mes = this.props.message;
-        database().ref('chats/' + mes.chat_id + '/messages/' + mes.id).remove();
-      }
-    });
-  }
-
-  render() {
-    const uid = this.props.uid;
-    const mes = this.props.message;
-
-    return (
-      <TouchableOpacity
-        onLongPress={() => this._showActionSheet()}
-        style={{
-          marginBottom: 30,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          borderBottomLeftRadius: mes.sender == uid
-            ? 20
-            : 0,
-          borderBottomRightRadius: mes.sender == uid
-            ? 0
-            : 20,
-          padding: 10,
-          paddingLeft: 20,
-          minWidth: 100,
-          maxWidth: 270,
-          marginLeft: mes.sender == uid
-            ? 100
-            : 20,
-          backgroundColor: mes.sender == uid
-            ? '#1e1e1e'
-            : '#3D384B'
-        }}>
-        <Text style={{
-            color: 'white',
-            fontFamily: 'Poppins-Medium',
-            fontSize: 16
-          }}>{mes.text}</Text>
-      </TouchableOpacity>
+      </Theme.BackgroundView>
     );
   }
 }

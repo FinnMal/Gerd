@@ -12,7 +12,8 @@ import {
   ScrollView,
   Animated,
   Easing,
-  Dimensions
+  Dimensions,
+  ActionSheetIOS
 } from "react-native";
 
 import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
@@ -24,8 +25,25 @@ import HeaderScrollView from "./../components/HeaderScrollView.js";
 import Setting from "./../components/Setting.js";
 import InputBox from "./../components/InputBox.js";
 import Button from "./../components/Button.js";
+import ClubCard from "./../components/ClubCard.js";
+import Modal from "./../components/Modal.js";
+import Group from "./../components/Group.js";
 import User from "./../classes/User.js";
-import {faTrash, faEye, faUser} from "@fortawesome/free-solid-svg-icons";
+import {Theme} from './../app/index.js';
+
+// Setting
+import {default as UserClubs} from './../components/Settings/UserClubs.js';
+import {default as UserAccount} from './../components/Settings/UserAccount.js';
+
+import {
+  faTrash,
+  faEye,
+  faEyeSlash,
+  faBell,
+  faBellSlash,
+  faUser,
+  faUsers
+} from "@fortawesome/free-solid-svg-icons";
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
 
 class SettingsScreen extends React.Component {
@@ -97,9 +115,9 @@ class SettingsScreen extends React.Component {
               marginRight: -20,
               marginBottom: 50
             }}>
-            <View style={{
-                backgroundColor: "#2e2e2e",
-                padding: 15
+            <Theme.View style={{
+                padding: 10,
+                paddingLeft: 20
               }}>
               <View style={{
                   flexWrap: "wrap",
@@ -120,7 +138,6 @@ class SettingsScreen extends React.Component {
                           }}
                           fill={this.state.image_upload.progress}
                           tintColor="#0DF5E3"
-                          onAnimationComplete={() => console.log("onAnimationComplete")}
                           backgroundColor="#201A30"/>
                       )
                       : (void 0)
@@ -130,7 +147,7 @@ class SettingsScreen extends React.Component {
                     style={{
                       borderRadius: 50
                     }}
-                    width={50}
+                    width={55}
                     source={{
                       uri: user.getImage()
                     }}/>
@@ -138,28 +155,26 @@ class SettingsScreen extends React.Component {
                 <View
                   style={{
                     marginLeft: 15,
-                    height: 50,
+                    height: 55,
                     justifyContent: "center",
                     maxWidth: 275
                   }}>
-                  <Text
+                  <Theme.Text
                     style={{
                       fontSize: 21,
                       color: "white",
                       fontFamily: "Poppins-SemiBold"
                     }}>
                     {user.getName()}
-                  </Text>
+                  </Theme.Text>
                 </View>
               </View>
-            </View>
+            </Theme.View>
             <View style={{
-                marginTop: 60,
-                backgroundColor: "#2e2e2e",
-                padding: 15
+                marginTop: 30
               }}>
               <Setting label="Account" icon={faUser} utils={this.props.utilsObject}>
-                <AccountSetting
+                <UserAccount
                   name={user.getName()}
                   email={user.getMail()}
                   password={user.getPassword()}
@@ -172,9 +187,7 @@ class SettingsScreen extends React.Component {
               </Setting>
             </View>
             <View style={{
-                marginTop: 40,
-                backgroundColor: "#2e2e2e",
-                padding: 15
+                marginTop: 50
               }}>
               <Setting
                 type="switch"
@@ -183,29 +196,28 @@ class SettingsScreen extends React.Component {
                   this.user.toggleOption("show_groups");
                 }}
                 label="Empfänger anzeigen"
-                icon={faEye}/>
+                icon={faEye}
+                iconInactive={faEyeSlash}/>
               <Setting
                 type="switch"
                 isEnabled={this.user.getOption("send_notifications")}
                 onSwitch={() => {
                   this.user.toggleOption("send_notifications");
                 }}
-                label="Mitteilungen senden"
-                icon={faEye}/>
+                label="Benachrichtigungen"
+                icon={faBell}
+                iconInactive={faBellSlash}/>
             </View>
             <View style={{
-                marginTop: 40,
-                backgroundColor: "#2e2e2e",
-                padding: 15
+                marginTop: 40
               }}>
-              <Setting label="Vereine" icon={faTrash} onPress={() => alert("setting")}/>
-              <Setting label="Konto löschen" icon={faTrash} onPress={() => alert("setting")}/>
+              <Setting utils={this.props.utilsObject} label="Vereine" icon={faUsers}>
+                <UserClubs user={this.user}/>
+              </Setting>
             </View>
 
             <View style={{
-                marginTop: 40,
-                backgroundColor: "#2e2e2e",
-                padding: 15
+                marginTop: 40
               }}>
               <Setting color="red" label="Konto löschen" icon={faTrash} iconColor="light" type="action" onPress={() => alert("setting")}/>
             </View>
@@ -224,42 +236,5 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent"
   }
 });
-
-class AccountSetting extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      name: this.props.name,
-      email: this.props.email,
-      password: this.props.password
-    };
-  }
-
-  render() {
-    return (
-      <View>
-        <InputBox returnKeyType="next" type="name" label="Name" marginTop={-10} value={this.state.name} onChange={v => (this.state.name = v)}/>
-        <InputBox
-          keyboardType="email-address"
-          returnKeyType="next"
-          type="emailAddress"
-          label="E-Mail"
-          marginTop={20}
-          value={this.state.email}
-          onChange={v => (this.state.email = v)}/>
-        <InputBox
-          returnKeyType="done"
-          type="newPassword"
-          secure={true}
-          label="Passwort"
-          marginTop={20}
-          value={this.state.password}
-          onChange={v => (this.state.password = v)}/>
-        <Button marginTop={40} label="Fertig" onPress={() => this.props.onChange(this.state)}/>
-      </View>
-    );
-  }
-}
 
 export default withNavigation(SettingsScreen);

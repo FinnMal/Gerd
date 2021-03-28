@@ -1,353 +1,479 @@
 import React from 'react';
 import {
-	View,
-	Text,
-	TextInput,
-	TouchableOpacity,
-	ActionSheetIOS,
-	StyleSheet,
-	ActivityIndicator,
-	Modal,
-	Platform
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ActionSheetIOS,
+  StyleSheet,
+  ActivityIndicator,
+  Platform,
+  Alert
 } from 'react-native';
 import AutoHeightImage from 'react-native-auto-height-image';
 import FileViewer from 'react-native-file-viewer';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
-	faChevronCircleRight,
-	faArrowAltCircleDown,
-	faQuoteRight,
-	faCalendar,
-	faMapMarker,
-	faPen,
-	faTrash,
-	faChevronCircleLeft,
-	faChevronLeft,
-	faChevronRight,
-	faPlus,
-	faPlusCircle,
-	faUpload,
-	faCloudUploadAlt,
-	faFile,
-	faEllipsisV,
-	faFileWord,
-	faFilePowerpoint,
-	faFileExcel,
-	faFileArchive,
-	faFileCsv,
-	faFileAudio,
-	faFileVideo,
-	faFileImage,
-	faFileAlt,
-	faTimesCircle,
-	faCheck,
-	faPaperPlane,
-	faFilePdf
+  faChevronCircleRight,
+  faArrowAltCircleDown,
+  faQuoteRight,
+  faCalendar,
+  faMapMarker,
+  faPen,
+  faTrash,
+  faChevronCircleLeft,
+  faChevronLeft,
+  faChevronRight,
+  faPlus,
+  faPlusCircle,
+  faUpload,
+  faCloudUploadAlt,
+  faFile,
+  faEllipsisV,
+  faFileWord,
+  faFilePowerpoint,
+  faFileExcel,
+  faFileArchive,
+  faFileCsv,
+  faFileAudio,
+  faFileVideo,
+  faFileImage,
+  faFileAlt,
+  faTimesCircle,
+  faCheck,
+  faPaperPlane,
+  faFilePdf,
+  faCloudDownloadAlt
 } from '@fortawesome/free-solid-svg-icons';
-import { withNavigation } from 'react-navigation';
-import { useNavigation } from '@react-navigation/native';
+import {withNavigation} from 'react-navigation';
+import {useNavigation} from '@react-navigation/native';
 import RNFetchBlob from 'rn-fetch-blob';
 import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
 import CameraRoll from '@react-native-community/cameraroll';
-import { AnimatedCircularProgress } from 'react-native-circular-progress';
+import {AnimatedCircularProgress} from 'react-native-circular-progress';
+import {Theme} from './../app/index.js';
+import {default as Modal} from "./../components/Modal.js";
+import {default as InputBox} from "./../components/InputBox.js";
 
 export default class File extends React.Component {
-	constructor(props) {
-		super(props);
+  constructor(props) {
+    super(props);
 
-		this.state = {
-			download_progress: 0,
-			downloaded: false,
-			path: '',
-			name: this.props.name,
-			modal_visible: false,
-			size: this.props.size,
-		};
+    this.state = {
+      download_progress: 0,
+      downloaded: false,
+      path: '',
+      name: this.props.name,
+      modal_visible: false,
+      size: this.props.file.getSize()
+    };
 
-		if (this.props.path) this.state.path = this.props.path;
+    if (this.props.path) 
+      this.state.path = this.props.path;
 
-		if (this.state.size < 1000) {
-			// Byte
-			this.state.size = Math.round(this.state.size) + ' B';
-		}
-		if (this.state.size < 1000000) {
-			// KB
-			this.state.size = Math.round(this.state.size / 1000) + ' KB';
-		} else if (this.props.size < 1000000000) {
-			// MB
-			this.state.size = Math.round(this.state.size / 1000000) + ' MB';
-		} else if (this.props.size < 1000000000000) {
-			// GB
-			this.state.size = Math.round(this.state.size / 1000000000) + ' GB';
-		}
-	}
+    }
+  
+  _getFormattedSize() {
+    const size = this.props.file.getSize()
+    if (size < 1000) 
+      return Math.round(this.state.size) + ' B';
+    else if (size < 1000000) 
+      return Math.round(this.state.size / 1000) + ' KB';
+    else if (size < 1000000000) 
+      return Math.round(this.state.size / 1000000) + ' MB';
+    else if (size < 1000000000000) 
+      return Math.round(this.state.size / 1000000000) + ' GB';
+    else 
+      return Math.round(this.state.size / 1000000000000) + ' TB';
+    }
+  
+  _getIcon() {
+    const file = this.props.file;
+    if (file.getType()) {
+      if (this.props.downloadable && !this.state.downloaded) 
+        return faArrowAltCircleDown;
+      
+      if (this.state.downloaded || !this.props.downloadable) {
+        if (file.getType() == 'application/pdf') 
+          return faFilePdf;
+        if (file.getType() == 'application/msword') 
+          return faFileWord;
+        if (file.getType() == 'application/mspowerpoint') 
+          return faFilePowerpoint;
+        if (file.getType() == 'application/msexcel') 
+          return faFileExcel;
+        if (file.getType() == 'application/pdf') 
+          return faFilePdf;
+        if (file.getType() == 'application/zip') 
+          return faFileArchive;
+        if (file.getType() == 'text/comma-separated-values	') 
+          return faFileCsv;
+        
+        if (!this.props.icon) {
+          if (file.getType().includes('audio')) 
+            return faFileAudio;
+          if (file.getType().includes('video')) 
+            return faFileVideo;
+          if (file.getType().includes('image')) 
+            return faFileImage;
+          if (file.getType().includes('text')) 
+            return faFileAlt;
+          }
+        }
+    }
 
-	_openFile() {
-		FileViewer.open(Platform.OS === 'android' ? 'file://' + this.state.path : '' + this.state.path)
-			.then(() => {})
-			.catch(error => {});
-	}
+    return faFile;
+  }
 
-	_openFileOptions() {
-		ActionSheetIOS.showActionSheetWithOptions(
-			{
-				options: [ 'Abbrechen', 'Bearbeiten', 'Löschen' ],
-				destructiveButtonIndex: 2,
-				cancelButtonIndex: 0,
-			},
-			buttonIndex => {
-				if (buttonIndex === 0) {
-					// cancel action
-				} else if (buttonIndex === 1) {
-					// edit uploaded file
-					this.state.name_before_edit = this.state.name;
-					this.state.modal_visible = true;
-					this.forceUpdate();
-				} else if (buttonIndex === 2) {
-					// delete uploaded file
-					this.props.onDelete(this.props.pos);
-				}
-			}
-		);
-	}
+  _open() {
+    const file = this.props.file
+    FileViewer.open(
+      Platform.OS === 'android'
+        ? 'file://' + file.getLocalPath()
+        : '' + file.getLocalPath()
+    ).then(() => {}).catch(error => {});
+  }
 
-	_downloadFile(url) {
-		RNFetchBlob
-			.config({
-				path: RNFetchBlob.fs.dirs.DocumentDir + '/' + this.props.name + '.' + this.props.type.split('/')[1],
-				fileCache: true,
-				appendExt: this.props.type.split('/')[1],
-			})
-			.fetch('GET', url, {
-				'Cache-Control': 'no-store',
-			})
-			.progress({ count: 1000 }, (received, total) => {
-				this.state.download_progress = received / total * 100;
-				this.forceUpdate();
-				console.log('progress: ' + received / total * 100 + '%');
-			})
-			.then(res => {
-				this.state.downloaded = true;
-				this.state.path = res.path();
-				this.forceUpdate();
-			});
-	}
+  _showOptions() {
+    var options = ['Abbrechen', 'Herunterladen', 'Teilen', 'Bearbeiten', 'Löschen']
+    this.props.file.getLocalPath(function(path) {
+      if (path) 
+        options[1] = 'Öffnen'
+      ActionSheetIOS.showActionSheetWithOptions({
+        options: options,
+        destructiveButtonIndex: 4,
+        cancelButtonIndex: 0
+      }, buttonIndex => {
+        if (buttonIndex === 0) {
+          // cancel action
+        } else if (buttonIndex === 1) {
+          this._onPress()
+        } else if (buttonIndex === 2) {
+          // TODO: share file
+        } else if (buttonIndex === 3) {
+          // edit file
+          this.modal.open()
+          this.forceUpdate();
+        } else if (buttonIndex === 4) {
+          this._delete();
+        }
+      });
+    }.bind(this))
+  }
 
-	onChangeText(value) {
-		this.state.name = value;
-		this.forceUpdate();
-	}
+  _onPress() {
+    this.props.file.getLocalPath(function(path) {
+      if (path) 
+        this._open()
+      else 
+        this._download()
+    }.bind(this))
+  }
 
-	editFile() {
-		this.props.onEdit(this.props.pos, this.state.name, this.state.name_before_edit);
-		this.state.modal_visible = false;
-		this.forceUpdate();
-	}
+  _download() {
+    const file = this.props.file
+    file.download(function(percentage, downloading) {
+      this.forceUpdate()
+      if (percentage == 100) {
+        FileViewer.open(
+          Platform.OS === 'android'
+            ? 'file://' + file.getLocalPath()
+            : '' + file.getLocalPath()
+        ).then(() => {}).catch(error => {});
+      }
+    }.bind(this))
+  }
 
-	render() {
-		if (this.props.downloadable && !this.state.downloaded) var icon = faArrowAltCircleDown;
-		else var icon = faFile;
-		if (this.state.downloaded || !this.props.downloadable) {
-			if (this.props.type == 'application/pdf') icon = faFilePdf;
-			if (this.props.type == 'application/msword') icon = faFileWord;
-			if (this.props.type == 'application/mspowerpoint') icon = faFilePowerpoint;
-			if (this.props.type == 'application/msexcel') icon = faFileExcel;
-			if (this.props.type == 'application/pdf') icon = faFilePdf;
-			if (this.props.type == 'application/zip') icon = faFileArchive;
-			if (this.props.type == 'text/comma-separated-values	') icon = faFileCsv;
+  onChangeText(value) {
+    this.state.name = value;
+    this.forceUpdate();
+  }
 
-			if (!this.props.icon) {
-				if (this.props.type.includes('audio')) icon = faFileAudio;
-				if (this.props.type.includes('video')) icon = faFileVideo;
-				if (this.props.type.includes('image')) icon = faFileImage;
-				if (this.props.type.includes('text')) icon = faFileAlt;
-			}
-		}
+  _saveEdit() {
+    const file = this.props.file;
+    file.setName(file.getName(), true);
+    this.forceUpdate();
+  }
 
-		//var s = require('./style.js');
-		return (
-			<View style={{ marginBottom: 30 }}>
-				{this.props.editable
-					? <Modal animationType="slide" presentationStyle="formSheet" visible={this.state.modal_visible}>
-							<View
-								style={{
-									padding: 20,
-									backgroundColor: '#121212',
-									height: '100%',
-								}}
-							>
-								<View
-									style={{
-										marginBottom: 10,
-										justifyContent: 'space-between',
-										flexWrap: 'wrap',
-										flexDirection: 'row',
-									}}
-								>
-									<Text
-										style={{ fontFamily: 'Poppins-Bold', color: 'white', fontSize: 25, width: '76%' }}
-										numberOfLines={1}
-									>
-										Datei bearbeiten
-									</Text>
-									<TouchableOpacity
-										style={{
-											height: 30,
-											borderRadius: 10,
-											marginLeft: 10,
-											width: 70,
-											padding: 5,
-											paddingLeft: 10,
-											backgroundColor: '#0DF5E3',
-										}}
-										onPress={text => this.editFile()}
-									>
-										<Text style={{ fontSize: 18, fontFamily: 'Poppins-Bold', color: '#1e1e1e' }}>FERTIG</Text>
-									</TouchableOpacity>
-								</View>
+  _delete() {
+    var btns = [];
+    ['Nein', 'Ja'].forEach((text, i) => {
+      var btn = {
+        text: text,
+        onPress: () => {
+          if (i == 1) {
+            this.props.file.delete();
+            this.forceUpdate();
+          }
+        },
+        style: i == 0
+          ? 'cancel'
+          : ''
+      };
+      btns.push(btn);
+    });
+    Alert.alert('Datei löschen?', 'Die Datei wird nur vom Server gelöscht, auf deinem Gerät bleibt sie jedoch erhalten.', btns, {cancelable: true});
+  }
 
-								<View
-									style={{ marginLeft: -20, height: 0.5, marginBottom: 40, backgroundColor: '#1e1e1e', width: '140%' }}
-								/>
+  render() {
+    const file = this.props.file;
+    if (file.getType()) {
+      const modalView = (
+        <Modal ref={m => {
+            this.modal = m;
+          }} headline={file.getName() + '.' + file.getExtension()} onDone={() => this._saveEdit()}>
+          <View>
+            <InputBox
+              boxColor={'light'}
+              label="Name"
+              marginTop={20}
+              value={file.getName()}
+              onChange={v => {
+                file.setName(v)
+                this.forceUpdate()
+              }}/>
+          </View>
+        </Modal>
+      )
 
-								<View style={{ marginBottom: 20 }}>
-									<Text style={{ fontFamily: 'Poppins-SemiBold', marginLeft: 10, color: '#5C5768' }}>NAME</Text>
-									<View style={{ borderRadius: 10, backgroundColor: '#1e1e1e' }}>
-										<TextInput
-											multiline
-											autoCorrect={false}
-											keyboardType="default"
-											multiline={true}
-											style={{
-												fontFamily: 'Poppins-Medium',
-												marginTop: 8,
-												padding: 15,
-												fontSize: 17,
-												color: '#D5D3D9',
-											}}
-											value={this.state.name}
-											onChangeText={text => this.onChangeText(text)}
-										/>
-									</View>
-								</View>
-							</View>
-						</Modal>
-					: void 0}
+      if (this.props.card_size == 'small') {
+        return (
+          <Theme.View shadow={"normal"} style={{
+              borderRadius: 13,
+              marginBottom: 20
+            }}>
+            {modalView}
+            <Theme.TouchableOpacity
+              style={{
+                padding: 10,
+                paddingLeft: 12,
+                flexWrap: "wrap",
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: "row"
+              }}
+              onPress={() => this._showOptions()}>
+              <Theme.Icon size={35} color={'primary'} icon={this._getIcon()}/>
+              <View style={{
+                  marginLeft: 20,
+                  maxWidth: 220,
+                  justifyContent: "center"
+                }}>
+                <Theme.Text style={{
+                    fontFamily: "Poppins-SemiBold",
+                    fontSize: 20
+                  }}>
+                  {file.getName() + '.' + file.getExtension()}
+                </Theme.Text>
+                <Theme.Text
+                  style={{
+                    fontFamily: "Poppins-SemiBold",
+                    fontSize: 15,
+                    opacity: 0.7
+                  }}>
+                  {this._getFormattedSize()}
+                </Theme.Text>
+              </View>
+              <Theme.TouchableOpacity
+                style={{
+                  padding: 11,
+                  opacity: 0.7,
+                  marginLeft: 'auto',
+                  alignSelf: 'flex-end'
+                }}
+                onPress={() => this._showOptions()}>
+                <Theme.Icon size={20} icon={faEllipsisV}/>
+              </Theme.TouchableOpacity>
+            </Theme.TouchableOpacity>
+            {
+              file.isUploading() || file.isDownloading()
+                ? <View><Theme.View
+                    color={'primary'}
+                    style={{
+                      height: 25,
+                      width: file.isUploading()
+                        ? file.getUploadedPercentage() + "%"
+                        : file.getDownloadedPercentage() + "%",
+                      paddingLeft: 20,
+                      borderBottomLeftRadius: 13,
+                      borderTopRightRadius: 13,
+                      borderBottomRightRadius: 13
+                    }}/>
+                    <View
+                      style={{
+                        marginTop: -25,
+                        padding: 0,
+                        paddingLeft: 20,
+                        borderBottomLeftRadius: 13,
+                        borderBottomRightRadius: 13,
+                        flexWrap: "wrap",
+                        flexDirection: "row"
+                      }}>
+                      <Theme.Icon
+                        style={{
+                          opacity: 0.85
+                        }}
+                        size={24}
+                        icon={file.isUploading()
+                          ? faCloudUploadAlt
+                          : faCloudDownloadAlt}
+                        backgroundColor={'primary'}/>
+                      <Theme.Text
+                        style={{
+                          opacity: 0.85,
+                          fontFamily: 'Poppins-Bold',
+                          fontSize: 18,
+                          marginLeft: 25
+                        }}
+                        backgroundColor={'primary'}>{
+                          file.isUploading()
+                            ? file.getUploadedPercentage() + "%"
+                            : file.getDownloadedPercentage() + "%"
+                        }</Theme.Text>
+                    </View>
+                  </View>
+                : void 0
+            }
 
-				<TouchableOpacity
-					onPress={() => {
-						if (this.props.downloadable && !this.state.downloaded) this._downloadFile(this.props.download_url);
-						else this._openFile();
-					}}
-				>
-					<View
-						style={{
-							marginTop: this.props.card_type != 'normal' ? 0 : 20,
-							marginRight: this.props.card_type != 'normal' ? 0 : 55,
+          </Theme.View>
+        );
+      } else {
+        return (
+          <View style={{
+              marginBottom: 30
+            }}>
+            {
+              file.isOwn()
+                ? <Modal ref={m => {
+                      this.modal = m;
+                    }} headline="Datei bearbeiten" onDone={() => alert('MODAL DONE')}>
+                    <ScrollView
+                      style={{
+                        marginLeft: -20,
+                        marginBottom: 40,
+                        backgroundColor: '#1e1e1e'
+                      }}>
+                      <InputBox label="Name" marginTop={20} value={file.getName()} onChange={v => file.setName(v, true)}/>
+                    </ScrollView>
+                  </Modal>
+                : void 0
+            }
 
-							justifyContent: 'flex-start',
-							flexWrap: 'wrap',
-							flexDirection: 'row',
-							padding: 15,
-							backgroundColor: this.props.card_type != 'normal' ? '#1e1e1e' : '#121212',
-							marginBottom: 0,
-							borderRadius: 13,
-						}}
-					>
-						<View
-							style={{
-								justifyContent: 'center',
-								alignItems: 'center',
-							}}
-						>
+            <Theme.TouchableOpacity
+              color={'selected_view'}
+              style={{
+                padding: 15,
+                marginBottom: 0,
+                borderRadius: 13
+              }}
+              onPress={() => this._onPress()}>
+              <Theme.View
+                color={'selected_view'}
+                style={{
+                  justifyContent: 'flex-start',
+                  flexWrap: 'wrap',
+                  flexDirection: 'row'
+                }}>
+                <View style={{
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}>
+                  <Theme.Icon style={{
+                      zIndex: 0
+                    }} size={35} icon={this._getIcon()}></Theme.Icon>
+                  {
+                    file.isDownloading()
+                      ? <Theme.AnimatedCircularProgress
+                          size={41}
+                          width={2}
+                          style={{
+                            position: 'absolute',
+                            marginTop: 13,
+                            marginLeft: 12
+                          }}
+                          fill={file.getDownloadedPercentage()}
+                          tintColor={"blue"}
+                          backgroundColor="#121212"/>
+                      : void 0
+                  }
+                </View>
 
-							<FontAwesomeIcon
-								style={{ zIndex: 0 }}
-								size={35}
-								color={this.props.card_type != 'normal' ? '#D1CFD5' : '#ADA4A9'}
-								icon={icon}
-							/>
-							{this.props.downloadable && !this.state.downloaded
-								? <AnimatedCircularProgress
-										size={41}
-										width={2}
-										style={{ position: 'absolute', marginTop: 13, marginLeft: 12 }}
-										fill={this.state.download_progress}
-										tintColor="#0DF5E3"
-										onAnimationComplete={() => console.log('onAnimationComplete')}
-										backgroundColor="#121212"
-									/>
-								: void 0}
-						</View>
-
-						<View
-							style={{
-								marginLeft: 20,
-								width: this.props.card_type != 'normal' ? 225 : 207,
-							}}
-						>
-							<Text
-								style={{
-									fontSize: 19,
-									fontFamily: 'Poppins-SemiBold',
-									color: this.props.card_type != 'normal' ? '#D1CFD5' : '#ADA4A9',
-								}}
-							>
-								{this.props.name}
-							</Text>
-							<Text
-								style={{
-									fontSize: 15,
-									fontFamily: 'Poppins-SemiBold',
-									color: this.props.card_type != 'normal' ? '#D1CFD5' : '#ADA4A9',
-								}}
-							>
-								{this.state.size}
-							</Text>
-						</View>
-						{this.props.editable
-							? <View
-									style={{
-										padding: 1,
-										justifyContent: 'center',
-										alignItems: 'center',
-									}}
-								>
-									<TouchableOpacity onPress={() => this._openFileOptions()} style={{ zIndex: 0 }}>
-										<FontAwesomeIcon size={20} color="#D1CFD5" icon={faEllipsisV} />
-									</TouchableOpacity>
-								</View>
-							: void 0}
-					</View>
-					{this.props.uploading && this.props.editable
-						? <View
-								style={{
-									marginLeft: 15,
-									marginRight: 15,
-									marginTop: -2,
-								}}
-							>
-								<View
-									style={{
-										borderRadius: 3,
-										shadowColor: '#0DF5E3',
-										shadowOffset: {
-											width: 6,
-											height: 6,
-										},
-										shadowOpacity: 0.5,
-										shadowRadius: 20.00,
-										backgroundColor: '#0DF5E3',
-										height: 2,
-										width: '' + this.props.uploaded_percentage + '%',
-										maxWidth: 1000,
-									}}
-								/>
-							</View>
-						: void 0}
-				</TouchableOpacity>
-			</View>
-		);
-	}
+                <View
+                  style={{
+                    marginLeft: 20,
+                    width: this.props.card_size != 'normal'
+                      ? 225
+                      : 207
+                  }}>
+                  <Theme.Text
+                    style={{
+                      fontSize: 19,
+                      fontFamily: 'Poppins-SemiBold',
+                      color: this.props.card_size != 'normal'
+                        ? '#D1CFD5'
+                        : '#ADA4A9'
+                    }}>
+                    {file.getName()}
+                  </Theme.Text>
+                  <Theme.Text
+                    style={{
+                      fontSize: 15,
+                      fontFamily: 'Poppins-SemiBold',
+                      color: this.props.card_size != 'normal'
+                        ? '#D1CFD5'
+                        : '#ADA4A9'
+                    }}>
+                    {this._getFormattedSize()}
+                  </Theme.Text>
+                </View>
+                {
+                  file.isOwn()
+                    ? <View
+                        style={{
+                          padding: 1,
+                          justifyContent: 'center',
+                          alignItems: 'center'
+                        }}>
+                        <TouchableOpacity onPress={() => this._openOptions()} style={{
+                            zIndex: 0
+                          }}>
+                          <Theme.Icon size={20} color="#D1CFD5" icon={faEllipsisV}/>
+                        </TouchableOpacity>
+                      </View>
+                    : void 0
+                }
+              </Theme.View>
+              {
+                false
+                  ? <View style={{
+                        marginLeft: 15,
+                        marginRight: 15,
+                        marginTop: -2
+                      }}>
+                      <View
+                        style={{
+                          borderRadius: 3,
+                          shadowColor: '#0DF5E3',
+                          shadowOffset: {
+                            width: 6,
+                            height: 6
+                          },
+                          shadowOpacity: 0.5,
+                          shadowRadius: 20.00,
+                          backgroundColor: '#0DF5E3',
+                          height: 2,
+                          width: '' + file.getUploadedPercentage() + '%',
+                          maxWidth: 1000
+                        }}/>
+                    </View>
+                  : void 0
+              }
+            </Theme.TouchableOpacity>
+          </View>
+        );
+      }
+    }
+    return null;
+  }
 }

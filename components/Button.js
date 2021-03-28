@@ -9,19 +9,24 @@ import {
   Dimensions
 } from "react-native";
 import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
+import ReactNativeHapticFeedback from "react-native-haptic-feedback"
+import {Theme} from './../app/index.js';
 
-export default class InputBox extends React.Component {
+export default class Button extends React.Component {
   constructor(props) {
     super(props);
 
     sizes = {
       small: [
-        5, 12, 18
+        5, 12, 17
       ],
       normal: [
         7, 20, 18
       ],
-      big: [11, 25, 18]
+      big: [
+        11, 25, 18
+      ],
+      extra_big: [15, 40, 23]
     };
 
     this.state = {
@@ -48,73 +53,138 @@ export default class InputBox extends React.Component {
       ? this.props.marginRight
       : 20;
 
-    this.state.sizes = this.props.size
+    this.state.iconSize = this.props.iconSize
+      ? this.props.iconSize
+      : -1;
+
+    this.state.sizes = this.props.size && this.props.size != "large"
       ? sizes[this.props.size]
       : sizes["normal"];
 
-    this.state.text_color = "#1e1e1e"
-    this.state.background_color = "#0DF5E3"
-    if (this.props.color == "danger") {
-      this.state.text_color = "white"
-      this.state.background_color = "red"
+    if (this.props.padding) {
+      this.state.sizes[0] = this.props.padding
+      this.state.sizes[1] = this.props.padding
     }
-    console.log(sizes);
+
+    this.state.text_color = "#1e1e1e"
   }
 
   _onPress(value) {
+    ReactNativeHapticFeedback.trigger("impactMedium");
     if (this.props.onPress) 
       this.props.onPress();
     }
   
   render() {
+    var color = this.props.color;
+    if (color == undefined) 
+      color = "primary";
+    
     return (
-      <View
-        style={{
-          flexWrap: "wrap",
-          alignItems: "flex-start",
-          flexDirection: "row",
-          justifyContent: "flex-start"
-        }}>
-        <TouchableOpacity
+      <Animated.View
+        style={[
+          this.props.style, {
+            flexWrap: "wrap",
+            alignItems: "flex-start",
+            flexDirection: "row",
+            justifyContent: "flex-start"
+          }
+        ]}>
+        <Theme.TouchableOpacity
           style={{
-            paddingTop: this.state.sizes[0],
-            paddingBottom: this.state.sizes[0],
-            paddingLeft: this.state.sizes[1],
-            paddingRight: this.state.sizes[1],
-            borderRadius: 10,
+            width: this.props.size == "large"
+              ? "100%"
+              : null,
             margin: this.props.margin,
             marginTop: this.props.marginTop,
             marginBottom: this.props.marginBottom,
-            marginLeft: this.props.marginLeft,
-            marginRight: this.props.marginRight,
-            backgroundColor: this.state.background_color,
+            marginLeft: this.props.size == "large"
+              ? 0
+              : this.props.marginLeft,
+            marginRight: this.props.size == "large"
+              ? 0
+              : this.props.marginRight,
             justifyContent: "center",
             alignItems: "center"
           }}
           onPress={text => this._onPress()}>
-          <View style={{
+          <Theme.View
+            colorOpacity={this.props.label
+              ? 1
+              : .2}
+            color={color}
+            style={{
               flexWrap: 'wrap',
               alignItems: 'flex-start',
-              flexDirection: 'row'
+              flexDirection: 'row',
+              paddingTop: this.state.sizes[0],
+              paddingBottom: this.state.sizes[0],
+              paddingLeft: this.props.label
+                ? this.state.sizes[1]
+                : this.state.sizes[0],
+              paddingRight: this.props.label
+                ? this.state.sizes[1]
+                : this.state.sizes[0],
+              borderRadius: this.props.label
+                ? 10
+                : 60
             }}>
             {
-              this.props.icon
-                ? <FontAwesomeIcon style={{
-                      marginRight: 15
-                    }} size={this.state.sizes[2]} color="#1e1e1e" icon={this.props.icon}/>
+              this.props.iconPos == "right" && this.props.label
+                ? <Theme.Text
+                    backgroundColor={color}
+                    style={{
+                      marginRight: this.props.icon
+                        ? 15
+                        : 0,
+                      fontSize: this.state.sizes[2],
+                      fontFamily: "Poppins-Bold"
+                    }}>
+                    {this.props.label}
+                  </Theme.Text>
+                : void 0
+            }
+            {
+              this.props.icon && !this.props.label
+                ? <FontAwesomeIcon
+                    size={this.state.iconSize > -1
+                      ? this.state.iconSize
+                      : this.state.sizes[2]}
+                    color={color}
+                    icon={this.props.icon}/>
+                : void 0
+            }
+            {
+              this.props.icon && this.props.label
+                ? <Theme.IconOnColor
+                    backgroundColor={color}
+                    size={this.state.iconSize > -1
+                      ? this.state.iconSize
+                      : this.state.sizes[2]}
+                    icon={this.props.icon}/>
+                : void 0
+            }
+            {
+              this.props.iconPos != "right" && this.props.label
+                ? <Theme.Text
+                    backgroundColor={color}
+                    style={{
+                      color: 'blue',
+                      marginRight: this.props.icon
+                        ? 15
+                        : 0,
+                      fontSize: this.state.sizes[2],
+                      fontFamily: "Poppins-Bold"
+                    }}>
+                    {this.props.label}
+                  </Theme.Text>
                 : void 0
             }
 
-            <Text style={{
-                fontSize: this.state.sizes[2],
-                fontFamily: "Poppins-Bold",
-                color: "#1e1e1e"
-              }}>
-              {this.props.label}
-            </Text>
-          </View>
-        </TouchableOpacity>
-      </View>
+          </Theme.View>
+
+        </Theme.TouchableOpacity>
+      </Animated.View>
     );
   }
 }
