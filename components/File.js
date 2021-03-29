@@ -91,10 +91,10 @@ export default class File extends React.Component {
   _getIcon() {
     const file = this.props.file;
     if (file.getType()) {
-      if (this.props.downloadable && !this.state.downloaded) 
+      if (this.props.downloadable && !file.isDownloaded()) 
         return faArrowAltCircleDown;
       
-      if (this.state.downloaded || !this.props.downloadable) {
+      if (file.isDownloaded() || !this.props.downloadable) {
         if (file.getType() == 'application/pdf') 
           return faFilePdf;
         if (file.getType() == 'application/msword') 

@@ -348,6 +348,7 @@ export class Message {
   }
 
   getFiles() {
+    console.log('in getFiles')
     var files = [];
     if (this.getValue('files')) {
       Object.keys(this.getValue('files')).map(file_id => {

@@ -7,42 +7,30 @@ import {
   ActionSheetIOS,
   StyleSheet,
   ActivityIndicator,
-  Modal,
-  Platform
+  Platform,
+  Dimensions,
+  Image,
+  Animated,
+  Easing
 } from 'react-native';
 import AutoHeightImage from 'react-native-auto-height-image';
 import FileViewer from 'react-native-file-viewer';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
-  faChevronCircleRight,
-  faArrowAltCircleDown,
-  faQuoteRight,
   faCalendar,
   faMapMarker,
-  faPen,
-  faTrash,
-  faChevronCircleLeft,
-  faChevronLeft,
   faChevronRight,
   faPlus,
-  faPlusCircle,
-  faUpload,
-  faCloudUploadAlt,
-  faFile,
-  faEllipsisV,
-  faFileWord,
-  faFilePowerpoint,
-  faFileExcel,
-  faFileArchive,
-  faFileCsv,
-  faFileAudio,
-  faFileVideo,
-  faFileImage,
-  faFileAlt,
-  faTimesCircle,
+  faClock,
+  faQuoteRight,
+  faMapMarkerAlt,
+  faRedoAlt,
+  faStar,
   faCheck,
-  faPaperPlane,
-  faFilePdf
+  faShareAlt,
+  faBellSlash,
+  faBell,
+  faEllipsisV
 } from '@fortawesome/free-solid-svg-icons';
 import {withNavigation} from 'react-navigation';
 import {useNavigation} from '@react-navigation/native';
@@ -52,6 +40,8 @@ import RNFS from 'react-native-fs';
 import CameraRoll from '@react-native-community/cameraroll';
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
 import {ModalCard} from './../app/components.js';
+import {Theme} from './../app/index.js';
+import Button from './../components/Button.js';
 
 export default class SwiperEvent extends React.Component {
   event = null;
@@ -61,9 +51,9 @@ export default class SwiperEvent extends React.Component {
   buttonMarginBottom = new Animated.Value(-30);
   animationDuration = 30000;
 
-  constructor(props) {
-    super(props);
-    this.event = props.event;
+  constructor(event) {
+    super();
+    this.event = event;
   }
 
   onShow(direction) {
@@ -137,15 +127,21 @@ export default class SwiperEvent extends React.Component {
   }
 
   onClickBell() {
-    const user = this.data.utils.getUser();
-    user.toggleEventNotification(this.getClubID(), this.getID(), function(subscribed) {
-      if (this.renderListener) 
-        this.renderListener(this);
-      }
-    .bind(this))
+    const event = this.event;
+    const user = event.getUser();
+    const club = event.getClub();
+    user.toggleEventNotification(club.getID(), event.getID(), function(subscribed) {
+      this.triggerRenderListener();
+    }.bind(this))
   }
 
-  render() {
+  triggerRenderListener() {
+    if (this.event.renderListener) {
+      this.event.renderListener();
+    }
+  }
+
+  render(width) {
     const event = this.event;
     const club = this.event.getClub();
     const user = this.event.getUser();
@@ -188,7 +184,7 @@ export default class SwiperEvent extends React.Component {
         }}>
         <View
           style={{
-            backgroundColor: this.text_color == "white"
+            backgroundColor: club.getTextColor() == "white"
               ? "black"
               : "white",
             position: "absolute",
@@ -209,7 +205,7 @@ export default class SwiperEvent extends React.Component {
           }}
           source={{
             cache: 'force-cache',
-            url: this.getImage()
+            url: event.getImage()
           }}/>
         <Theme.LinearGradient
           color={club.getColor()}
@@ -265,14 +261,14 @@ export default class SwiperEvent extends React.Component {
                 alignItems: 'flex-start',
                 flexDirection: 'row'
               }}>
-              <FontAwesomeIcon color={event.} size={15} icon={faMapMarkerAlt}/>
+              <FontAwesomeIcon color={club.getTextColor()} size={15} icon={faMapMarkerAlt}/>
               <Text
                 style={{
                   marginLeft: 7,
                   fontSize: 15,
                   fontFamily: "Poppins-SemiBold",
                   color: this.text_color
-                }}>{this.getLocation()}</Text>
+                }}>{event.getLocation()}</Text>
             </View>
             <Animated.Text
               style={{
@@ -281,7 +277,7 @@ export default class SwiperEvent extends React.Component {
                 fontFamily: "Poppins-Bold",
                 color: this.text_color,
                 opacity: 0.9
-              }}>{event.title}</Animated.Text>
+              }}>{event.getTitle()}</Animated.Text>
           </Animated.View>
         </Theme.LinearGradient>
       </View>;

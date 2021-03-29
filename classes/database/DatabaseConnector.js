@@ -42,9 +42,13 @@ export default class DatabaseConnector {
       );
     });
   }
-
-  getValue(path, cb = null) {
+  /*
+  @param print_path is for debugging purposes
+  */
+  getValue(path, cb = null, print_path = false) {
     var obj = this.data;
+    if (print_path) 
+      console.log(this.parent_path + '/' + this.id + '/' + path)
     if (obj) {
       path_arr = path.split("/");
       if (path_arr) {
@@ -70,27 +74,29 @@ export default class DatabaseConnector {
   }
 
   setValue(value, path, store = false) {
-    path_arr = path.split("/");
-    if (path_arr) {
-      var obj = this.data;
-      if (obj) {
-        for (i = 0; i < path_arr.length - 1; i++) {
-          if (!obj) 
-            obj = {}
-          obj = obj[path_arr[i]];
-        }
+    if (path) {
+      path_arr = path.split("/");
+      if (path_arr) {
+        var obj = this.data;
+        if (obj) {
+          for (i = 0; i < path_arr.length - 1; i++) {
+            if (!obj) 
+              obj = {}
+            obj = obj[path_arr[i]];
+          }
 
-        if (obj) 
-          obj[path_arr[i]] = value;
-        else 
-          database().ref(this.parent_path + "/" + this.id + "/" + path).set(value);
-        
-        if (store) {
-          database().ref(this.parent_path + "/" + this.id + "/" + path).set(value);
-        } else 
-          this._triggerCallbacks(path, value);
+          if (obj) 
+            obj[path_arr[i]] = value;
+          else 
+            database().ref(this.parent_path + "/" + this.id + "/" + path).set(value);
+          
+          if (store) {
+            database().ref(this.parent_path + "/" + this.id + "/" + path).set(value);
+          } else 
+            this._triggerCallbacks(path, value);
+          }
         }
-      }
+    }
   }
 
   pushValue(value, path, cb) {
@@ -221,7 +227,9 @@ export default class DatabaseConnector {
 
   setReadyListener(cb) {
     if (!this.ready) {
-      this.ready_listeners.append(cb);
+      if (!this.ready_listeners) 
+        this.ready_listeners = [];
+      this.ready_listeners.push(cb);
       this.checkIfReady();
     } else 
       cb(this);

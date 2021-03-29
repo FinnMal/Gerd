@@ -95,7 +95,7 @@ export default class Event extends DatabaseConnector {
   }
 
   setRenderListener(cb) {
-    if (ready_to_render) 
+    if (this.ready_to_render) 
       return cb();
     else 
       this.renderListener = cb;
@@ -148,6 +148,7 @@ export default class Event extends DatabaseConnector {
   getTitle() {
     return this.getValue('title');
   }
+
   setTitle(v, store = false) {
     this.setValue(v, 'title', store);
     this.forceUpdate();

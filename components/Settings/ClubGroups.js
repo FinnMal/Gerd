@@ -240,7 +240,7 @@ export default class ClubGroups extends React.Component {
                     fontSize: 16,
                     fontFamily: "Poppins-Bold"
                   }}>
-                  Gruppe ist öffentlich!
+                  Öffentliche Administrator-Rechte!
                 </Theme.Text>
               </Theme.View>
             )

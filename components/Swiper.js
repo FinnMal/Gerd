@@ -16,6 +16,7 @@ import FileViewer from "react-native-file-viewer";
 import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
 import {faPlusCircle, faChevronCircleLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
 import {Theme} from './../app/index.js';
+import SwiperEvent from './SwiperEvent.js';
 
 import database from "@react-native-firebase/database";
 
@@ -29,7 +30,10 @@ export default class Swiper extends React.Component {
 
   constructor(props) {
     super(props);
-    this.data = props.data;
+    this.data = [];
+    props.data.forEach((event, i) => {
+      this.data.push(new SwiperEvent(event))
+    });
   }
 
   componentWillUnmount() {
@@ -123,7 +127,7 @@ export default class Swiper extends React.Component {
           {
             Object.keys(this.data).map(index => {
               const ele = this.data[index];
-              return ele.getRenderForPreview(this.swiper_width)
+              return ele.render(this.swiper_width)
             })
           }
         </ScrollView>

@@ -80,6 +80,10 @@ export default class File extends DatabaseConnector {
     this.id = id;
     this.user = user;
     this.club_id = club_id;
+
+    this.setReadyListener(function() {
+      this.getLocalPath();
+    }.bind(this))
   }
 
   getClubID() {
@@ -129,7 +133,9 @@ export default class File extends DatabaseConnector {
   }
 
   getType() {
-    return this.getValue('type');
+    console.log('in file get type')
+    console.log(this.getValue('type'))
+    return this.getValue('type', null, true);
   }
 
   getExtension() {
@@ -171,8 +177,12 @@ export default class File extends DatabaseConnector {
     return icon;
   }
 
-  getDownloadURL() {
+  getDownloadURL(cb) {
     return this.getValue('download_url');
+  }
+
+  getStoragePath(cb) {
+    return this.getValue('storage_path', cb)
   }
 
   getDownloads() {
@@ -268,22 +278,28 @@ export default class File extends DatabaseConnector {
   }
 
   download(cb) {
-    RNFetchBlob.config({
-      path: RNFetchBlob.fs.dirs.DocumentDir + '/' + this.getName() + '.' + this.getExtension(),
-      fileCache: true,
-      appendExt: this.getExtension()
-    }).fetch('GET', this.getDownloadURL(), {'Cache-Control': 'no-store'}).progress({
-      count: 1000
-    }, (received, total) => {
-      this.setDownloadedPercentage(received / total * 100)
-      cb(received / total * 100, true)
-    }).then(res => {
-      this.saveLocalPath(res.path(), function(saved) {
-        this.setDownloading(false)
-        this.setDownloadedPercentage(100)
-        cb(100, false);
-      }.bind(this));
-    });
+    this.getStoragePath(async function(storage_path) {
+      const download_url = await storage().ref(storage_path).getDownloadURL();
+      RNFetchBlob.config({
+        path: RNFetchBlob.fs.dirs.DocumentDir + '/' + this.getName() + '.' + this.getExtension(),
+        fileCache: true,
+        appendExt: this.getExtension()
+      }).fetch('GET', download_url, {'Cache-Control': 'no-store'}).progress({
+        count: 1000
+      }, (received, total) => {
+        this.setDownloadedPercentage(received / total * 100)
+        cb(received / total * 100, true)
+      }).then(res => {
+        this.saveLocalPath(res.path(), function(saved) {
+          this.setDownloading(false)
+          this.setDownloadedPercentage(100)
+          setTimeout(function() {
+            cb(100, false);
+          }, 100);
+
+        }.bind(this));
+      });
+    }.bind(this))
   }
 
   isDownloading() {
