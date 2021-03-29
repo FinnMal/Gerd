@@ -252,15 +252,15 @@ export class Message {
         if (this.data.ago_sec > 60) 
           delay = 60000;
         this.data.ago = this.data.utils.getAgoText(this.data.send_at);
-        if (this.renderListerner) 
-          this.renderListerner(this);
+        if (this.renderListener) 
+          this.renderListener(this);
         this.startAgoCounter(delay);
       }.bind(this), delay)
     }
   }
 
-  setRenderListerner(cb) {
-    this.renderListerner = cb;
+  setRenderListener(cb) {
+    this.renderListener = cb;
   }
 
   getAgoText() {

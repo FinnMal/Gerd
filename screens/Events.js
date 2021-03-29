@@ -75,7 +75,7 @@ class EventsScreen extends React.Component {
       if (this.state.events.indexOf(event) == -1) {
         const event_index = this.state.events.length;
 
-        event.setRenderListerner(function(new_event) {
+        event.setRenderListener(function(new_event) {
           this.state.events[event_index + 1] = new_event;
           this.forceUpdate();
         }.bind(this))

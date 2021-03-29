@@ -77,7 +77,10 @@ export class EventsList {
           this.refs.push(ref);
           ref.on('child_added', function(snap) {
             if (!this.events[snap.key + c.getID()]) {
-              var e = new Event(snap.key, c, this.user, snap.val());
+              var e = new Event(snap.key, c, this.user, snap.val(), ['name', 'logo']);
+              e.setRenderListener(function() {
+                console.log('after setRenderListener')
+              })
               e.setReadyListener(function() {
                 if (this.event_added_cb) 
                   this.event_added_cb(e);

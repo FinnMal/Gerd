@@ -82,7 +82,7 @@ export default class MessageScreen extends React.Component {
       author_info: {}
     };
 
-    mes.setRenderListerner(this.render);
+    mes.setRenderListener(this.render);
 
     //utils.setMessageRead(mes.id);
     database().ref('users/' + utils.getUserID() + '/messages/' + mes.id + '/read').set(true);

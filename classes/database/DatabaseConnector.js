@@ -8,7 +8,7 @@ export default class DatabaseConnector {
   data = {};
   listener = {};
   ready = false;
-  ready_listener = null;
+  ready_listeners = [];
   start_values = [];
   parent_path = "";
 
@@ -221,12 +221,19 @@ export default class DatabaseConnector {
 
   setReadyListener(cb) {
     if (!this.ready) {
-      this.ready_listener = cb;
+      this.ready_listeners.append(cb);
       this.checkIfReady();
     } else 
       cb(this);
     }
   
+  triggerReadyListeners(value) {
+    console.log('in triggerReadyListeners')
+    this.ready_listeners.forEach((listener, i) => {
+      listener(value);
+    });
+  }
+
   checkIfReady() {
     if (!this.ready) {
       var values_ok = true;
@@ -243,9 +250,9 @@ export default class DatabaseConnector {
       }
 
       if (values_ok) {
-        if (this.ready_listener && !this.ready) {
+        if (this.ready_listeners && !this.ready) {
           this.ready = true;
-          this.ready_listener(this);
+          this.triggerReadyListeners(this);
         }
       }
     }

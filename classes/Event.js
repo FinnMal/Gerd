@@ -51,6 +51,7 @@ export default class Event extends DatabaseConnector {
   textMarginLeft = new Animated.Value(15);
   buttonMarginBottom = new Animated.Value(-30);
   animationDuration = 30000;
+  ready_to_render = false;
 
   constructor(id, club, user = null, data = null) {
     super('clubs/' + club.getID() + '/events', id, [
@@ -59,6 +60,9 @@ export default class Event extends DatabaseConnector {
     this.id = id;
     this.club = club;
     this.user = user;
+    this.setReadyListener(function() {
+      this._loadClubData();
+    }.bind(this))
   }
 
   async downloadStorageImage(cb) {
@@ -71,29 +75,32 @@ export default class Event extends DatabaseConnector {
     }
   
   _loadClubData() {
-    this.club = {}
-    database().ref("clubs/" + this.data.club_id + "/logo").on("value", function(snap) {
-      this.club.logo = snap.val()
-      database().ref("clubs/" + this.data.club_id + "/color").on("value", function(snap) {
-        database().ref("colors/" + snap.val()).on("value", function(snap) {
-          var color = snap.val();
-          this.club.color = "#" + color.hex;
-          this.club.text_color = "#" + color.font_hex;
-          if (this.readyListener) 
-            this.readyListener();
-          this.data.utils.getUser().getDatabaseValue("events/" + this.getClubID() + "_" + this.getID(), function(value) {
-            this.calculateTextColor(function() {
-              if (this.renderListerner) 
-                this.renderListerner(this)
-            }.bind(this))
-          }.bind(this));
-
+    /*console.log('in _loadClubData')
+      club.setReadyListener(funciton() {
+      database().ref("colors/" + snap.val()).on("value", function(snap) {
+        var color = snap.val();
+        club.setColor("#" + color.hex)
+        club.setTextColor("#" + color.font_hex);
+        this.user.getDatabaseValue("events/" + this.getClubID() + "_" + this.getID(), function(value) {
+          this.calculateTextColor(function() {
+            this.ready_to_render = true;
+            if (this.renderListener)
+              this.renderListener(this)
+          }.bind(this))
         }.bind(this));
-      }.bind(this));
-    }.bind(this));
 
+      }.bind(this));
+    }.bind(this)
+  )*/
   }
 
+  setRenderListener(cb) {
+    if (ready_to_render) 
+      return cb();
+    else 
+      this.renderListener = cb;
+    }
+  
   calculateTextColor(cb) {
     getColorFromURL(this.getImage()).then(colors => {
       var rgb = this.hexToRGBA(colors.background)
@@ -391,8 +398,8 @@ export default class Event extends DatabaseConnector {
   onClickBell() {
     const user = this.data.utils.getUser();
     user.toggleEventNotification(this.getClubID(), this.getID(), function(subscribed) {
-      if (this.renderListerner)
-        this.renderListerner(this);
+      if (this.renderListener)
+        this.renderListener(this);
       }
     .bind(this))
   }

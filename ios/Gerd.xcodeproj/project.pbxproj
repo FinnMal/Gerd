@@ -31,9 +31,9 @@
 		96905EF65AED1B983A6B3ABC /* libPods-Gerd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 58EEBF8E8E6FB1BC6CAF49B5 /* libPods-Gerd.a */; };
 		A1A87F41062E4C23A7FA229A /* Poppins-ThinItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 82B38855DFE04CBDA0D658BF /* Poppins-ThinItalic.ttf */; };
 		A32D5A5FD3832C804DE755FB /* libPods-OneSignalNotificationServiceExtension.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 161BB8C4637DF5A80F2EF14C /* libPods-OneSignalNotificationServiceExtension.a */; };
-		B63EC26024FAF02B00269DCC /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = B63EC25F24FAF02A00269DCC /* GoogleService-Info.plist */; };
 		B63EC26924FAF84600269DCC /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B63EC26824FAF84600269DCC /* NotificationService.swift */; };
 		B63EC26D24FAF84600269DCC /* OneSignalNotificationServiceExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = B63EC26624FAF84600269DCC /* OneSignalNotificationServiceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B6698E8C261286DC00B4EE58 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = B6698E8B261286DC00B4EE58 /* GoogleService-Info.plist */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		ECE7E493CB674E19A67BE10E /* Poppins-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 24DA2476571B46D7BC48BA40 /* Poppins-Regular.ttf */; };
 /* End PBXBuildFile section */
@@ -93,12 +93,12 @@
 		82B38855DFE04CBDA0D658BF /* Poppins-ThinItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-ThinItalic.ttf"; path = "../assets/fonts/Poppins-ThinItalic.ttf"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Gerd/SplashScreen.storyboard; sourceTree = "<group>"; };
 		B600F19524FAB71100EEECCF /* Gerd.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Gerd.entitlements; path = Gerd/Gerd.entitlements; sourceTree = "<group>"; };
-		B63EC25F24FAF02A00269DCC /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "../../../../../Downloads/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		B63EC26124FAF1F900269DCC /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "../../../../../Downloads/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		B63EC26624FAF84600269DCC /* OneSignalNotificationServiceExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OneSignalNotificationServiceExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B63EC26824FAF84600269DCC /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		B63EC26A24FAF84600269DCC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B63EC27224FAF90D00269DCC /* OneSignalNotificationServiceExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OneSignalNotificationServiceExtension.entitlements; sourceTree = "<group>"; };
+		B6698E8B261286DC00B4EE58 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		B7EC418360704BB48F90B788 /* Poppins-ExtraLightItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-ExtraLightItalic.ttf"; path = "../assets/fonts/Poppins-ExtraLightItalic.ttf"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		BCA7335DA809890384FCD1F2 /* Pods-OneSignalNotificationServiceExtension.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OneSignalNotificationServiceExtension.release.xcconfig"; path = "Target Support Files/Pods-OneSignalNotificationServiceExtension/Pods-OneSignalNotificationServiceExtension.release.xcconfig"; sourceTree = "<group>"; };
@@ -192,7 +192,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
-				B63EC25F24FAF02A00269DCC /* GoogleService-Info.plist */,
+				B6698E8B261286DC00B4EE58 /* GoogleService-Info.plist */,
 				13B07FAE1A68108700A75B9A /* Gerd */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				B63EC26724FAF84600269DCC /* OneSignalNotificationServiceExtension */,
@@ -352,9 +352,9 @@
 				13DD2B5006734EBE826A4B9A /* Poppins-LightItalic.ttf in Resources */,
 				1D06FF365C29426F99D200AF /* Poppins-Medium.ttf in Resources */,
 				4406F4EB4979482786E5EA42 /* Poppins-MediumItalic.ttf in Resources */,
+				B6698E8C261286DC00B4EE58 /* GoogleService-Info.plist in Resources */,
 				ECE7E493CB674E19A67BE10E /* Poppins-Regular.ttf in Resources */,
 				7A527CD23FF04A46BC359624 /* Poppins-SemiBold.ttf in Resources */,
-				B63EC26024FAF02B00269DCC /* GoogleService-Info.plist in Resources */,
 				303FDA9E58734F83979A57EF /* Poppins-SemiBoldItalic.ttf in Resources */,
 				3B9066CB7C3F4065B2196B2E /* Poppins-Thin.ttf in Resources */,
 				A1A87F41062E4C23A7FA229A /* Poppins-ThinItalic.ttf in Resources */,

@@ -158,25 +158,25 @@ export default class User extends DatabaseConnector {
     .bind(this));
   }
 
-  getClubsList(cb, startListener = false) {
+  getClubsList(cb, startListener = false, start_values = null) {
     if (!startListener) {
       this.getValue('clubs', function(club_infos) {
-        this._clubInfosToObjects(club_infos, cb);
+        this._clubInfosToObjects(club_infos, cb, start_values);
       }.bind(this))
     } else {
       this.startListener('clubs', function(club_infos) {
-        this._clubInfosToObjects(club_infos, cb);
+        this._clubInfosToObjects(club_infos, cb, start_values);
       }.bind(this))
     }
   }
 
-  _clubInfosToObjects(club_infos, cb) {
+  _clubInfosToObjects(club_infos, cb, start_values = null) {
     var clubs_list = [];
     if (club_infos) {
       Object.keys(club_infos).forEach((key, i) => {
         const club_info = club_infos[key];
         if (club_info) {
-          var club = new Club(club_info.club_id, this);
+          var club = new Club(club_info.club_id, this, start_values);
           clubs_list.push(club);
           if (i == Object.keys(club_infos).length - 1) {
             cb(clubs_list);

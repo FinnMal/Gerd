@@ -92,7 +92,7 @@ class HomeScreen extends React.Component {
       // message added
       if (this.state.messages.indexOf(mes) == -1) {
         const mes_index = this.state.messages.length;
-        mes.setRenderListerner(function(new_mes) {
+        mes.setRenderListener(function(new_mes) {
           this.state.messages[mes_index + 1] = new_mes;
           this.forceUpdate();
         }.bind(this))
@@ -121,7 +121,9 @@ class HomeScreen extends React.Component {
       if (this.state.events.indexOf(event) == -1) {
         const event_index = this.state.events.length;
 
-        event.setRenderListerner(function(new_event) {
+        console.log('in event added')
+        console.log(event);
+        event.setRenderListener(function(new_event) {
           this.state.events[event_index] = new_event;
           this.forceUpdate();
         }.bind(this))

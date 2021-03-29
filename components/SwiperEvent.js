@@ -139,8 +139,8 @@ export default class SwiperEvent extends React.Component {
   onClickBell() {
     const user = this.data.utils.getUser();
     user.toggleEventNotification(this.getClubID(), this.getID(), function(subscribed) {
-      if (this.renderListerner) 
-        this.renderListerner(this);
+      if (this.renderListener) 
+        this.renderListener(this);
       }
     .bind(this))
   }

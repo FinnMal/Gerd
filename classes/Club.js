@@ -87,6 +87,14 @@ export default class Club extends DatabaseConnector {
     this.setValue(v, "color", true);
   }
 
+  setTextColor(v) {
+    this.setValue(v, "text_color");
+  }
+
+  getTextColor(v) {
+    return this.getValue("text_color");
+  }
+
   getMembersCount() {
     return this.getValue('members');
   }
