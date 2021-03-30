@@ -70,11 +70,12 @@ export default class Button extends React.Component {
   }
 
   _onPress(value) {
-    ReactNativeHapticFeedback.trigger("impactMedium");
-    if (this.props.onPress) 
+    if (this.props.onPress) {
+      ReactNativeHapticFeedback.trigger("impactMedium");
       this.props.onPress();
     }
-  
+  }
+
   render() {
     var color = this.props.color;
     if (color == undefined) 
@@ -92,6 +93,9 @@ export default class Button extends React.Component {
         ]}>
         <Theme.TouchableOpacity
           style={{
+            opacity: this.props.opacity
+              ? this.props.opacity
+              : 1,
             width: this.props.size == "large"
               ? "100%"
               : null,
@@ -133,6 +137,7 @@ export default class Button extends React.Component {
               this.props.iconPos == "right" && this.props.label
                 ? <Theme.Text
                     backgroundColor={color}
+                    color={this.props.labelColor}
                     style={{
                       marginRight: this.props.icon
                         ? 15
@@ -161,6 +166,11 @@ export default class Button extends React.Component {
                     size={this.state.iconSize > -1
                       ? this.state.iconSize
                       : this.state.sizes[2]}
+                    style={{
+                      marginTop: this.props.iconPos == "right"
+                        ? 2
+                        : 0
+                    }}
                     icon={this.props.icon}/>
                 : void 0
             }
@@ -168,6 +178,7 @@ export default class Button extends React.Component {
               this.props.iconPos != "right" && this.props.label
                 ? <Theme.Text
                     backgroundColor={color}
+                    color={this.props.labelColor}
                     style={{
                       color: 'blue',
                       marginRight: this.props.icon

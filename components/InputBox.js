@@ -20,7 +20,8 @@ export default class InputBox extends React.Component {
 
     this.state = {
       secure: this.props.secure === true,
-      value: this.props.value
+      value: this.props.value,
+      error: this.props.error
     };
 
     //set default values
@@ -44,7 +45,34 @@ export default class InputBox extends React.Component {
     if (this.props.onChangeText) 
       this.props.onChangeText(value)
     this.state.value = value;
+
+    if (this.props.accept == "string") {
+      this.state.error = null
+      var format = /^[a-zA-Z 0-9À-ž\.\+\-\_\u0370-\u03FF\u0400-\u04FF]*$/;
+      if (value != "" && value && format.test(value)) {
+        if (this.props.max_characters > 0) {
+          if (value.length > this.props.max_characters) 
+            this.state.error = "Name enthält zu viele Zeichen"
+        }
+      } else if (value == "" || value) {
+        this.state.error = "Benutzername darf nicht leer sein"
+      } else 
+        this.state.error = "Keine Sonderzeichen erlaubt"
+    }
+
     this.forceUpdate();
+  }
+
+  hasError() {
+    var format = /^[a-zA-Z 0-9À-ž\.\+\-\_\u0370-\u03FF\u0400-\u04FF]*$/;
+    var value = this.state.value;
+    if (value) {
+      if (!this.props.max_characters) 
+        this.props.max_characters = value.length
+      return value == "" || !format.test(value) || value.length > this.props.max_characters
+    }
+    return true
+
   }
 
   _onDone() {
@@ -58,6 +86,8 @@ export default class InputBox extends React.Component {
 
   render() {
     const s_width = Dimensions.get("window").width;
+    if (!this.state.error) 
+      this.state.error = this.props.error;
     return (
       <Theme.View
         hasColor={this.showBigBackgroundColor}
@@ -195,6 +225,16 @@ export default class InputBox extends React.Component {
               : void 0
           }
         </View>
+        {
+          this.state.error
+            ? <Theme.Text color="danger" style={{
+                  fontFamily: "Poppins-SemiBold",
+                  marginLeft: 10
+                }}>
+                {this.state.error}
+              </Theme.Text>
+            : void 0
+        }
       </Theme.View>
     );
   }

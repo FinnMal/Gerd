@@ -8,33 +8,55 @@ import {
   View,
   StatusBar,
   Image,
-  Button,
   TouchableOpacity,
   ScrollView,
   Animated,
   Easing,
   Dimensions,
-  AsyncStorage
+  AsyncStorage,
+  Keyboard
 } from 'react-native';
 import {Headlines} from './../app/constants.js';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faUserCircle, faUserShield} from '@fortawesome/free-solid-svg-icons';
+import {faAngleRight, faAngleLeft} from '@fortawesome/free-solid-svg-icons';
 import {NotificationCard} from './../app/components.js';
 import database from '@react-native-firebase/database';
 import {withNavigation} from 'react-navigation';
 import auth from '@react-native-firebase/auth';
+import {Theme} from './../app/index.js';
+import Button from "./../components/Button.js";
+import InputBox from "./../components/InputBox.js";
+import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
 
 class FirstStartScreen extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      profile_0_selected: true
+      is_in_slider: true,
+      slider_pos: 0
     };
+
+    this.slider = [
+      {
+        "headline": "Gerd, der Messenger für Vereine.",
+        "text": "Mit Gerd bleibst du als Vereinsmitglied immer informiert. Dein Verein kann Veranstaltungen planen, Mitteilungen senden, oder dir wichtige Dateien zukommen las" +
+            "sen.",
+
+        "img": require('./../assets/img/firststart_slider_1.png')
+      }, {
+        "headline": "Mitteilungen",
+        "text": "Dein Verein kann dir Mitteilungen über aktuelle Vorhaben oder anstehende Termine senden. Durch Push-Mitteilungen bleibst du immer auf dem Laufendem.",
+        "img": require('./../assets/img/firststart_slider_2.png')
+      }
+    ]
   }
 
-  _selectProfile(id) {
-    this.state.profile_0_selected = !this.state.profile_0_selected;
-    this.forceUpdate();
+  _createAccount() {
+    if (this.username_box) {
+      if (!this.username_box.hasError()) {
+        this._registerProfile();
+      }
+    }
   }
 
   async _registerProfile() {
@@ -42,14 +64,8 @@ class FirstStartScreen extends React.Component {
     const uid = this.props.navigation.getParam('uid', null);
     this._saveUserID(uid);
 
-    database().ref('users/' + uid + '/account_type').set(
-      this.state.profile_0_selected
-        ? 'user'
-        : 'manager'
-    );
-    database().ref('users/' + uid + '/name').set('User ' + (
-      Math.floor(Math.random() * 999999) + 1
-    ));
+    database().ref('users/' + uid + '/account_type').set('user');
+    database().ref('users/' + uid + '/name').set(this.username);
 
     try {
       const value = await AsyncStorage.getItem('onesignal_id');
@@ -68,122 +84,149 @@ class FirstStartScreen extends React.Component {
     } catch (e) {}
   }
 
+  previousSlider() {
+    if (this.state.slider_pos > 0) {
+      this.state.is_in_slider = true
+      this.state.slider_pos = this.state.slider_pos - 1
+      this.forceUpdate()
+    }
+  }
+
+  nextSlider() {
+    if (this.state.slider_pos < 1) {
+      this.state.is_in_slider = true
+      this.state.slider_pos = this.state.slider_pos + 1
+    } else 
+      this.state.is_in_slider = false
+    this.forceUpdate()
+  }
+
+  skip() {
+    this.state.slider_pos = 1
+    this.state.is_in_slider = false
+    this.forceUpdate()
+  }
+
   render() {
-    const ps0 = this.state.profile_0_selected;
-
     var s = require('./../app/style.js');
-    return (
-      <View style={s.container}>
+    const s_width = Dimensions.get("window").width;
+    const s_height = Dimensions.get("window").height;
+    const slider = this.slider[this.state.slider_pos];
+    const selected_pos = this.state.slider_pos;
+    console.log('./../assets/' + slider.img)
 
-        <View
+    const config = {
+      velocityThreshold: 0.3,
+      directionalOffsetThreshold: 80
+    };
+    return (
+      <GestureRecognizer
+        onSwipeLeft={() => this.nextSlider()}
+        onSwipeRight={() => this.previousSlider()}
+        config={config}
+        style={{
+          flex: 1,
+          backgroundColor: this.state.backgroundColor
+        }}>
+        <Theme.BackgroundView
           style={{
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginTop: 50,
-            marginLeft: 20,
-            marginRight: 20
+            paddingLeft: 25,
+            paddingRight: 25,
+            height: s_height,
+            width: s_width,
+            paddingTop: 70
           }}>
-          <Text style={{
-              color: '#E5EEF7',
-              fontSize: 35,
-              fontFamily: 'Poppins-ExtraBold'
-            }}>Wähle dein Profil</Text>
-          <Text
-            style={{
-              marginTop: 30,
-              textAlign: 'center',
-              color: '#635E6E',
-              fontSize: 18,
-              fontFamily: 'Poppins-SemiBold'
+          <View style={{
+              marginTop: 175,
+              height: s_height,
+              flex: 1,
+              justifyContent: 'center'
             }}>
-            Gerd ist ein Tool zur Organisation von Vereinen. Du kannst es als Vereinsmitglied oder Vereinsbetreiber benutzen.
-          </Text>
-          <View
-            style={{
-              marginTop: 80,
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              flexDirection: 'row'
-            }}>
-            <TouchableOpacity
-              onPress={() => this._selectProfile(0)}
-              style={{
-                marginRight: 50,
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}>
-              <View
-                style={{
-                  padding: 45,
-                  backgroundColor: ps0
-                    ? '#0FD5B3'
-                    : '#1e1e1e',
-                  borderRadius: 25
-                }}>
-                <FontAwesomeIcon style={{}} size={50} color={ps0
-                    ? '#1e1e1e'
-                    : '#E3E2E6'} icon={faUserCircle}/>
-              </View>
-              <Text
-                style={{
-                  color: ps0
-                    ? '#188E82'
-                    : '#635E6E',
-                  fontFamily: 'Poppins-Bold',
-                  fontSize: 16
-                }}>
-                MITGLIED
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => this._selectProfile(1)}
-              style={{
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}>
-              <View
-                style={{
-                  padding: 40,
-                  backgroundColor: ps0
-                    ? '#1e1e1e'
-                    : '#0FD5B3',
-                  borderRadius: 25
-                }}>
-                <FontAwesomeIcon style={{}} size={40} color={ps0
-                    ? '#E3E2E6'
-                    : '#1e1e1e'} icon={faUserShield}/>
-              </View>
-              <Text
-                style={{
-                  color: ps0
-                    ? '#635E6E'
-                    : '#188E82',
-                  fontFamily: 'Poppins-Bold',
-                  fontSize: 16
-                }}>
-                BETREIBER
-              </Text>
-            </TouchableOpacity>
+            {
+              this.state.is_in_slider
+                ? <View>
+                    <Theme.Text
+                      style={{
+                        fontSize: 45,
+                        lineHeight: 60,
+                        fontFamily: 'Poppins-SemiBold'
+                      }}>{slider.headline}</Theme.Text>
+                    <Image style={{
+                        marginTop: 40
+                      }} source={slider.img}/>
+                    <Theme.Text
+                      style={{
+                        opacity: .50,
+                        fontSize: 18,
+                        marginTop: 20,
+                        fontFamily: 'Poppins-Medium'
+                      }}>{slider.text}</Theme.Text>
+                  </View>
+                : <View>
+                    <Theme.Text
+                      style={{
+                        fontSize: 40,
+                        lineHeight: 65,
+                        fontFamily: 'Poppins-SemiBold'
+                      }}>Benutzername</Theme.Text>
+                    <Theme.Text
+                      style={{
+                        opacity: .50,
+                        fontSize: 18,
+                        marginTop: 10,
+                        fontFamily: 'Poppins-Medium'
+                      }}>Dein Benutzername ist nur für die Vereinsbetreiber sichtbar.</Theme.Text>
+                    <InputBox
+                      ref={(input_box) => this.username_box = input_box}
+                      returnKeyType="done"
+                      onChange={(value) => {
+                        this.username = value
+                      }}
+                      accept="string"
+                      max_characters={50}
+                      style={{
+                        marginTop: 20,
+                        marginBottom: 70
+                      }}
+                      placeholder={'Name'}></InputBox>
+                  </View>
+            }
           </View>
-          <TouchableOpacity
-            style={{
-              marginTop: 80,
-              backgroundColor: '#16FFD7',
-              paddingLeft: 38,
-              paddingRight: 38,
-              paddingTop: 13,
-              paddingBottom: 13,
-              borderRadius: 20
-            }}
-            onPress={() => this._registerProfile()}>
-            <Text style={{
-                color: '#1e1e1e',
-                fontSize: 20,
-                fontFamily: 'Poppins-ExtraBold'
-              }}>Fertig</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+          <View style={{
+              flex: 1,
+              justifyContent: 'flex-end',
+              marginBottom: 30
+            }}>
+            <View style={{
+                marginLeft: -10,
+                flexDirection: "row"
+              }}>
+              {
+                this.state.is_in_slider
+                  ? <Button opacity={.6} color="background_view" labelColor="primary" label="Überspringen" onPress={() => this.skip()}></Button>
+                  : <Button opacity={.6} color="background_view" labelColor="primary" label="Zurück" onPress={() => this.previousSlider()}></Button>
+              }
+
+              {
+                this.state.is_in_slider
+                  ? <Button
+                      style={{
+                        marginLeft: 70
+                      }}
+                      icon={faAngleRight}
+                      iconPos="right"
+                      label="Weiter"
+                      onPress={() => this.nextSlider()}></Button>
+                  : <Button style={{
+                        marginLeft: 155
+                      }} label="Fertig" onPress={() => this._createAccount()}></Button>
+              }
+
+            </View>
+          </View>
+
+        </Theme.BackgroundView>
+      </GestureRecognizer>
     );
   }
 }

@@ -7,7 +7,8 @@ import {
   ActivityIndicator as ReactActivityIndicator,
   StyleSheet,
   Animated,
-  Switch as ReactSwitch
+  Switch as ReactSwitch,
+  Pressable
 } from 'react-native';
 import {useDarkMode} from 'react-native-dynamic'
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -17,14 +18,15 @@ import {BlurView as ReactBlurView} from "@react-native-community/blur";
 import {default as ReactCheckBox} from '@react-native-community/checkbox';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback"
 import {AnimatedCircularProgress as ReactAnimatedCircularProgress} from "react-native-circular-progress";
+import {Keyboard} from 'react-native'
 
-// first value is for darkmode
+// first value is for darkmode old white color: F2F1F6
 const colors = {
   "view": [
-    "#1C1C1E", "#FFFFFF"
+    "#1C1C1E", "#F2F1F6"
   ],
   "background_view": [
-    "black", "#F2F1F6"
+    "black", "#FFFFFF"
   ],
   "selected_view": [
     "#2C2C2E", "#E4E3E9"
@@ -155,11 +157,13 @@ function BackgroundView(props) {
       ? colors[props.color][0]
       : colors[props.color][1];
   
-  return <Animated.View style={[
-      props.style, {
-        backgroundColor: color
-      }
-    ]} onLayout={props.onLayout}>{props.children}</Animated.View>;
+  return <Pressable onPress={Keyboard.dismiss}>
+    <Animated.View style={[
+        props.style, {
+          backgroundColor: color
+        }
+      ]} onLayout={props.onLayout}>{props.children}</Animated.View>
+  </Pressable>;
 }
 
 function BlurView(props) {
@@ -201,7 +205,7 @@ function Text(props) {
     numberOfLines={props.numberOfLines}
     style={[
       props.style, {
-        color: backgroundColor
+        color: backgroundColor && !props.color
           ? calculateTextColor(backgroundColor)
           : color
       }
