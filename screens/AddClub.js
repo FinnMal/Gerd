@@ -68,7 +68,7 @@ class AddClubScreen extends React.Component {
       loading: false
     };
     this.user = utils.getUser();
-    this.margin = new Animated.Value(-20);
+    this.margin = new Animated.Value(0);
   }
 
   /*searchClub(str, open_result = -1) {
@@ -99,23 +99,26 @@ class AddClubScreen extends React.Component {
   }*/
 
   searchClubByCode(code, cb, done_cb) {
-    code = code.toUpperCase()
-    database().ref('clubs/keys').once('value', function(snap) {
-      const keys = snap.val();
-      Object.keys(keys).forEach(function(club_id) {
-        database().ref('clubs/' + club_id + '/invite_codes/' + code + '/groups').once('value', function(snap) {
-          const groups = snap.val();
-          if (groups) {
-            database().ref('clubs/' + res[0].id + '/name').once('value', function(snap) {
+    if (code) {
+      code = code.toUpperCase()
+      database().ref('clubs/keys').once('value', function(snap) {
+        const keys = snap.val();
+        Object.keys(keys).forEach(function(club_id) {
+          database().ref('clubs/' + club_id + '/invite_codes/' + code + '/groups').once('value', function(snap) {
+            const groups = snap.val();
+            if (groups) {
+              database().ref('clubs/' + club_id + '/name').once('value', function(snap) {
+                done_cb();
+                cb({name: snap.val(), code: code, id: club_id, groups: groups});
+              });
+            } else 
               done_cb();
-              cb({name: snap.val(), code: code, id: club_id, groups: groups});
-            });
-          } else 
-            done_cb();
-          }
-        );
+            }
+          );
+        });
       });
-    });
+    } else 
+      done_cb()
   }
 
   searchClubByName(str, cb, done_cb) {
@@ -199,17 +202,6 @@ class AddClubScreen extends React.Component {
           this.state.loading = false;
         this.forceUpdate();
       }.bind(this))
-
-      /*
-      if (open_result > -1) {
-        if (this.state.qr_code_result == null)
-          this.animateQrCodeResult('in', results[0]);
-        else
-          this.animateQrCodeResult('out', results[0], (function() {
-            this.animateQrCodeResult('in', results[0]);
-          }).bind(this));
-        }
-        */
     }
   }
 
@@ -222,13 +214,13 @@ class AddClubScreen extends React.Component {
     else {
       res.ok = true;
       this.state.qr_code_result = res;
-      this.state.qr_code_result.name = this.state.qr_code_result.name + " beitreten"
+      this.state.qr_code_result.name = res.name + " beitreten"
     }
     this.forceUpdate();
     if (dir == 'in') 
-      var param = [630, 430, 250];
+      var param = [210, 30, 250];
     else 
-      var param = [430, 630, 100];
+      var param = [30, 210, 100];
     this.margin.setValue(param[0]);
     Animated.timing(this.margin, {
       useNativeDriver: false,
@@ -320,20 +312,26 @@ class AddClubScreen extends React.Component {
           ? 'admin'
           : 'subscriber'
 
-        if (selected_groups.length > 0) {
-          database().ref('users/' + uid + '/clubs/' + club_id).set(user_club);
-          if (is_admin) 
-            database().ref('users/' + uid + '/account_type').set('manager');
-          
-          utils.showAlert('Du bist jetzt ' + (
-            is_admin
-              ? 'Administrator'
-              : 'Mitglied'
-          ) + ' von ' + club_name, '', ['Ok'], false, false);
-        } else {
-          database().ref('users/' + uid + '/clubs/' + club_id).remove();
-          utils.showAlert('Du bist jetzt kein Mitglied mehr von ' + club_name, '', ['Ok'], false, false);
-        }
+        this.user.getClubRoles(function(user_club_roles) {
+          if (selected_groups.length > 0) {
+            database().ref('users/' + uid + '/clubs/' + club_id).set(user_club);
+
+            utils.showAlert('Du bist jetzt ' + (
+              is_admin
+                ? 'Administrator'
+                : 'Mitglied'
+            ) + ' von ' + club_name, '', ['Ok'], false, false);
+          } else {
+            database().ref('users/' + uid + '/clubs/' + club_id).remove();
+            if (user_club_roles[club_id]) 
+              utils.showAlert('Du bist jetzt kein ' + (
+                user_club_roles[club_id] == "subscriber"
+                  ? 'Mitglied'
+                  : 'Administrator'
+              ) + ' mehr von ' + club_name, ' ', [' Ok '], false, false);
+            }
+          this.user.updateAccountType()
+        }.bind(this))
 
       }).bind(this));
     }).bind(this));
@@ -359,8 +357,26 @@ class AddClubScreen extends React.Component {
   }
 
   _qrCodeScanned(e) {
-    this.searchClub(e.data, 0);
+    this.state.loading = true;
+    this.state.search_results = []
     this.forceUpdate();
+
+    this.searchClubByCode(e.data, function(club) {
+      /*
+      if (this.state.qr_code_result == null)
+        this.animateQrCodeResult('in', club);
+      else
+        this.animateQrCodeResult('out', club, (function() {
+          this.animateQrCodeResult('in', club);
+        }).bind(this));
+        */
+      if (club) 
+        this.showJoinClubModal(club.id, club.groups);
+      }
+    .bind(this), function() {
+      this.state.loading = false;
+      this.forceUpdate();
+    }.bind(this))
   }
 
   checkIfScrollViewIsNeeded(viewHeight) {
@@ -436,33 +452,39 @@ class AddClubScreen extends React.Component {
             </Theme.Text>
             <View style={{
                 marginTop: 20,
-                marginLeft: -20
+                marginLeft: -15
               }}>
               <QRCodeScanner reactivate={true} reactivateTimeout={1700} onRead={this._qrCodeScanned.bind(this)}></QRCodeScanner>
             </View>
             {
               qrc_r
-                ? <Button
-                    size={"extra_big"}
-                    label={qrc_r.name}
-                    iconPos={"right"}
-                    icon={!qrc_r.ok
-                      ? faExclamationCircle
-                      : faChevronCircleRight}
-                    color={qrc_r.ok
-                      ? 'primary'
-                      : 'danger'}
-                    style={{
-                      marginTop: margin,
-                      borderRadius: 13,
-                      justifyContent: 'center',
-                      alignItems: 'center'
-                    }}
-                    onPress={() => {
-                      if (qrc_r.ok) {
-                        this.showJoinClubModal(qrc_r.id, qrc_r.groups);
-                      }
-                    }}></Button>
+                ? <View style={{
+                      marginLeft: -15,
+                      alignItems: 'center',
+                      flex: 1
+                    }}>
+                    <Button
+                      size={"extra_big"}
+                      label={qrc_r.name}
+                      iconPos={"right"}
+                      icon={!qrc_r.ok
+                        ? faExclamationCircle
+                        : faChevronCircleRight}
+                      color={qrc_r.ok
+                        ? 'primary'
+                        : 'danger'}
+                      style={{
+                        marginTop: margin,
+                        borderRadius: 13,
+                        justifyContent: 'center',
+                        alignItems: 'center'
+                      }}
+                      onPress={() => {
+                        if (qrc_r.ok) {
+                          this.showJoinClubModal(qrc_r.id, qrc_r.groups);
+                        }
+                      }}></Button>
+                  </View>
                 : void 0
             }
           </Modal>
@@ -473,7 +495,7 @@ class AddClubScreen extends React.Component {
             headline={"Rollen auswählen"}
             onDone={() => this.joinClub(this.state.selected_club_id, this.state.joinable_groups)}>
             <ScrollView showsVerticalScrollIndicator={false} style={{
-                paddingTop: 30
+                paddingTop: 10
               }}>
               {
                 preSelectedGroupsList.length > 0
@@ -483,7 +505,7 @@ class AddClubScreen extends React.Component {
                   : void 0
               }
               <View style={{
-                  marginBottom: 80
+                  marginBottom: 0
                 }}>
                 {groupsList}
               </View>
@@ -611,11 +633,13 @@ class SearchResult extends React.Component {
               justifyContent: 'center',
               alignItems: 'center'
             }}>
-            <Text style={{
+            <Theme.Text
+              backgroundColor={'selected_view'}
+              style={{
                 fontFamily: 'Poppins-SemiBold',
-                color: '#C5C3CB',
-                fontSize: 16
-              }}>{this.name}</Text>
+                fontSize: 16,
+                opacity: 0.8
+              }}>{this.name}</Theme.Text>
           </View>
         </TouchableOpacity>
       );

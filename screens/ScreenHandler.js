@@ -251,7 +251,8 @@ export default class ScreenHandler extends React.Component {
                   ? <NavItem
                       onPress={() => this.props.navigation.navigate('NewMessageScreen', {
                         transition: 'horizontal',
-                        utils: utils
+                        utils: utils,
+                        user: utils.getUser()
                       })}
                       active={false}
                       isBtn={true}

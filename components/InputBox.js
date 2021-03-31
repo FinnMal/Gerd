@@ -182,11 +182,12 @@ export default class InputBox extends React.Component {
                     alignSelf: 'flex-end',
                     marginLeft: 'auto',
                     marginBottom: 16,
-                    marginRight: 20
+                    marginRight: -25
                   }}>
                   <Theme.Icon
                     size={20}
                     style={{
+                      marginBottom: -4,
                       opacity: this.has_focus
                         ? 1
                         : .8

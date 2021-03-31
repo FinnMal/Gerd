@@ -169,59 +169,6 @@ export class NotificationCard extends React.Component {
   }
 }
 
-export class ClubCard extends React.Component {
-  render() {
-    var s = require('./style.js');
-    return (
-      <TouchableOpacity
-        style={{
-          marginBottom: 20,
-          borderRadius: 13,
-          padding: 13,
-          backgroundColor: this.props.color,
-          flexWrap: 'wrap',
-          alignItems: 'flex-start',
-          flexDirection: 'row'
-        }}
-        onPress={() => this.props.onPress()}>
-        <AutoHeightImage style={{
-            borderRadius: 50
-          }} width={50} source={{
-            uri: this.props.club_img
-          }}/>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-
-            height: 50,
-            marginLeft: 20,
-            alginSelf: 'center',
-            justifySelf: 'center'
-          }}>
-          <View>
-            <Text style={{
-                fontSize: 18,
-                fontFamily: 'Poppins-SemiBold',
-                color: 'white'
-              }}>{this.props.club_name}</Text>
-            <Text
-              style={{
-                fontSize: 13,
-                fontFamily: 'Poppins-SemiBold',
-                color: 'rgba(255, 255, 255, 0.34)'
-              }}>
-              {this.props.club_members.toLocaleString()}
-              Mitglieder
-            </Text>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  }
-}
-
 export class ModalCard extends React.Component {
   constructor(props) {
     super(props);

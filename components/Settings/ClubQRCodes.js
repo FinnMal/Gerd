@@ -43,6 +43,7 @@ import ClubCard from "./../../components/ClubCard.js";
 import InputBox from "./../../components/InputBox.js";
 import Button from "./../../components/Button.js";
 import {default as Modal} from "./../../components/Modal.js";
+import storage from '@react-native-firebase/storage';
 
 export default class ClubQRCodes extends React.Component {
   constructor(props) {
@@ -113,16 +114,17 @@ export default class ClubQRCodes extends React.Component {
     });
   }
 
-  _shareIntiveCode(code) {
+  async _shareIntiveCode(code) {
     const club = this.props.club;
     if (club.hasInviteCodes()) {
       var invite = club.getInviteCodes()[code];
       if (invite) {
+        const download_url = await storage().ref('qrcodes/' + invite.code + '.png').getDownloadURL();
         RNFetchBlob.config({
-          path: RNFetchBlob.fs.dirs.DocumentDir + "/" + invite.code + ".jpg",
+          path: RNFetchBlob.fs.dirs.DocumentDir + "/" + invite.code + ".png",
           fileCache: true,
           appendExt: "image"
-        }).fetch("GET", invite.img, {"Cache-Control": "no-store"}).progress({
+        }).fetch("GET", download_url, {"Cache-Control": "no-store"}).progress({
           count: 1000
         }, (received, total) => {}).then(res => {
           FileViewer.open(

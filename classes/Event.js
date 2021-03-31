@@ -62,6 +62,7 @@ export default class Event extends DatabaseConnector {
     this.user = user;
     this.setReadyListener(function() {
       this._loadClubData();
+      this.downloadStorageImage()
     }.bind(this))
   }
 
@@ -69,8 +70,10 @@ export default class Event extends DatabaseConnector {
     if (this.getValue("image_name")) {
       const url = await storage().ref('fallback_images/' + this.getValue("image_name")).getDownloadURL();
       this.setImage(url);
-      cb();
-    } else 
+      if (cb) 
+        cb();
+      }
+    else if (cb) 
       cb();
     }
   

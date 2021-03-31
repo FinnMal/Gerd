@@ -187,6 +187,41 @@ export default class User extends DatabaseConnector {
       cb([null]);
     }
   
+  getClubRoles(cb) {
+    if (cb) {
+      this.getDatabaseValue('clubs', function(clubs) {
+        var roles = {}
+        if (clubs) {
+          Object.keys(clubs).forEach((club_id, i) => {
+            if (clubs[club_id]) 
+              roles[club_id] = clubs[club_id].role
+          });
+        }
+        cb(roles)
+      }.bind(this))
+    } else 
+      return this.getValue('club_roles')
+  }
+
+  updateAccountType() {
+    this.getClubRoles(function(roles) {
+      var has_admin_role = false
+      if (roles) {
+        has_admin_role = Object.keys(roles).some(function(id) {
+          return roles[id] == 'admin';
+        });
+      }
+      this.setValue(
+        has_admin_role
+          ? 'manager'
+          : 'user',
+        'account_type',
+        true
+      );
+    }.bind(this))
+
+  }
+
   /*
   Starts a new chat, from user to partner_uid
   @param partner_uid ID of the chat partner

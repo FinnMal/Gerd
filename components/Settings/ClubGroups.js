@@ -133,7 +133,6 @@ export default class ClubGroups extends React.Component {
     return (
       <Theme.View
         key={group.id}
-        shadow={"normal"}
         color={group.has_admin_rights
           ? 'primary'
           : ''}
@@ -218,6 +217,7 @@ export default class ClubGroups extends React.Component {
           group.public && group.has_admin_rights
             ? (
               <Theme.View
+                color={'danger'}
                 style={{
                   opacity: 0.9,
                   marginTop: 0,
@@ -225,18 +225,17 @@ export default class ClubGroups extends React.Component {
                   borderRadius: 15,
                   borderTopLeftRadius: 0,
                   borderTopRightRadius: 0,
-                  backgroundColor: "#ff1629",
                   flexWrap: "wrap",
                   alignItems: "flex-start",
                   flexDirection: "row",
                   justifyContent: "center",
                   alignItems: "center"
                 }}>
-                <Theme.Icon size={15} icon={faExclamationCircle}/>
+                <Theme.Icon backgroundColor={'danger'} size={15} icon={faExclamationCircle}/>
                 <Theme.Text
+                  backgroundColor={'danger'}
                   style={{
                     marginLeft: 10,
-                    color: "white",
                     fontSize: 16,
                     fontFamily: "Poppins-Bold"
                   }}>
@@ -283,7 +282,6 @@ export default class ClubGroups extends React.Component {
                   marginLeft: 5,
                   marginRight: 20,
                   opacity: 0.8,
-                  color: "white",
                   fontSize: 20,
                   fontFamily: "Poppins-SemiBold"
                 }}>
@@ -309,7 +307,6 @@ export default class ClubGroups extends React.Component {
                   marginLeft: 5,
                   marginRight: 20,
                   opacity: 0.8,
-                  color: "white",
                   fontSize: 20,
                   fontFamily: "Poppins-SemiBold"
                 }}>

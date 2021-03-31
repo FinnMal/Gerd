@@ -8,7 +8,6 @@ import {
   View,
   StatusBar,
   Image,
-  Button,
   TouchableOpacity,
   ActionSheetIOS,
   ScrollView,
@@ -18,7 +17,8 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Modal,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
+  Pressable
 } from 'react-native';
 
 import {Headlines} from './../app/constants.js';
@@ -49,12 +49,14 @@ import {
   faFilePdf,
   faLink
 } from '@fortawesome/free-solid-svg-icons';
-import {ClubCard, ModalCard, EventCard, FileCard} from './../app/components.js';
+import {ModalCard, EventCard, FileCard} from './../app/components.js';
+import InputBox from './../components/InputBox.js';
 import database from '@react-native-firebase/database';
 import {SafeAreaView} from 'react-navigation'; //added this import
 import DocumentPicker from 'react-native-document-picker';
 import ImagePicker from "react-native-image-crop-picker";
 import CheckBox from '@react-native-community/checkbox';
+import {Theme} from './../app/index.js';
 
 import storage from '@react-native-firebase/storage';
 
@@ -62,9 +64,10 @@ export default class NewMessageScreen extends React.Component {
   constructor(props) {
     super(props);
     const utils = this.props.navigation.getParam('utils', null);
+    const user = this.props.navigation.getParam('user', null)
 
     this.state = {
-      curPageIndex: 0,
+      curPageIndex: 3,
       clubsList: [],
       event_modal_visible: false,
       events: [],
@@ -549,15 +552,7 @@ export default class NewMessageScreen extends React.Component {
       pageContent = Object.keys(this.state.clubsList).map(key => {
         var club = this.state.clubsList[key];
         return (
-          <ClubCard
-            key={key}
-            club_name={club.name}
-            club_members={club.members}
-            club_img={club.logo}
-            color={club.selected
-              ? '#615384'
-              : '#1e1e1e'}
-            onPress={() => this.selectClub(key)}/>
+          <ClubCard key={key} selected={club.selected} club_name={club.name} club_members={club.members} club_img={club.logo} onPress={() => this.selectClub(key)}/>
         );
       });
     } else if (this.state.curPageIndex == 1) {
@@ -570,98 +565,39 @@ export default class NewMessageScreen extends React.Component {
           <InputScrollView topOffset={120} style={{
               zIndex: 100
             }}>
-            <View style={{
-                marginBottom: 40
-              }}>
-              <Text style={{
-                  fontFamily: 'Poppins-SemiBold',
-                  marginLeft: 10,
-                  color: '#5C5768'
-                }}>ÜBERSCHRIFT</Text>
-              <View style={{
-                  borderRadius: 10,
-                  backgroundColor: '#1e1e1e'
-                }}>
-                <TextInput
-                  multiline="multiline"
-                  onBlur={() => Keyboard.dismiss()}
-                  style={{
-                    maxHeight: 70,
-                    fontFamily: 'Poppins-Medium',
-                    marginTop: 8,
-                    padding: 15,
-                    fontSize: 17,
-                    color: '#D5D3D9'
-                  }}
-                  value={this.state.headlineInputValue}
-                  onChangeText={text => this.onChangeText('headline', text)}/>
-              </View>
-            </View>
+            <InputBox
+              width={350}
+              label="Überschrift"
+              multiline={true}
+              onBlur={() => Keyboard.dismiss()}
+              value={this.state.headlineInputValue}
+              onChange={text => this.onChangeText('headline', text)}/>
 
-            <View style={{
-                marginBottom: 40
-              }}>
-              <Text style={{
-                  fontFamily: 'Poppins-SemiBold',
-                  marginLeft: 10,
-                  color: '#5C5768'
-                }}>ANREIßER</Text>
-              <View style={{
-                  borderRadius: 10,
-                  backgroundColor: '#1e1e1e'
-                }}>
-                <TextInput
-                  multiline="multiline"
-                  keyboardType="default"
-                  onBlur={() => Keyboard.dismiss()}
-                  style={{
-                    minHeight: 70,
-                    fontFamily: 'Poppins-Medium',
-                    marginTop: 8,
-                    padding: 15,
-                    fontSize: 17,
-                    color: '#D5D3D9'
-                  }}
-                  value={this.state.shortTextInputValue}
-                  onChangeText={text => this.onChangeText('shortText', text)}/>
-              </View>
-            </View>
+            <InputBox
+              marginTop={20}
+              width={350}
+              label="Anreißer"
+              multiline={true}
+              onBlur={() => Keyboard.dismiss()}
+              value={this.state.shortTextInputValue}
+              onChange={text => this.onChangeText('shortText', text)}/>
 
-            <View style={{
-                marginBottom: 300
-              }}>
-              <Text style={{
-                  fontFamily: 'Poppins-SemiBold',
-                  marginLeft: 10,
-                  color: '#5C5768'
-                }}>TEXT</Text>
-              <View style={{
-                  borderRadius: 10,
-                  backgroundColor: '#1e1e1e'
-                }}>
-                <TextInput
-                  multiline="multiline"
-                  keyboardType="default"
-                  onBlur={() => {
-                    Keyboard.dismiss();
-                    this.state.long_text_input_has_focus = false;
-                  }}
-                  onFocus={() => {
-                    //this.scrollView.scrollToEnd({ animated: true });
-                    this.state.long_text_input_has_focus = true;
-                  }}
-                  style={{
-                    minHeight: 180,
-                    fontFamily: 'Poppins-Medium',
-                    marginTop: 8,
-                    padding: 15,
-                    fontSize: 17,
-                    color: '#D5D3D9'
-                  }}
-                  value={this.state.textInputValue}
-                  onChangeText={text => this.onChangeText('text', text)}/>
-              </View>
-            </View>
+            <InputBox
+              marginTop={20}
+              width={350}
+              label="Text"
+              multiline={true}
+              onBlur={() => {
+                Keyboard.dismiss();
+                this.state.long_text_input_has_focus = false;
+              }}
+              onFocus={() => {
+                //this.scrollView.scrollToEnd({ animated: true });
+                this.state.long_text_input_has_focus = true;
+              }}
+              value={this.state.textInputValue}
+              onChange={text => this.onChangeText('text', text)}/>
+
           </InputScrollView>
         </View>
       );
@@ -687,18 +623,23 @@ export default class NewMessageScreen extends React.Component {
         pageContent = (
           <View
             style={{
-              justifyContent: 'center',
+              paddingLeft: 15,
+              paddingRight: 15,
               alignItems: 'center',
-              width: '100%',
-              height: '85%'
+              justifyContent: 'center',
+              height: 560
             }}>
-            <Text
+            <Image style={{
+                width: 320,
+                height: 250
+              }} source={require('./../assets/img/event_illustration.png')}/>
+            <Theme.Text
               style={{
+                marginTop: 40,
                 fontFamily: 'Poppins-ExtraBold',
-                color: '#514D5D',
                 fontSize: 30,
-                alignSelf: 'center'
-              }}>KEINE EVENTS</Text>
+                opacity: .5
+              }}>Keine Events</Theme.Text>
           </View>
         );
       }
@@ -727,18 +668,23 @@ export default class NewMessageScreen extends React.Component {
         pageContent = (
           <View
             style={{
-              justifyContent: 'center',
+              paddingLeft: 15,
+              paddingRight: 15,
               alignItems: 'center',
-              width: '100%',
-              height: '85%'
+              justifyContent: 'center',
+              height: 560
             }}>
-            <Text
+            <Image style={{
+                width: 300,
+                height: 260
+              }} source={require('./../assets/img/files_illustration.png')}/>
+            <Theme.Text
               style={{
+                marginTop: 40,
                 fontFamily: 'Poppins-ExtraBold',
-                color: '#514D5D',
                 fontSize: 30,
-                alignSelf: 'center'
-              }}>KEINE DATEIEN</Text>
+                opacity: .5
+              }}>Keine Dateien</Theme.Text>
           </View>
         );
       }
@@ -1112,14 +1058,13 @@ export default class NewMessageScreen extends React.Component {
     }
 
     return (
-      <View style={{
-          flex: 1,
-          backgroundColor: "#121212"
+      <Theme.View color={'background_view'} style={{
+          flex: 1
         }} keyboardShouldPersistTaps="always">
 
         {
           pageHeadline != ''
-            ? <Animated.View
+            ? <View
                 style={{
                   zIndex: 10,
                   marginTop: 50,
@@ -1129,14 +1074,14 @@ export default class NewMessageScreen extends React.Component {
                   justifyContent: 'center',
                   flexDirection: 'row'
                 }}>
-                <Text style={{
+                <Theme.Text style={{
                     color: 'white',
                     fontFamily: 'Poppins-Bold',
                     fontSize: 27
                   }}>
                   {pageHeadline}
-                </Text>
-              </Animated.View>
+                </Theme.Text>
+              </View>
             : void 0
         }
 
@@ -1157,14 +1102,14 @@ export default class NewMessageScreen extends React.Component {
             ? <TouchableOpacity
                 style={{
                   zIndex: 20,
-                  marginTop: 52,
+                  marginTop: 56,
                   marginLeft: 20,
                   position: 'absolute'
                 }}
                 onPress={() => this.props.navigation.navigate('ScreenHandler')}>
-                <FontAwesomeIcon style={{
+                <Theme.Icon style={{
                     zIndex: 0
-                  }} size={29} color="#F5F5F5" icon={faChevronCircleLeft}/>
+                  }} size={22} icon={faChevronCircleLeft}/>
               </TouchableOpacity>
             : void 0
         }
@@ -1190,36 +1135,27 @@ export default class NewMessageScreen extends React.Component {
 
           {
             this.state.curPageIndex > 0
-              ? <TouchableOpacity
+              ? <Theme.TouchableOpacity
+                  color={'selected_view'}
                   style={{
                     justifyContent: 'center',
                     alignSelf: 'center',
-                    width: 47,
-                    height: 47,
+                    width: 40,
+                    height: 40,
                     borderRadius: 40,
-                    backgroundColor: '#1e1e1e',
-                    justifyContent: 'center',
-
-                    shadowColor: '#1e1e1e',
-                    shadowOffset: {
-                      width: 6,
-                      height: 0
-                    },
-                    shadowOpacity: 0.20,
-                    shadowRadius: 20.00
+                    justifyContent: 'center'
                   }}
                   onPress={() => this.previousPage()}>
-                  <FontAwesomeIcon
+                  <Theme.Icon
                     style={{
                       marginRight: 4,
                       alignSelf: 'center',
                       textAlign: 'center',
                       zIndex: 0
                     }}
-                    size={27}
-                    color="#F5F5F5"
+                    size={17}
                     icon={faChevronLeft}/>
-                </TouchableOpacity>
+                </Theme.TouchableOpacity>
               : <TouchableOpacity
                   style={{
                     justifyContent: 'center',
@@ -1276,86 +1212,112 @@ export default class NewMessageScreen extends React.Component {
 
           {
             this.state.curPageIndex < 5
-              ? <TouchableOpacity
+              ? <Theme.TouchableOpacity
+                  color={'selected_view'}
                   style={{
                     justifyContent: 'center',
                     alignSelf: 'center',
-                    width: 47,
-                    height: 47,
+                    width: 40,
+                    height: 40,
                     borderRadius: 40,
-                    backgroundColor: '#1e1e1e',
-                    justifyContent: 'center',
-
-                    shadowColor: '#1e1e1e',
-                    shadowOffset: {
-                      width: 6,
-                      height: 0
-                    },
-                    shadowOpacity: 0.20,
-                    shadowRadius: 20.00
+                    justifyContent: 'center'
                   }}
                   onPress={() => this.nextPage()}>
-                  <FontAwesomeIcon
+                  <Theme.Icon
                     style={{
                       marginLeft: 4,
                       alignSelf: 'center',
                       textAlign: 'center',
                       zIndex: 0
                     }}
-                    size={27}
-                    color="#F5F5F5"
+                    size={17}
                     icon={faChevronRight}/>
-                </TouchableOpacity>
+                </Theme.TouchableOpacity>
               : void 0
           }
 
           {
             this.state.curPageIndex == 5
-              ? <TouchableOpacity
+              ? <Theme.TouchableOpacity
+                  color={'selected_view'}
                   style={{
                     alignSelf: 'center',
-                    width: 50,
-                    height: 50,
+                    width: 40,
+                    height: 40,
                     marginLeft: 280,
                     borderRadius: 40,
-                    backgroundColor: '#0DF5E3',
                     justifyContent: 'center',
                     alignItems: 'center',
                     alignContent: 'center',
                     padding: 5,
-                    position: 'absolute',
-                    shadowColor: '#1e1e1e',
-                    shadowOffset: {
-                      width: 6,
-                      height: 0
-                    },
-                    shadowOpacity: 0.20,
-                    shadowRadius: 20.00
+                    position: 'absolute'
                   }}
                   onPress={() => this.sendMessage()}>
-                  <FontAwesomeIcon
+                  <Theme.Icon
                     style={{
                       marginRight: 5,
                       alignSelf: 'center',
                       textAlign: 'center',
                       zIndex: 0
                     }}
-                    size={27}
-                    color="#1e1e1e"
+                    size={17}
                     icon={faPaperPlane}/>
-                </TouchableOpacity>
+                </Theme.TouchableOpacity>
               : void 0
           }
         </View>
-      </View>
+      </Theme.View>
     );
   }
 }
+class ClubCard extends React.Component {
+  render() {
+    return (
+      <Pressable onPress={() => this.props.onPress()}>
+        <Theme.View
+          color={this.props.selected
+            ? "selected_view"
+            : "view"}
+          style={{
+            marginBottom: 20,
+            borderRadius: 13,
+            padding: 13,
+            flexWrap: 'wrap',
+            alignItems: 'flex-start',
+            flexDirection: 'row'
+          }}>
+          <AutoHeightImage style={{
+              borderRadius: 50
+            }} width={50} source={{
+              uri: this.props.club_img
+            }}/>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
 
-//Styles
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'transparent'
+              height: 50,
+              marginLeft: 20,
+              alginSelf: 'center',
+              justifySelf: 'center'
+            }}>
+            <View>
+              <Theme.Text style={{
+                  fontSize: 18,
+                  fontFamily: 'Poppins-SemiBold'
+                }}>{this.props.club_name}</Theme.Text>
+              <Theme.Text style={{
+                  fontSize: 13,
+                  fontFamily: 'Poppins-SemiBold',
+                  opacity: 0.4
+                }}>
+                {this.props.club_members.toLocaleString() + ' Mitglieder'}
+              </Theme.Text>
+            </View>
+          </View>
+        </Theme.View>
+      </Pressable>
+    );
   }
-});
+}
