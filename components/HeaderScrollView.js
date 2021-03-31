@@ -496,12 +496,22 @@ class HeaderScrollView extends React.Component {
                     paddingTop: 5,
                     paddingBottom: 13
                   }}>
-                  <TouchableOpacity style={{
+                  <TouchableOpacity
+                    style={{
                       zIndex: 100
-                    }} onPress={() => this._navigateBack()}>
-                    <Theme.Icon style={{
+                    }}
+                    onPress={(
+                      ) => !this.props.backButtonOnPress
+                      ? this._navigateBack()
+                      : this.props.backButtonOnPress()}>
+                    <Theme.Icon
+                      style={{
                         opacity: .96
-                      }} icon={faChevronCircleLeft} size={25}/>
+                      }}
+                      icon={this.props.backButtonIcon
+                        ? this.props.backButtonIcon
+                        : faChevronCircleLeft}
+                      size={25}/>
                   </TouchableOpacity>
                   <Animated.View
                     style={{

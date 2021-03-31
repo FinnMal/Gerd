@@ -24,6 +24,8 @@ export default class InputBox extends React.Component {
       error: this.props.error
     };
 
+    this.lastOnChangeTriggered = Date.now()
+
     //set default values
     this.props.marginTop = this.props.marginTop
       ? this.props.marginTop
@@ -173,7 +175,8 @@ export default class InputBox extends React.Component {
             onChangeText={v => this._onChange(v)}></Theme.TextInput>
           {
             this.props.icon && this.props.showButton !== true
-              ? <TouchableOpacity
+              ? <Theme.TouchableOpacity
+                  color={'selected_view'}
                   onPress={() => this._onDone()}
                   style={{
                     alignSelf: 'flex-end',
@@ -189,7 +192,7 @@ export default class InputBox extends React.Component {
                         : .8
                     }}
                     icon={this.props.icon}/>
-                </TouchableOpacity>
+                </Theme.TouchableOpacity>
               : void 0
           }
           {
@@ -217,9 +220,9 @@ export default class InputBox extends React.Component {
                       alignItems: 'center'
                     }}
                     onPress={() => this._onDone()}>
-                    <FontAwesomeIcon style={{
+                    <Theme.Icon style={{
                         zIndex: 0
-                      }} size={20} color="#F5F5F5" icon={this.props.icon}/>
+                      }} size={20} icon={this.props.icon}/>
                   </TouchableOpacity>
                 </Theme.View>
               : void 0

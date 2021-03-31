@@ -228,8 +228,12 @@ export default class ScreenHandler extends React.Component {
               startNavbarAnimation={this.startNavbarAnimation}
               setScrollViewEnabled={this.setScrollViewEnabled}
               moveTo={this.state.nav[0].moveTo}
-              show={this.state.nav[0].active}/>
-            <ManagmentScreen utilsObject={utils} setScrollViewEnabled={this.setScrollViewEnabled} moveTo={this.state.nav[1].moveTo} show={this.state.nav[1].active}/>
+              show={this.state.nav[0].active}></HomeScreen>
+            {
+              utils.getUser().isManager()
+                ? <ManagmentScreen utilsObject={utils} setScrollViewEnabled={this.setScrollViewEnabled} moveTo={this.state.nav[1].moveTo} show={this.state.nav[1].active}/>
+                : <AddClubScreen utilsObject={utils} setScrollViewEnabled={this.setScrollViewEnabled} moveTo={this.state.nav[1].moveTo} show={this.state.nav[1].active}/>
+            }
             <MessagesScreen utilsObject={utils} setScrollViewEnabled={this.setScrollViewEnabled} moveTo={this.state.nav[3].moveTo} show={this.state.nav[3].active}/>
             <SettingsScreen utilsObject={utils} setScrollViewEnabled={this.setScrollViewEnabled} moveTo={this.state.nav[4].moveTo} show={this.state.nav[4].active}/>
           </View>
@@ -240,7 +244,7 @@ export default class ScreenHandler extends React.Component {
               }
             ]}>
             <View style={styles.navigationBarIcons}>
-              <NavItem index={0} label="Home" icon={faHome} active={this.state.nav[0].active} navigate={this.navigate.bind(this)}/>
+              <NavItem index={0} label="Home" icon={faHome} active={this.state.nav[0].active} navigate={this.navigate.bind(this)}></NavItem>
               <NavItem index={1} label="Clubs" icon={faUsers} active={this.state.nav[1].active} navigate={this.navigate.bind(this)}></NavItem>
               {
                 utils.getUser().isManager()
@@ -249,19 +253,12 @@ export default class ScreenHandler extends React.Component {
                         transition: 'horizontal',
                         utils: utils
                       })}
-                      isBtn={true}
-                      active={false}
-                      icon={faPlusCircle}
-                      navigate={this.navigate.bind(this)}/>
-                  : <NavItem
-                      onPress={() => this.props.navigation.navigate('NewMessageScreen', {
-                        transition: 'horizontal',
-                        utils: utils
-                      })}
                       active={false}
                       isBtn={true}
+                      bigBtn={true}
                       icon={faPlusCircle}
                       navigate={this.navigate.bind(this)}/>
+                  : void 0
               }
               <NavItem index={3} label="Chats" icon={faComment} active={this.state.nav[3].active} navigate={this.navigate.bind(this)}/>
               <NavItem index={4} label="Settings" icon={faCog} active={this.state.nav[4].active} navigate={this.navigate.bind(this)}/>

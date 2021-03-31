@@ -89,50 +89,53 @@ export default class Swiper extends React.Component {
   render() {
     const s_width = Dimensions.get("window").width;
 
-    return (
-      <Theme.View color={'view'} shadow={"large"} style={[
-          this.props.style, {
-            borderRadius: 20
-          }
-        ]}>
-        <ScrollView
-          ref={(v) => {
-            this.scrollView = v;
-            if (v) 
-              v.scrollTo({x: 0, y: 0, animated: true})
-          }}
-          onScrollEndDrag={(e) => {
-            this.onScrolledTo(e.nativeEvent.targetContentOffset.x)
-          }}
-          onLayout={event => {
-            var {
-              x,
-              y,
-              width,
-              height
-            } = event.nativeEvent.layout;
-            if (width > 1 && this.swiper_width == 0) {
-              this.swiper_width = width;
-              this.forceUpdate();
+    if (this.data.length > 0) {
+      return (
+        <Theme.View color={'view'} shadow={"large"} style={[
+            this.props.style, {
+              borderRadius: 20
             }
-          }}
-          bounces={false}
-          horizontal={true}
-          showsHorizontalScrollIndicator={false}
-          pagingEnabled={true}
-          style={{
-            borderRadius: 20,
-            height: s_width
-          }}>
-          {
-            Object.keys(this.data).map(index => {
-              const ele = this.data[index];
-              return ele.render(this.swiper_width)
-            })
-          }
-        </ScrollView>
-      </Theme.View>
-    )
+          ]}>
+          <ScrollView
+            ref={(v) => {
+              this.scrollView = v;
+              if (v) 
+                v.scrollTo({x: 0, y: 0, animated: true})
+            }}
+            onScrollEndDrag={(e) => {
+              this.onScrolledTo(e.nativeEvent.targetContentOffset.x)
+            }}
+            onLayout={event => {
+              var {
+                x,
+                y,
+                width,
+                height
+              } = event.nativeEvent.layout;
+              if (width > 1 && this.swiper_width == 0) {
+                this.swiper_width = width;
+                this.forceUpdate();
+              }
+            }}
+            bounces={false}
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+            pagingEnabled={true}
+            style={{
+              borderRadius: 20,
+              height: s_width
+            }}>
+            {
+              Object.keys(this.data).map(index => {
+                const ele = this.data[index];
+                return ele.render(this.swiper_width)
+              })
+            }
+          </ScrollView>
+        </Theme.View>
+      )
+    }
+    return null;
 
   }
 }

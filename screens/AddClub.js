@@ -67,7 +67,7 @@ class AddClubScreen extends React.Component {
       account_type: utils.getAccountType(),
       loading: false
     };
-
+    this.user = utils.getUser();
     this.margin = new Animated.Value(-20);
   }
 
@@ -98,7 +98,7 @@ class AddClubScreen extends React.Component {
     }
   }*/
 
-  searchClubByCode(code, cb) {
+  searchClubByCode(code, cb, done_cb) {
     code = code.toUpperCase()
     database().ref('clubs/keys').once('value', function(snap) {
       const keys = snap.val();
@@ -106,45 +106,110 @@ class AddClubScreen extends React.Component {
         database().ref('clubs/' + club_id + '/invite_codes/' + code + '/groups').once('value', function(snap) {
           const groups = snap.val();
           if (groups) {
-            return cb([
-              {
-                code: code,
-                id: club_id,
-                groups: groups
-              }
-            ]);
+            database().ref('clubs/' + res[0].id + '/name').once('value', function(snap) {
+              done_cb();
+              cb({name: snap.val(), code: code, id: club_id, groups: groups});
+            });
+          } else 
+            done_cb();
           }
-        });
+        );
       });
     });
+  }
+
+  searchClubByName(str, cb, done_cb) {
+    str = str.toLowerCase()
+    database().ref('clubs/keys').once('value', function(snap) {
+      const keys = snap.val();
+      Object.keys(keys).forEach(function(club_id) {
+        const done = Object.keys(keys).indexOf(club_id) == Object.keys(keys).length - 1
+        database().ref('clubs/' + club_id + '/name').once('value', function(snap) {
+          if (snap.val()) {
+            const club_name = snap.val().toLowerCase();
+            console.log(club_name)
+            if (str.includes(club_name) || club_name.includes(str)) {
+              console.log('FOUND!')
+              // check if club is public
+              database().ref('clubs/' + club_id + '/public').once('value', function(snap) {
+                if (snap.val()) {
+                  cb({id: club_id, name: club_name})
+                  console.log('club is public')
+                }
+
+                if (done) 
+                  done_cb()
+              }.bind(this));
+            } else if (done) 
+              done_cb()
+          } else if (done) 
+            done_cb()
+        }.bind(this))
+      });
+    });
+  }
+
+  appendSearchResult(result) {
+    if (this.state.search_results) {
+      var found = false
+      this.state.search_results.forEach((r, i) => {
+        console.log(r.id + " AND " + result.id)
+        if (r.id == result.id) {
+          found = true;
+          if (result.groups) 
+            this.state.search_results[this.state.search_results.index(r)] = result
+          return false
+        }
+      });
+    } else 
+      this.state.search_results = []
+    if (!found) {
+      this.state.search_results.push(result)
+      this.forceUpdate();
+      return true
+    }
   }
 
   searchClub(str, open_result = -1) {
     if (str && str != '' && str != ' ') {
       this.state.loading = true;
+      var searching_by_code = true;
+      var searching_by_name = true;
       this.forceUpdate();
 
       console.log('>' + str + '<')
-      this.searchClubByCode(str, function(res) {
-        console.log(res)
-        this.state.loading = false;
-        this.forceUpdate();
-        if (open_result > -1) {
-          //fetch club name
-          database().ref('clubs/' + res[0].id + '/name').once('value', (function(snap) {
-            res[0].name = snap.val();
-            if (this.state.qr_code_result == null) 
-              this.animateQrCodeResult('in', res[0]);
-            else 
-              this.animateQrCodeResult('out', res[0], (function() {
-                this.animateQrCodeResult('in', res[0]);
-              }).bind(this));
-            }
-          ).bind(this));
-        } else 
-          this.state.search_results = res;
+      this.state.search_results = []
+      this.forceUpdate();
+      this.searchClubByCode(str, function(club) {
+        this.appendSearchResult(club)
+      }.bind(this), function() {
+        console.log('searching_by_code is done')
+        searching_by_code = false;
+        if (!searching_by_name) 
+          this.state.loading = false;
         this.forceUpdate();
       }.bind(this))
+
+      this.searchClubByName(str, function(club) {
+        this.appendSearchResult(club)
+      }.bind(this), function() {
+        console.log('searching_by_name is done')
+        searching_by_name = false;
+        if (!searching_by_code) 
+          this.state.loading = false;
+        this.forceUpdate();
+      }.bind(this))
+
+      /*
+      if (open_result > -1) {
+        if (this.state.qr_code_result == null)
+          this.animateQrCodeResult('in', results[0]);
+        else
+          this.animateQrCodeResult('out', results[0], (function() {
+            this.animateQrCodeResult('in', results[0]);
+          }).bind(this));
+        }
+        */
     }
   }
 
@@ -257,6 +322,9 @@ class AddClubScreen extends React.Component {
 
         if (selected_groups.length > 0) {
           database().ref('users/' + uid + '/clubs/' + club_id).set(user_club);
+          if (is_admin) 
+            database().ref('users/' + uid + '/account_type').set('manager');
+          
           utils.showAlert('Du bist jetzt ' + (
             is_admin
               ? 'Administrator'
@@ -425,6 +493,12 @@ class AddClubScreen extends React.Component {
             headline="Beitreten"
             headlineFontSize={46}
             backButton={true}
+            backButtonIcon={!this.user.isManager()
+              ? faPlusCircle
+              : null}
+            backButtonOnPress={!this.user.isManager()
+              ? () => alert('onPress')
+              : null}
             actionButtonIcon={faCamera}
             actionButtonOnPress={() => {
               this.scan_qr_code_modal.open()
@@ -437,35 +511,32 @@ class AddClubScreen extends React.Component {
               Du kannst nach öffentlichen Vereinen suchen, oder einen Einladungcode eingeben.
             </Theme.Text>
 
-            <Theme.View style={{
+            <Theme.View color={'selected_view'} style={{
                 marginTop: 30,
-                borderRadius: 10,
-                backgroundColor: '#1e1e1e'
+                borderRadius: 10
               }}>
-              <InputBox icon={faSearch} placeholder={"Name oder Code"} onChange={(v) => this.searchClub(v)}/>
-              <Theme.ActivityIndicator
-                visible={this.state.loading}
-                style={{
+              <InputBox icon={faSearch} placeholder="Name oder Code" onChange={(v) => this.searchClub(v)}/>
+              <Theme.ActivityIndicator visible={this.state.loading} style={{
                   marginTop: 10,
                   marginBottom: 10
-                }}
-                scale={1}/>
+                }} scale={1}></Theme.ActivityIndicator>
+              {
+                searchResults.length > 0
+                  ? <Theme.View
+                      color={"selected_view"}
+                      style={{
+                        paddingBottom: 20,
+                        marginBottom: 0,
+                        marginTop: 0,
+                        borderBottomLeftRadius: 10,
+                        borderBottomRightRadius: 10
+                      }}>
+                      {searchResults}
+                    </Theme.View>
+                  : void 0
+              }
             </Theme.View>
-            {
-              searchResults.length > 0
-                ? <Theme.View
-                    style={{
-                      paddingBottom: 20,
-                      marginBottom: 20,
-                      marginTop: 0,
-                      borderBottomLeftRadius: 10,
-                      borderBottomRightRadius: 10,
-                      backgroundColor: '#1e1e1e'
-                    }}>
-                    {searchResults}
-                  </Theme.View>
-                : void 0
-            }
+
           </HeaderScrollView>
 
         </View>

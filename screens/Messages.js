@@ -8,7 +8,6 @@ import {
   View,
   StatusBar,
   Image,
-  Button,
   TouchableOpacity,
   ScrollView,
   Animated,
@@ -20,6 +19,7 @@ import {Headlines} from './../app/constants.js';
 import database from '@react-native-firebase/database';
 import {withNavigation} from 'react-navigation';
 import HeaderScrollView from './../components/HeaderScrollView.js';
+import Button from './../components/Button.js';
 import User from "./../classes/User.js";
 import Chat from "./../classes/Chat.js";
 import {Theme} from './../app/index.js';
@@ -38,7 +38,8 @@ class MessagesScreen extends React.Component {
     // get all active chats of user
     utils.getUser().getChats(function(c) {
       c.forEach((chat, i) => {
-        this.chats.push(chat)
+        if (chat) 
+          this.chats.push(chat)
       });
     }.bind(this))
   }
@@ -55,12 +56,49 @@ class MessagesScreen extends React.Component {
     }
 
     if (this.props.show) {
+      console.log(this.chats)
       return (
         <HeaderScrollView headline="Chats" headlineFontSize={47} backButton={false}>
           <View style={{
               marginLeft: -20
             }}>
-            {chatsElements}
+            {
+              this.chats.length > 1
+                ? chatsElements
+                : <View
+                    style={{
+                      marginLeft: 20,
+                      flex: 1,
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                    <Image
+                      style={{
+                        marginTop: 40,
+                        width: 320,
+                        height: 261
+                      }}
+                      source={require('./../assets/img/chat_illustration.png')}/>
+                    <Theme.Text
+                      style={{
+                        marginTop: 40,
+                        fontFamily: 'Poppins-ExtraBold',
+                        fontSize: 30,
+                        opacity: .5
+                      }}>Keine Chats</Theme.Text>
+                    <Theme.Text
+                      style={{
+                        textAlign: 'center',
+                        marginTop: 20,
+                        fontFamily: 'Poppins-Medium',
+                        fontSize: 20,
+                        opacity: .5
+                      }}>Beginne einen Chat, indem du auf den Autoren einer Mitteilung clickst.</Theme.Text>
+                    <Button style={{
+                        marginTop: 20
+                      }} color="selected_view" label="Verein beitreten"/>
+                  </View>
+            }
           </View>
         </HeaderScrollView>
       );

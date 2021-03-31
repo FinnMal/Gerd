@@ -8,7 +8,6 @@ import {
   View,
   StatusBar,
   Image,
-  Button,
   TouchableOpacity,
   ScrollView,
   Animated,
@@ -41,6 +40,7 @@ import {useDarkMode} from 'react-native-dynamic'
 import {Theme} from './../app/index.js';
 import Swiper from './../components/Swiper.js'
 import {default as Modal} from "./../components/Modal.js";
+import Button from "./../components/Button.js";
 import Setting from "./../components/Setting.js";
 
 function CText(props) {
@@ -273,31 +273,70 @@ class HomeScreen extends React.Component {
               <Swiper data={this.state.events} style={{
                   marginTop: 25
                 }} autoplay={false}></Swiper>
-              <View
-                style={{
-                  flexWrap: 'wrap',
-                  alignItems: 'flex-start',
-                  flexDirection: 'row',
-                  marginBottom: 25,
-                  marginTop: 20
-                }}>
-                <Theme.Text
-                  style={{
-                    marginTop: 60,
-                    marginLeft: 5,
-                    fontFamily: 'Poppins-ExtraBold',
-                    fontSize: 35
-                  }}>Mitteilungen</Theme.Text>
-                <Theme.Text
-                  color={"primary"}
-                  style={{
-                    marginLeft: "auto",
-                    alignSelf: 'flex-end',
-                    marginBottom: 5,
-                    fontFamily: 'Poppins-SemiBold',
-                    fontSize: 17
-                  }}>Alle anzeigen</Theme.Text>
-              </View>
+              {
+                this.state.messages.length > 0
+                  ? <View
+                      style={{
+                        flexWrap: 'wrap',
+                        alignItems: 'flex-start',
+                        flexDirection: 'row',
+                        marginBottom: 25,
+                        marginTop: 20
+                      }}>
+                      <Theme.Text
+                        style={{
+                          marginTop: 60,
+                          marginLeft: 5,
+                          fontFamily: 'Poppins-ExtraBold',
+                          fontSize: 35
+                        }}>Mitteilungen</Theme.Text>
+                      <Theme.Text
+                        color={"primary"}
+                        style={{
+                          marginLeft: "auto",
+                          alignSelf: 'flex-end',
+                          marginBottom: 5,
+                          fontFamily: 'Poppins-SemiBold',
+                          fontSize: 17
+                        }}>Alle anzeigen</Theme.Text>
+                    </View>
+                  : <View
+                      style={{
+                        paddingLeft: 15,
+                        paddingRight: 15,
+                        paddingTop: 70,
+                        flex: 1,
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                      <Image
+                        style={{
+                          marginTop: 40,
+                          width: 250,
+                          height: 200
+                        }}
+                        source={require('./../assets/img/messages_illustration.png')}/>
+                      <Theme.Text
+                        style={{
+                          marginTop: 40,
+                          fontFamily: 'Poppins-ExtraBold',
+                          fontSize: 30,
+                          opacity: .5
+                        }}>Keine Mitteilungen</Theme.Text>
+                      <Theme.Text
+                        style={{
+                          textAlign: 'center',
+                          marginTop: 20,
+                          fontFamily: 'Poppins-Medium',
+                          fontSize: 20,
+                          opacity: .5
+                        }}>Trete einem Verein bei, um Mitteilungen und Events anzuzeigen.</Theme.Text>
+                      <Button style={{
+                          marginTop: 20
+                        }} color="selected_view" label="Verein beitreten"/>
+                    </View>
+              }
+
               <View>
                 {firstMessages}
               </View>
