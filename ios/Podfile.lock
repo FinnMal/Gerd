@@ -378,6 +378,8 @@ PODS:
     - React
   - react-native-document-picker (3.5.4):
     - React
+  - react-native-encrypted-storage (4.0.2):
+    - React-Core
   - react-native-image-picker (2.3.4):
     - React-Core
   - react-native-onesignal (3.9.1):
@@ -597,6 +599,7 @@ DEPENDENCIES:
   - react-native-camera (from `../node_modules/react-native-camera`)
   - "react-native-cameraroll (from `../node_modules/@react-native-community/cameraroll`)"
   - react-native-document-picker (from `../node_modules/react-native-document-picker`)
+  - react-native-encrypted-storage (from `../node_modules/react-native-encrypted-storage`)
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
   - react-native-onesignal (from `../node_modules/react-native-onesignal`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
@@ -752,6 +755,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-community/cameraroll"
   react-native-document-picker:
     :path: "../node_modules/react-native-document-picker"
+  react-native-encrypted-storage:
+    :path: "../node_modules/react-native-encrypted-storage"
   react-native-image-picker:
     :path: "../node_modules/react-native-image-picker"
   react-native-onesignal:
@@ -919,6 +924,7 @@ SPEC CHECKSUMS:
   react-native-camera: 5c1fbfecf63b802b8ca4a71c60d30a71550fb348
   react-native-cameraroll: 7c2e22b5a8e8f30fc6d5566c942b225ca7129752
   react-native-document-picker: c5752781fbc0c126c627c1549b037c139444a4cf
+  react-native-encrypted-storage: 837c733334debf626204f03d867c7e01d8741e2f
   react-native-image-picker: 32d1ad2c0024ca36161ae0d5c2117e2d6c441f11
   react-native-onesignal: 4d82a09492e4937c1b6eb22dcd602b0b26a9e4b0
   react-native-safe-area-context: 01158a92c300895d79dee447e980672dc3fb85a6

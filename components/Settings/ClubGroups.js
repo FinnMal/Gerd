@@ -54,7 +54,6 @@ export default class ClubGroups extends React.Component {
         headline: "Gruppe bearbeiten"
       }
     };
-
     this.props.setting_screen.showActionButton(true);
 
     this.props.club.startListener('groups', function() {

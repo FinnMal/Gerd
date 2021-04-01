@@ -23,6 +23,7 @@ import Group from './Group.js'
 import File from './File.js'
 import storage from '@react-native-firebase/storage';
 import RNFS from 'react-native-fs';
+import KeyManager from './KeyManager'
 
 export default class Club extends DatabaseConnector {
   id = null;
@@ -33,6 +34,7 @@ export default class Club extends DatabaseConnector {
     super("clubs", id, start_values)
     this.id = id;
     this.user = user;
+    this.key_manager = new KeyManager();
   }
 
   getName() {
@@ -157,7 +159,13 @@ export default class Club extends DatabaseConnector {
   }
 
   createGroup(group) {
-    this.pushValue(group, 'groups');
+    this.pushValue(group, 'groups', function(group_id) {
+      if (!group.public) {
+        var keys = this.key_manager.generate()
+        this.key_manager.saveKey(this.getID() + '_' + group_id + '_private_key', keys[1])
+        this.setValue(JSON.parse(keys[0]), 'groups/' + group_id + '/public_key')
+      }
+    }.bind(this));
   }
 
   updateGroupName(key, value) {

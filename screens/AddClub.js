@@ -304,7 +304,11 @@ class AddClubScreen extends React.Component {
         selected_groups.forEach((group, i) => {
           if (group.has_admin_rights) 
             is_admin = true;
-          database().ref('clubs/' + club_id + '/groups/' + group.key + '/members').set(group.members + 1);
+          if (group.is_public) {
+            database().ref('clubs/' + club_id + '/groups/' + group.key + '/members').set(group.members + 1);
+          } else 
+            database().ref('clubs/' + club_id + '/groups/' + group.key + '/queue/' + uid).set(true);
+          
           user_club.groups[group.key] = true;
         });
 

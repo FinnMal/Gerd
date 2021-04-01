@@ -27,6 +27,8 @@ import {Theme} from './../app/index.js';
 import Button from "./../components/Button.js";
 import InputBox from "./../components/InputBox.js";
 import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
+import EncryptedStorage from 'react-native-encrypted-storage';
+import KeyManager from './../classes/KeyManager.js';
 
 class FirstStartScreen extends React.Component {
   constructor(props) {
@@ -49,6 +51,7 @@ class FirstStartScreen extends React.Component {
         "img": require('./../assets/img/firststart_slider_2.png')
       }
     ]
+    this.key_manager = new KeyManager()
   }
 
   _createAccount() {
@@ -71,11 +74,17 @@ class FirstStartScreen extends React.Component {
       const value = await AsyncStorage.getItem('onesignal_id');
       if (value) {
         database().ref('users/' + uid + '/onesignal_id').set(value);
-        onDone();
       }
     } catch (error) {
-      onDone();
+      console.log(error)
     }
+
+    // generate and store private/public keys
+    var keys = this.key_manager.generate();
+    this.key_manager.saveKey('private_key', keys[1])
+    database().ref('users/' + uid + '/public_key').set(JSON.parse(keys[0]));
+
+    onDone()
   }
 
   async _saveUserID(id) {

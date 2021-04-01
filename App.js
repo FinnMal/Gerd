@@ -29,6 +29,7 @@ import FirstStartScreen from "./screens/FirstStart";
 import AddClubScreen from "./screens/AddClub";
 import ClubSettingsScreen from "./screens/ClubSettings";
 import SettingScreen from "./screens/Setting";
+import NotificationActionHandler from "./classes/NotificationActionHandler";
 
 import {LogBox, AppRegistry} from "react-native";
 import database from "@react-native-firebase/database";
@@ -167,10 +168,8 @@ export default class App extends Component {
   }
 
   onOpened(openResult) {
-    console.log("Message: ", openResult.notification.payload.body);
-    console.log("Data: ", openResult.notification.payload.additionalData);
-    console.log("isActive: ", openResult.notification.isAppInFocus);
-    console.log("openResult: ", openResult);
+    handler = new NotificationActionHandler(openResult)
+    handler.handle()
   }
 
   async onIds(device) {
