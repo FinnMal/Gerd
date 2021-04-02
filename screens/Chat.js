@@ -125,7 +125,7 @@ class ChatScreen extends React.Component {
     }
     return (
       <Theme.BackgroundView style={{
-          flex: 1
+          height: s_height
         }}>
         <HeaderScrollView
           onRef={view => {
@@ -143,7 +143,7 @@ class ChatScreen extends React.Component {
           scrollToEnd={true}
           headline={partner_user_name}
           subheadline={"schreibt ..."}
-          height={91}
+          height={90}
           headlineFontSize={47}
           backButton={true}
           hasFlatList={true}
@@ -197,7 +197,6 @@ class ChatScreen extends React.Component {
                   borderRadius={50}/>
               : void 0
           }
-
         </View>
       </Theme.BackgroundView>
     );

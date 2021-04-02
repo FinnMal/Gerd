@@ -376,6 +376,8 @@ PODS:
     - React-Core
   - react-native-cameraroll (4.0.0):
     - React
+  - react-native-date-picker (3.2.10):
+    - React-Core
   - react-native-document-picker (3.5.4):
     - React
   - react-native-encrypted-storage (4.0.2):
@@ -510,8 +512,8 @@ PODS:
     - React
   - RNReactNativeHapticFeedback (1.10.0):
     - React
-  - RNReanimated (1.13.0):
-    - React
+  - RNReanimated (1.13.3):
+    - React-Core
   - RNScreens (2.11.0):
     - React
   - RNShare (3.8.3):
@@ -598,6 +600,7 @@ DEPENDENCIES:
   - "react-native-blur (from `../node_modules/@react-native-community/blur`)"
   - react-native-camera (from `../node_modules/react-native-camera`)
   - "react-native-cameraroll (from `../node_modules/@react-native-community/cameraroll`)"
+  - react-native-date-picker (from `../node_modules/react-native-date-picker`)
   - react-native-document-picker (from `../node_modules/react-native-document-picker`)
   - react-native-encrypted-storage (from `../node_modules/react-native-encrypted-storage`)
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
@@ -753,6 +756,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-camera"
   react-native-cameraroll:
     :path: "../node_modules/@react-native-community/cameraroll"
+  react-native-date-picker:
+    :path: "../node_modules/react-native-date-picker"
   react-native-document-picker:
     :path: "../node_modules/react-native-document-picker"
   react-native-encrypted-storage:
@@ -923,6 +928,7 @@ SPEC CHECKSUMS:
   react-native-blur: cad4d93b364f91e7b7931b3fa935455487e5c33c
   react-native-camera: 5c1fbfecf63b802b8ca4a71c60d30a71550fb348
   react-native-cameraroll: 7c2e22b5a8e8f30fc6d5566c942b225ca7129752
+  react-native-date-picker: 242eec7af56cea5fb2706d5db5d3837060b3884b
   react-native-document-picker: c5752781fbc0c126c627c1549b037c139444a4cf
   react-native-encrypted-storage: 837c733334debf626204f03d867c7e01d8741e2f
   react-native-image-picker: 32d1ad2c0024ca36161ae0d5c2117e2d6c441f11
@@ -957,7 +963,7 @@ SPEC CHECKSUMS:
   RNImageCropPicker: 89352ad050ea8dd9bc1728802c477f5b38cd7b4c
   RNPermissions: e29e449d948ba1c04f3bb3bede5c662667543c49
   RNReactNativeHapticFeedback: 22c5ecf474428766c6b148f96f2ff6155cd7225e
-  RNReanimated: 89f5e0a04d1dd52fbf27e7e7030d8f80a646a3fc
+  RNReanimated: 514a11da3a2bcc6c3dfd9de32b38e2b9bf101926
   RNScreens: 0e91da98ab26d5d04c7b59a9b6bd694124caf88c
   RNShare: ec48772563576a8ff19022c3d1db410429fb3e2e
   RNSharedElement: 591b3be4f03678cee37697acc62702984ea43de4
@@ -979,6 +985,6 @@ SPEC CHECKSUMS:
   Yoga: 7740b94929bbacbddda59bf115b5317e9a161598
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
 
-PODFILE CHECKSUM: f8b3526e5e82f1d3eedda489b39718d10e106834
+PODFILE CHECKSUM: cb273abed8cab66e4df05e82e073a52cc89880b7
 
 COCOAPODS: 1.9.3

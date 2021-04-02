@@ -118,7 +118,7 @@ export default class DatabaseConnector {
   }
 
   hasValue(path, cb = false) {
-    return this.getValue(path) != undefined;
+    return this.getValue(path) != undefined && this.getValue(path) != [] && this.getValue(path) != "";
   }
 
   remove() {

@@ -5,6 +5,7 @@ require_relative '../node_modules/@react-native-community/cli-platform-ios/nativ
 
 permissions_path = '../node_modules/react-native-permissions/ios'
 pod 'Permission-Camera', :path => "#{permissions_path}/Camera.podspec"
+pod 'react-native-date-picker', :path => '../node_modules/react-native-date-picker'
 
 target 'Gerd' do
   config = use_native_modules!

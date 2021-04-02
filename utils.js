@@ -14,6 +14,7 @@ var TOAST = null;
 this.state = {};
 
 auth().onAuthStateChanged(function(user) {
+  console.log(user)
   console.log("onAuthStateChanged utils: " + user.uid);
   USER_ID = user.uid;
 }.bind(this));

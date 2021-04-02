@@ -22,6 +22,7 @@ import database from "@react-native-firebase/database";
 import functions from '@react-native-firebase/functions';
 import ChatMessage from './../components/ChatMessage.js';
 import User from './../classes/User.js';
+import KeyManager from './../classes/KeyManager.js'
 import DatabaseConnector from "./database/DatabaseConnector";
 import ReactNativeHapticFeedback from "react-native-haptic-feedback"
 
@@ -42,12 +43,17 @@ export default class Chat extends DatabaseConnector {
   message_removed_cb = null;
   last_message_cb = null;
   unread_messages_count_cb = null;
-  constructor(id, uid) {
+  constructor(id, user) {
     super("chats", id, ["user_id_1", "user_id_2"])
     this.id = id;
-    this.uid = uid;
+    this.uid = user.getID();
+    this.user = user
 
     this.state = {}
+    this.key_manager = new KeyManager()
+    this.setReadyListener(function() {
+      this.partner_user = new User(this.getPartnerUserId(), ['name', 'public_key'])
+    }.bind(this))
 
     //load read messages this.loadMessagesFromSQL();
   }
@@ -172,15 +178,17 @@ export default class Chat extends DatabaseConnector {
           var mes_id = messages[send_at];
           this.removeValue('unread_by_' + this.getUID() + '/' + send_at)
           // download message from firebase
-          this.getDatabaseValue('messages/' + mes_id, function(mes) {
+          this.getDatabaseValue('messages/' + mes_id, async function(mes) {
             // delete message
             this.removeValue('messages/' + mes_id)
             if (mes) {
+              //alert(JSON.stringify(this.key_manager.decryptWithPrivate(mes.encrypted_message)))
               var data = {}
               data.read = false;
               data.send_at = send_at;
-              data.text = mes.text;
+              data.text = await this.key_manager.decryptWithPrivate(mes.encrypted_message);
               data.is_own = mes.sender == this.getUID()
+              console.log(data)
               new ChatMessage(this, data, false, function(mes) {
                 this.messages[mes.getSendAt()] = mes;
                 this.countUnreadMessages()
@@ -234,22 +242,32 @@ export default class Chat extends DatabaseConnector {
   sendMessage(text, cb) {
     if (text) {
       //this.setTyping(false)
-      var data = {
-        text: text,
-        send_at: new Date().getTime(),
-        sender: this.getUID(),
-        receiver: this.getPartnerUserId()
-      }
 
-      var mes = new ChatMessage(this, data, false)
-      this.messages[data.send_at] = mes;
-      this.triggerLastMessageListener()
-      this.message_added_cb([mes], false)
+      const partner = this.getPartnerUser()
+      partner.getPublicKey(function(partner_public_key) {
+        if (partner_public_key) {
+          const encrypted_message = this.key_manager.encrypt(text, partner_public_key)
 
-      console.log('sending chat message ...')
-      this.pushValue(data, 'messages', function(mes_id) {
-        this.setTyping(false);
-        this.setValue(mes_id, 'unread_by_' + this.getPartnerUserId() + '/' + data.send_at)
+          var data = {
+            encrypted_message: encrypted_message,
+            text: text,
+            send_at: new Date().getTime(),
+            sender: this.getUID(),
+            receiver: this.getPartnerUserId()
+          }
+
+          var mes = new ChatMessage(this, data, false)
+          this.messages[data.send_at] = mes;
+          this.triggerLastMessageListener()
+          this.message_added_cb([mes], false)
+          data.text = null;
+
+          console.log('sending chat message ...')
+          this.pushValue(data, 'messages', function(mes_id) {
+            this.setTyping(false);
+            this.setValue(mes_id, 'unread_by_' + this.getPartnerUserId() + '/' + data.send_at)
+          }.bind(this))
+        }
       }.bind(this))
     }
   }

@@ -13,9 +13,10 @@ import {
   Easing,
   Dimensions,
   ActionSheetIOS,
-  Switch,
   ActivityIndicator,
-  ImageBackground
+  ImageBackground,
+  Picker,
+  Keyboard
 } from "react-native";
 import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
 import ReactNativeHapticFeedback from "react-native-haptic-feedback"
@@ -36,30 +37,43 @@ import {
   faInfoCircle,
   faCheck,
   faChevronLeft,
-  faTrash
+  faTrash,
+  faUpload,
+  faCalendarMinus
 } from "@fortawesome/free-solid-svg-icons";
 import ClubCard from "./../../components/ClubCard.js";
 import InputBox from "./../../components/InputBox.js";
+import Switch from "./../../components/Switch.js";
 import Button from "./../../components/Button.js";
+import {default as File} from './../../classes/File.js';
+import {default as EventCard} from './../../components/Event.js';
 import {default as Modal} from "./../../components/Modal.js";
+import DatePicker from './../../components/DatePicker.js'
+import SelectBox from './../../components/SelectBox.js'
 
 export default class ClubEvents extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      groups: {},
+      events: {},
       modal: {
-        group: {},
-        headline: "Gruppe bearbeiten"
+        event: {},
+        headline: "Event bearbeiten"
       }
     };
 
     this.props.setting_screen.showActionButton(true);
 
-    this.props.club.startListener('groups', function() {
-      this.forceUpdate();
-    }.bind(this))
+    this.props.club.getEvents(function(events) {
+      events.forEach((event, i) => {
+        event.setReadyListener(function() {
+          if (!this.state.events[event.getID()]) 
+            this.state.events[event.getID()] = event;
+          this.forceUpdate()
+        }.bind(this))
+      });
+    }.bind(this), true);
   }
 
   componentDidMount() {
@@ -67,41 +81,27 @@ export default class ClubEvents extends React.Component {
   }
 
   actionButtonOnPress() {
-    this.state.modal.headline = "Gruppe erstellen";
-    this.state.modal.group = {
-      members: 0,
+    this.state.modal.headline = "Event erstellen";
+    this.state.modal.event = {
       id: "NEW",
-      name: "",
-      public: true,
-      has_admin_rights: false
+      ends_at: new Date(),
+      full_day: false,
+      groups: {},
+      img: "",
+      locaiton: "",
+      repeat: "",
+      starts_at: new Date(),
+      title: "",
+      visible: true
     };
     this.forceUpdate();
-    this.groupModal.open();
+    this.modal.open();
+    //this.starts_at_modal.open();
   }
 
-  _openOptions(key) {
-    ActionSheetIOS.showActionSheetWithOptions({
-      options: [
-        "Abbrechen", "Bearbeiten", "Löschen"
-      ],
-      destructiveButtonIndex: 2,
-      cancelButtonIndex: 0
-    }, buttonIndex => {
-      if (buttonIndex === 0) {
-        // cancel
-      } else if (buttonIndex === 1) {
-        this.state.modal.group = this.props.club.getGroups()[key];
-        this.forceUpdate();
-        this.groupModal.open();
-      } else if (buttonIndex === 2) {
-        //delete this groups
-        this._deleteGroup(key);
-      }
-    });
-  }
-
-  _editGroup() {
-    this.groupModal.close();
+  _editEvent() {
+    this.modal.close();
+    /*
     const club = this.props.club;
     var group = this.state.modal.group;
     if (group.id != "NEW") {
@@ -114,140 +114,21 @@ export default class ClubEvents extends React.Component {
       club.createGroup(this.state.modal.group);
       this.forceUpdate();
     }
+    */
   }
 
-  _deleteGroup(key) {
-    this.props.utils.showAlert("Gruppe löschen?", "", [
-      "Ja", "Nein"
-    ], function(btn_id) {
-      if (btn_id == 0) {
-        // delete group
-        this.props.club.deleteGroup(key);
-        this.forceUpdate();
-        this.props.setting_screen.showToast("Gruppe gelöscht", faTrash)
-      }
-    }.bind(this), true, false);
-  }
-
-  renderFileCard(group) {
-    return (
-      <Theme.View
-        key={group.id}
-        shadow={"normal"}
-        color={group.has_admin_rights
-          ? 'primary'
-          : ''}
-        style={{
-          borderRadius: 15,
-          marginBottom: 20
-        }}>
-        <Theme.TouchableOpacity
-          style={{
-            padding: 7,
-            borderRadius: 15,
-            borderBottomLeftRadius: group.public && group.has_admin_rights
-              ? 0
-              : 15,
-            borderBottomRightRadius: group.public && group.has_admin_rights
-              ? 0
-              : 15,
-            flexWrap: "wrap",
-            alignItems: "flex-start",
-            flexDirection: "row"
-          }}
-          onPress={() => this._openOptions(group.id)}>
-          <View style={{
-              padding: 8
-            }}>
-            <Theme.Icon
-              backgroundColor={group.has_admin_rights
-                ? 'primary'
-                : ''}
-              size={24}
-              color={group.has_admin_rights
-                ? ''
-                : 'primary'}
-              icon={group.public === false
-                ? faLock
-                : faLayerGroup}/>
-          </View>
-          <View style={{
-              marginLeft: 20,
-              height: 42,
-              maxWidth: 220,
-              justifyContent: "center"
-            }}>
-            <Theme.Text
-              backgroundColor={group.has_admin_rights
-                ? 'primary'
-                : ''}
-              style={{
-                fontFamily: "Poppins-SemiBold",
-                fontSize: 21
-              }}>
-              {group.name}
-            </Theme.Text>
-            <Theme.Text
-              backgroundColor={group.has_admin_rights
-                ? 'primary'
-                : ''}
-              style={{
-                marginTop: -4,
-                fontFamily: "Poppins-Medium",
-                fontSize: 16,
-                opacity: 0.77
-              }}>
-              {group.members.toLocaleString() + ' '}
-              Mitglieder
-            </Theme.Text>
-          </View>
-          <Theme.TouchableOpacity
-            style={{
-              padding: 11,
-              opacity: 0.7,
-              marginLeft: 'auto',
-              alignSelf: 'flex-end'
-            }}
-            onPress={() => this._openOptions(group.id)}>
-            <Theme.Icon backgroundColor={group.has_admin_rights
-                ? 'primary'
-                : ''} size={20} icon={faEllipsisV}/>
-          </Theme.TouchableOpacity>
-        </Theme.TouchableOpacity>
-        {
-          group.public && group.has_admin_rights
-            ? (
-              <Theme.View
-                style={{
-                  opacity: 0.9,
-                  marginTop: 0,
-                  padding: 6,
-                  borderRadius: 15,
-                  borderTopLeftRadius: 0,
-                  borderTopRightRadius: 0,
-                  backgroundColor: "#ff1629",
-                  flexWrap: "wrap",
-                  alignItems: "flex-start",
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  alignItems: "center"
-                }}>
-                <Theme.Icon size={15} icon={faExclamationCircle}/>
-                <Theme.Text
-                  style={{
-                    marginLeft: 10,
-                    color: "white",
-                    fontSize: 16,
-                    fontFamily: "Poppins-Bold"
-                  }}>
-                  Gruppe ist öffentlich!
-                </Theme.Text>
-              </Theme.View>
-            )
-            : (void 0)
-        }
-      </Theme.View>
-    );
+  dateToString(date) {
+    if (date) {
+      console.log('DATETOSTIRNG: ' + date.toLocaleString())
+      return date.toLocaleDateString("de-DE", {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    return ''
   }
 
   render() {
@@ -255,75 +136,82 @@ export default class ClubEvents extends React.Component {
     const s_height = Dimensions.get("window").height;
 
     const club = this.props.club;
-    const groups = club.getGroups();
-    const pageContent = Object.keys(groups).map(group_id => {
-      var group = groups[group_id];
-      if (group) {
-        return this.renderFileCard(group);
+
+    const pageContent = Object.keys(this.state.events).reverse().map(event_id => {
+      const event = this.state.events[event_id];
+      if (event) {
+        return <EventCard card_size={'small'} event={event}/>;
       }
     });
     return (
       <View>
         <Modal ref={m => {
-            this.groupModal = m;
-          }} headline={this.state.modal.headline} onDone={() => this._editGroup()}>
-          <View>
-            <InputBox label="Name" marginTop={20} value={this.state.modal.group.name} onChange={v => (this.state.modal.group.name = v)}/>
-            <View
-              style={{
-                marginTop: 30,
-                marginBottom: 30,
-                flexWrap: "wrap",
-                alignItems: "flex-start",
-                flexDirection: "row",
-                alignItems: "center"
-              }}>
-              <Theme.Text
-                style={{
-                  marginLeft: 5,
-                  marginRight: 20,
-                  opacity: 0.8,
-                  color: "white",
-                  fontSize: 20,
-                  fontFamily: "Poppins-SemiBold"
-                }}>
-                Öffentlich
-              </Theme.Text>
-              <Theme.Switch
-                onValueChange={() => {
-                  this.state.modal.group.public = !this.state.modal.group.public;
-                  this.forceUpdate();
-                }}
-                value={this.state.modal.group.public}/>
-            </View>
-            <View
-              style={{
-                marginBottom: 30,
-                flexWrap: "wrap",
-                alignItems: "flex-start",
-                flexDirection: "row",
-                alignItems: "center"
-              }}>
-              <Theme.Text
-                style={{
-                  marginLeft: 5,
-                  marginRight: 20,
-                  opacity: 0.8,
-                  color: "white",
-                  fontSize: 20,
-                  fontFamily: "Poppins-SemiBold"
-                }}>
-                Administrator Rechte
-              </Theme.Text>
-              <Theme.Switch
-                onValueChange={() => {
-                  this.state.modal.group.has_admin_rights = !this.state.modal.group.has_admin_rights;
-                  this.forceUpdate();
-                }}
-                value={this.state.modal.group.has_admin_rights}/>
-            </View>
-          </View>
+            this.modal = m;
+          }} headline={this.state.modal.headline} onDone={() => this._editEvent()}>
+          <ScrollView>
+            <InputBox label="Name" width={s_width * .95} marginTop={20} value={this.state.modal.event.title} onChange={v => (this.state.modal.event.title = v)}/>
+            <InputBox label="Ort" width={s_width * .95} marginTop={20} value={this.state.modal.event.location} onChange={v => (this.state.modal.event.location = v)}/>
+
+            <Switch
+              onValueChange={() => {
+                this.state.modal.event.full_day = !this.state.modal.event.full_day;
+                this.forceUpdate();
+              }}
+              value={this.state.modal.event.full_day}
+              label="Ganztägig"/>
+            <DatePicker
+              label={!this.state.modal.event.full_day
+                ? 'Beginn'
+                : 'Datum'}
+              mode={!this.state.modal.event.full_day
+                ? 'datetime'
+                : 'date'}
+              value={this.state.modal.event.starts_at}
+              onChange={v => {
+                this.state.modal.event.starts_at = v;
+                this.forceUpdate()
+              }}
+              width={s_width * .95}></DatePicker>
+            {
+              !this.state.modal.event.full_day
+                ? <View>
+                    <DatePicker
+                      label='Ende'
+                      mode={'datetime'}
+                      marginTop={20}
+                      value={this.state.modal.event.ends_at}
+                      onChange={v => {
+                        this.state.modal.event.ends_at = v;
+                        this.forceUpdate()
+                      }}
+                      width={s_width * .95}/></View>
+                : void 0
+            }
+
+            <SelectBox
+              marginTop={20}
+              width={s_width * .95}
+              picker_width={170}
+              label="Wiederholen"
+              sheet_headline="Intervall auswählen"
+              elements={[
+                'Nie',
+                'Täglich',
+                'Wöchentlich',
+                'Alle 2 Wochen',
+                'Monatlich',
+                'Jährlich'
+              ]}
+              value={this.state.modal.event.repeat}
+              onChange={(value, index) => {
+                console.log(value)
+                this.state.modal.event.repeat = value
+                this.forceUpdate()
+              }}/>
+
+          </ScrollView>
         </Modal>
+
         <Theme.ActivityIndicator
           style={{
             alignSelf: 'flex-start',
@@ -332,8 +220,46 @@ export default class ClubEvents extends React.Component {
             marginBottom: 50
           }}
           scale={1.2}
-          visible={!club.hasGroups()}></Theme.ActivityIndicator>
-        {pageContent}
+          visible={false}></Theme.ActivityIndicator>
+        {
+          club.hasEvents()
+            ? pageContent
+            : <View style={{
+                  flex: 1,
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                <Image
+                  style={{
+                    marginTop: 10,
+                    width: 302,
+                    height: 261
+                  }}
+                  source={require('./../../assets/img/event_illustration.png')}/>
+                <Theme.Text
+                  style={{
+                    marginTop: 40,
+                    fontFamily: 'Poppins-ExtraBold',
+                    fontSize: 30,
+                    opacity: .5
+                  }}>Keine Events</Theme.Text>
+                <Theme.Text
+                  style={{
+                    textAlign: 'center',
+                    marginTop: 20,
+                    fontFamily: 'Poppins-Medium',
+                    fontSize: 20,
+                    opacity: .5
+                  }}>Lade eine Datei für deinen Club hoch, um sie nachher mit einer Mitteilung zu verknüpfen.</Theme.Text>
+                <Button
+                  style={{
+                    marginTop: 20
+                  }}
+                  color="selected_view"
+                  label="Event erstellen"
+                  onPress={() => this.actionButtonOnPress()}/>
+              </View>
+        }
       </View>
     );
   }

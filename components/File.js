@@ -239,7 +239,7 @@ export default class File extends React.Component {
 
       if (this.props.card_size == 'small') {
         return (
-          <Theme.View shadow={"normal"} style={{
+          <Theme.View style={{
               borderRadius: 13,
               marginBottom: 20
             }}>

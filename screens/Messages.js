@@ -63,7 +63,7 @@ class MessagesScreen extends React.Component {
               marginLeft: -20
             }}>
             {
-              this.chats.length > 1
+              this.chats.length > 0
                 ? chatsElements
                 : <View
                     style={{

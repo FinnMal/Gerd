@@ -36,7 +36,8 @@ import {
   faInfoCircle,
   faCheck,
   faChevronLeft,
-  faTrash
+  faTrash,
+  faUpload
 } from "@fortawesome/free-solid-svg-icons";
 import ClubCard from "./../../components/ClubCard.js";
 import InputBox from "./../../components/InputBox.js";
@@ -134,8 +135,46 @@ export default class ClubFiles extends React.Component {
             marginBottom: 50
           }}
           scale={1.2}
-          visible={!club.hasFiles()}></Theme.ActivityIndicator>
-        {pageContent}
+          visible={false}></Theme.ActivityIndicator>
+        {
+          club.hasFiles()
+            ? pageContent
+            : <View style={{
+                  flex: 1,
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                <Image
+                  style={{
+                    marginTop: 10,
+                    width: 302,
+                    height: 261
+                  }}
+                  source={require('./../../assets/img/files_illustration.png')}/>
+                <Theme.Text
+                  style={{
+                    marginTop: 40,
+                    fontFamily: 'Poppins-ExtraBold',
+                    fontSize: 30,
+                    opacity: .5
+                  }}>Keine Dateien</Theme.Text>
+                <Theme.Text
+                  style={{
+                    textAlign: 'center',
+                    marginTop: 20,
+                    fontFamily: 'Poppins-Medium',
+                    fontSize: 20,
+                    opacity: .5
+                  }}>Lade eine Datei für deinen Club hoch, um sie nachher mit einer Mitteilung zu verknüpfen.</Theme.Text>
+                <Button
+                  style={{
+                    marginTop: 20
+                  }}
+                  color="selected_view"
+                  label="Datei hochladen"
+                  onPress={() => this.actionButtonOnPress()}/>
+              </View>
+        }
       </View>
     );
   }

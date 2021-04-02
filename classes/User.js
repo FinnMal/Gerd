@@ -27,8 +27,8 @@ import Club from './Club.js';
 export default class User extends DatabaseConnector {
   uid = null;
 
-  constructor(uid) {
-    super('users', uid, ['name', 'account_type'])
+  constructor(uid, start_values = ['name', 'account_type']) {
+    super('users', uid, start_values)
     this.uid = uid;
   }
 
@@ -144,7 +144,7 @@ export default class User extends DatabaseConnector {
       var d = 0;
       if (chat_ids) {
         Object.keys(chat_ids).forEach((chat_id, i) => {
-          var chat = new Chat(chat_id, this.getUID());
+          var chat = new Chat(chat_id, this);
           chat.setReadyListener(function() {
             chats.push(chat);
             if (d == Object.keys(chat_ids).length - 1) 
@@ -219,7 +219,16 @@ export default class User extends DatabaseConnector {
         true
       );
     }.bind(this))
+  }
 
+  getPublicKey(cb = null) {
+    if (cb) {
+      this.getValue('public_key', function(public_key) {
+        if (public_key) 
+          cb(JSON.stringify(public_key))
+      }.bind(this))
+    } else 
+      return JSON.stringify(this.getValue('public_key'))
   }
 
   /*

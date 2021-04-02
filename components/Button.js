@@ -16,6 +16,7 @@ export default class Button extends React.Component {
   constructor(props) {
     super(props);
 
+    const s_width = Dimensions.get("window").width;
     sizes = {
       small: [
         5, 12, 17
@@ -26,7 +27,13 @@ export default class Button extends React.Component {
       big: [
         11, 25, 18
       ],
-      extra_big: [15, 40, 23]
+      extra_big: [
+        15, 40, 23
+      ],
+      wide: [
+        10, s_width * 0.35,
+        18
+      ]
     };
 
     this.state = {

@@ -25,6 +25,13 @@ export default class KeyManager {
     return result
   }
 
+  async decryptWithPrivate(parts) {
+    var key = await this.getKey('private_key')
+    if (key) 
+      return this.decrypt(parts, key)
+    return null
+  }
+
   generate() {
     this.rsa.generate(1024, '10001');
     var publicKey = this.rsa.getPublicString();
@@ -32,17 +39,25 @@ export default class KeyManager {
     return [publicKey, privateKey]
   }
 
-  async getKey(name) {
+  async getKey(name, cb) {
     try {
       const session = await EncryptedStorage.getItem(name);
+      if (cb) 
+        cb(session)
+      return session
     } catch (error) {
       console.log(error)
+      if (cb) 
+        cb(null)
+      return null
     }
-    return session
   }
 
   async saveKey(name, value) {
     try {
+      console.log('SAVING KEY TO EncryptedStorage ...')
+      console.log(name)
+      console.log(value)
       await EncryptedStorage.setItem(name, value);
     } catch (error) {
       console.log(error)

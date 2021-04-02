@@ -53,9 +53,9 @@ export default class Event extends DatabaseConnector {
   animationDuration = 30000;
   ready_to_render = false;
 
-  constructor(id, club, user = null, data = null) {
+  constructor(id, club, user = null, data = false) {
     super('clubs/' + club.getID() + '/events', id, [
-      'title', 'visible'
+      'title', 'visible', 'starts_at'
     ], data);
     this.id = id;
     this.club = club;
@@ -128,10 +128,6 @@ export default class Event extends DatabaseConnector {
     return parseInt(hexStr.repeat(2 / hexStr.length), 16)
   }
 
-  getID() {
-    return this.data.id;
-  }
-
   getClubID() {
     return this.club.getID();
   }
@@ -154,7 +150,14 @@ export default class Event extends DatabaseConnector {
 
   setTitle(v, store = false) {
     this.setValue(v, 'title', store);
-    this.forceUpdate();
+  }
+
+  isVisible() {
+    return this.getValue('visible') === true;
+  }
+
+  setVisible(v, store = false) {
+    this.setValue(v, 'visible', store)
   }
 
   isFullDay() {
@@ -209,9 +212,8 @@ export default class Event extends DatabaseConnector {
     }
   }
 
-  setDate() {
+  setDate(v, store = false) {
     this.setValue(v, 'date', store);
-    this.forceUpdate();
   }
 
   getDuration() {
@@ -237,9 +239,8 @@ export default class Event extends DatabaseConnector {
     return this.getValue('location');
   }
 
-  setLocation() {
+  setLocation(v, store = false) {
     this.setValue(v, 'location', store);
-    this.forceUpdate();
   }
 
   isOwnEvent() {

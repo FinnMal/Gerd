@@ -8,7 +8,8 @@ import {
   StyleSheet,
   Animated,
   Switch as ReactSwitch,
-  Pressable
+  Pressable,
+  Picker as ReactPicker
 } from 'react-native';
 import {useDarkMode} from 'react-native-dynamic'
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
@@ -19,6 +20,7 @@ import {default as ReactCheckBox} from '@react-native-community/checkbox';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback"
 import {AnimatedCircularProgress as ReactAnimatedCircularProgress} from "react-native-circular-progress";
 import {Keyboard} from 'react-native'
+import {default as ReactDatePicker} from 'react-native-date-picker'
 
 // first value is for darkmode old white color: F2F1F6
 const colors = {
@@ -26,7 +28,7 @@ const colors = {
     "#1C1C1E", "#F2F1F6"
   ],
   "background_view": [
-    "black", "#FFFFFF"
+    "#000000", "#FFFFFF"
   ],
   "selected_view": [
     "#2C2C2E", "#E4E3E9"
@@ -44,6 +46,29 @@ const colors = {
     "#B4B7CB", "#B4B7CB"
   ],
   'teal': ['#64D2FF', '#5AC7FA']
+}
+
+function getColor(props) {
+  var isDarkMode = useDarkMode()
+  if (props.invertedColor) {
+    isDarkMode = !isDarkMode;
+  }
+  var color = props.color;
+  if (!props.color) {
+    color = isDarkMode
+      ? colors["view"][0]
+      : colors["view"][1];
+  } else {
+    if (colors[props.color]) 
+      color = isDarkMode
+        ? colors[props.color][0]
+        : colors[props.color][1];
+    }
+  
+  if (props.colorOpacity < 1 && props.colorOpacity > 0) {
+    color = hexToRGBA(color, props.colorOpacity, true);
+  }
+  return color
 }
 
 function View(props) {
@@ -504,6 +529,10 @@ function Switch(props) {
     ? colors["primary"][0]
     : colors["primary"][1]
 
+  var background_color = isDarkMode
+    ? colors["view"][0]
+    : colors["view"][1]
+
   return <ReactSwitch
     style={[
       props.style, {
@@ -519,7 +548,7 @@ function Switch(props) {
       true: color
     }}
     thumbColor={"white"}
-    ios_backgroundColor="#3e3e3e"
+    ios_backgroundColor={background_color}
     onValueChange={props.onValueChange}
     value={props.value}/>
 }
@@ -545,6 +574,39 @@ function AnimatedCircularProgress(props) {
     backgroundColor={backgroundColor}/>
 }
 
+function DatePicker(props) {
+
+  var isDarkMode = useDarkMode()
+  var color = isDarkMode
+    ? '#ffffff'
+    : '#000000'
+
+  return <ReactDatePicker
+    locale="de"
+    textColor={color}
+    minuteInterval={props.minuteInterval}
+    date={props.date}
+    mode={props.mode}
+    onDateChange={(v) => {
+      if (props.onChange) 
+        props.onChange(v)
+    }}>{props.children}</ReactDatePicker>
+}
+
+function Picker(props) {
+
+  var isDarkMode = useDarkMode()
+  var color = isDarkMode
+    ? '#ffffff'
+    : '#000000'
+
+  return <ReactPicker selectedValue={props.selectedValue} style={props.style} itemStyle={{
+      color: color
+    }} onValueChange={props.onValueChange}>
+    {props.children}
+  </ReactPicker>
+}
+
 export {
   TouchableOpacity,
   View,
@@ -561,5 +623,7 @@ export {
   ActivityIndicator,
   CheckBox,
   Switch,
-  AnimatedCircularProgress
+  AnimatedCircularProgress,
+  DatePicker,
+  Picker
 };
