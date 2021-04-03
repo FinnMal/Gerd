@@ -254,15 +254,15 @@ class HomeScreen extends React.Component {
                     marginRight: 5,
                     alignSelf: 'flex-end',
                     borderRadius: 47,
-                    height: 46,
-                    width: 46,
+                    height: 45,
+                    width: 45,
                     marginBottom: 5
                   }}>
                   <Image
                     style={{
                       borderRadius: 47,
-                      height: 46,
-                      width: 46
+                      height: '100%',
+                      width: '100%'
                     }}
                     source={{
                       cache: 'force-cache',
