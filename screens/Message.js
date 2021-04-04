@@ -746,6 +746,7 @@ export default class MessageScreen extends React.Component {
             }
           ], {useNativeDriver: false})}>
           <Theme.View
+            color={'background_view'}
             style={{
               zIndex: 10,
               minHeight: s_height + this.state.headlineHeight - 100,

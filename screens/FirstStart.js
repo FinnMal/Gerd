@@ -184,7 +184,7 @@ class FirstStartScreen extends React.Component {
                         fontSize: 18,
                         marginTop: 10,
                         fontFamily: 'Poppins-Medium'
-                      }}>Dein Benutzername ist nur für die Vereinsbetreiber sichtbar.</Theme.Text>
+                      }}>Dein Benutzername ist nur für die Vereinsbetreiber und deine Chatpartner sichtbar.</Theme.Text>
                     <InputBox
                       ref={(input_box) => this.username_box = input_box}
                       returnKeyType="done"

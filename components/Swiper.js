@@ -91,7 +91,7 @@ export default class Swiper extends React.Component {
 
     if (this.data.length > 0) {
       return (
-        <Theme.View color={'view'} shadow={"large"} style={[
+        <Theme.View color={'view'} shadow={"normal"} style={[
             this.props.style, {
               borderRadius: 20
             }

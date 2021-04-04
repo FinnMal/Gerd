@@ -16,7 +16,6 @@ import {
   Dimensions,
   TouchableWithoutFeedback,
   Keyboard,
-  Modal,
   KeyboardAvoidingView,
   Pressable
 } from 'react-native';
@@ -57,6 +56,7 @@ import DocumentPicker from 'react-native-document-picker';
 import ImagePicker from "react-native-image-crop-picker";
 import CheckBox from '@react-native-community/checkbox';
 import {Theme} from './../app/index.js';
+import {default as Modal} from "./../components/Modal.js";
 
 import storage from '@react-native-firebase/storage';
 
@@ -67,7 +67,7 @@ export default class NewMessageScreen extends React.Component {
     const user = this.props.navigation.getParam('user', null)
 
     this.state = {
-      curPageIndex: 3,
+      curPageIndex: 5,
       clubsList: [],
       event_modal_visible: false,
       events: [],
@@ -77,7 +77,6 @@ export default class NewMessageScreen extends React.Component {
       uid: utils.getUserID(),
       long_text_input_has_focus: false,
       link_modal: {
-        visible: false,
         club_key: '',
         group_key: ''
       },
@@ -346,21 +345,21 @@ export default class NewMessageScreen extends React.Component {
         alert('with_group is null');
       }
     else {
-      this.state.link_modal.visible = false;
+      this.link_modal.open()
       this.forceUpdate();
     }
   }
 
   _openModal() {
-    if (this.state.link_modal.visible) {
-      this.state.link_modal.visible = false;
+    if (this.link_modal.isOpen()) {
+      this.link_modal.close()
       this.forceUpdate();
       setTimeout((function() {
-        this.state.link_modal.visible = true;
+        this.link_modal.open()
         this.forceUpdate();
       }).bind(this), 0);
     } else {
-      this.state.link_modal.visible = true;
+      this.link_modal.open()
       this.forceUpdate();
     }
   }
@@ -749,16 +748,16 @@ export default class NewMessageScreen extends React.Component {
                 : faPlusCircle;
 
               return (
-                <TouchableOpacity
+                <Theme.TouchableOpacity
+                  color={group.selected
+                    ? 'selected_view'
+                    : 'view'}
                   onPress={() => this.addGroup(key, g_key)}
                   key={g_key}
                   style={{
                     borderRadius: 5,
                     paddingTop: 5,
                     paddingBottom: 5,
-                    backgroundColor: group.selected
-                      ? '#615384'
-                      : '#1e1e1e',
                     marginTop: 5,
                     marginBottom: 5,
                     flexWrap: 'wrap',
@@ -775,14 +774,12 @@ export default class NewMessageScreen extends React.Component {
                       justifyContent: 'center',
                       alignItems: 'center'
                     }}>
-                    <CheckBox
+                    <Theme.CheckBox
                       lineWidth={2}
-                      animationDuration={0.15}
-                      onCheckColor="#0DF5E3"
-                      onTintColor="#0DF5E3"
-                      value={group.selected}
-                      onValueChange={() => this.addGroup(key, g_key)}
+                      checked={group.selected}
+                      onChange={() => this.addGroup(key, g_key)}
                       style={{
+                        marginTop: -25,
                         height: 20,
                         width: 20
                       }}/>
@@ -790,7 +787,7 @@ export default class NewMessageScreen extends React.Component {
                   <View style={{
                       marginLeft: 18
                     }}>
-                    <Text
+                    <Theme.Text
                       style={{
                         fontSize: 18,
                         fontFamily: 'Poppins-SemiBold',
@@ -798,8 +795,8 @@ export default class NewMessageScreen extends React.Component {
                         opacity: 0.85
                       }}>
                       {group.name}
-                    </Text>
-                    <Text
+                    </Theme.Text>
+                    <Theme.Text
                       style={{
                         fontSize: 15,
                         fontFamily: 'Poppins-SemiBold',
@@ -808,7 +805,7 @@ export default class NewMessageScreen extends React.Component {
                       }}>
                       {group.members.toLocaleString() + " "}
                       Mitglieder
-                    </Text>
+                    </Theme.Text>
                   </View>
                   {
                     group.selected
@@ -820,11 +817,11 @@ export default class NewMessageScreen extends React.Component {
                             marginLeft: 275
                           }}
                           onPress={() => this.linkGroup(key, g_key, 0)}>
-                          <FontAwesomeIcon size={20} color={'white'} icon={faLink}/>
+                          <Theme.Icon size={20} icon={faLink}/>
                         </TouchableOpacity>
                       : void 0
                   }
-                </TouchableOpacity>
+                </Theme.TouchableOpacity>
               );
             }
           });
@@ -855,16 +852,16 @@ export default class NewMessageScreen extends React.Component {
               : faPlusCircle;
 
             return (
-              <TouchableOpacity
+              <Theme.TouchableOpacity
+                color={is_linked
+                  ? 'selected_view'
+                  : 'view'}
                 onPress={() => this.linkGroup(modal_club_key, modal_group_key, 1, g_key, !is_linked)}
                 key={g_key}
                 style={{
                   borderRadius: 5,
                   paddingTop: 5,
                   paddingBottom: 5,
-                  backgroundColor: is_linked
-                    ? '#615384'
-                    : '#121212',
                   marginTop: 5,
                   marginBottom: 5,
                   flexWrap: 'wrap',
@@ -881,14 +878,13 @@ export default class NewMessageScreen extends React.Component {
                     justifyContent: 'center',
                     alignItems: 'center'
                   }}>
-                  <CheckBox
+                  <Theme.CheckBox
                     lineWidth={2}
                     animationDuration={0.15}
-                    onCheckColor="#0DF5E3"
-                    onTintColor="#0DF5E3"
-                    value={is_linked}
-                    onValueChange={() => this.linkGroup(modal_club_key, modal_group_key, 1, g_key, !is_linked)}
+                    checked={is_linked}
+                    onChange={() => this.linkGroup(modal_club_key, modal_group_key, 1, g_key, !is_linked)}
                     style={{
+                      marginTop: -25,
                       height: 20,
                       width: 20
                     }}/>
@@ -896,27 +892,25 @@ export default class NewMessageScreen extends React.Component {
                 <View style={{
                     marginLeft: 18
                   }}>
-                  <Text
+                  <Theme.Text
                     style={{
                       fontSize: 18,
                       fontFamily: 'Poppins-SemiBold',
-                      color: 'white',
                       opacity: 0.85
                     }}>
                     {group.name}
-                  </Text>
-                  <Text
+                  </Theme.Text>
+                  <Theme.Text
                     style={{
                       fontSize: 15,
                       fontFamily: 'Poppins-SemiBold',
-                      color: 'white',
                       opacity: 0.6
                     }}>
                     {group.members.toLocaleString()}
                     Mitglieder
-                  </Text>
+                  </Theme.Text>
                 </View>
-              </TouchableOpacity>
+              </Theme.TouchableOpacity>
             );
           }
         });
@@ -940,83 +934,33 @@ export default class NewMessageScreen extends React.Component {
         <View style={{
             marginBottom: 20
           }}>
-          <Modal animationType="slide" presentationStyle="formSheet" visible={this.state.link_modal.visible}>
-            <View style={{
-                padding: 20,
-                backgroundColor: '#121212',
-                height: '100%'
+          <Modal ref={m => {
+              this.link_modal = m;
+            }} headline={'Gruppe verlinken'} onDone={() => this._editEvent()}>
+            <ScrollView style={{
+                paddingRight: 20
               }}>
-              <View
+              <Theme.Text
                 style={{
-                  marginBottom: 10,
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  flexDirection: 'row'
+                  opacity: 0.6,
+                  color: 'white',
+                  fontFamily: 'Poppins-Medium',
+                  fontSize: 18,
+                  marginTop: 20,
+                  marginBottom: 30
                 }}>
-                <Text
-                  style={{
-                    fontFamily: 'Poppins-Bold',
-                    color: 'white',
-                    fontSize: 25,
-                    width: '76%'
-                  }}
-                  numberOfLines={1}>
-                  Gruppe verlinken
-                </Text>
-                <TouchableOpacity
-                  style={{
-                    height: 30,
-                    borderRadius: 10,
-                    marginLeft: 10,
-                    width: 70,
-                    padding: 5,
-                    paddingLeft: 10,
-                    backgroundColor: '#0DF5E3'
-                  }}
-                  onPress={text => this.linkGroup()}>
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      fontFamily: 'Poppins-Bold',
-                      color: '#1e1e1e'
-                    }}>FERTIG</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View
-                style={{
-                  marginLeft: -20,
-                  height: 0.5,
-                  marginBottom: 20,
-                  backgroundColor: '#1e1e1e',
-                  width: '140%'
-                }}/>
-
-              <ScrollView showsVerticalScrollIndicator={false}>
-                <Text
-                  style={{
-                    opacity: 0.6,
-                    color: 'white',
-                    fontFamily: 'Poppins-Medium',
-                    fontSize: 18,
-                    marginBottom: 30
-                  }}>
-                  In verlinkten Gruppen erhalten nur die Mitglieder eine Mitteilung, die sich in jeder verlinkten Gruppen befinden. Verlinkungen werden nicht für den gesamten
-                  Verein übernommen.
-                </Text>
-
-                {linkingGroupsList}
-              </ScrollView>
-            </View>
+                In verlinkten Gruppen erhalten nur die Mitglieder eine Mitteilung, die sich in jeder verlinkten Gruppen befinden. Verlinkungen werden nur für diese Mitteilung
+                übernommen.
+              </Theme.Text>
+              {linkingGroupsList}
+            </ScrollView>
           </Modal>
-          <View
-            style={{
+          <Theme.View style={{
               borderRadius: 10,
               borderBottomLeftRadius: 0,
-              borderBottomRightRadius: 0,
-              backgroundColor: '#1e1e1e'
+              borderBottomRightRadius: 0
             }}>
-            <TextInput
+            <Theme.TextInput
               multiline={true}
               autoCorrect={false}
               keyboardType="default"
@@ -1031,15 +975,13 @@ export default class NewMessageScreen extends React.Component {
               placeholderTextColor="#665F75"
               placeholder="Gruppe suchen ..."
               onChangeText={text => this.onChangeText('group_serach', text)}/>
-          </View>
-          <View style={{
+          </Theme.View>
+          <Theme.View color={'selected_view'} style={{
               height: 0.5,
-              width: '100%',
-              backgroundColor: '#121212'
+              width: '100%'
             }}/>
-          <View
+          <Theme.View
             style={{
-              backgroundColor: '#1e1e1e',
               marginTop: 0,
               padding: 20,
               paddingLeft: 10,
@@ -1051,7 +993,7 @@ export default class NewMessageScreen extends React.Component {
             <ScrollView showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false}>
               {groupsList}
             </ScrollView>
-          </View>
+          </Theme.View>
 
         </View>
       );
@@ -1167,7 +1109,8 @@ export default class NewMessageScreen extends React.Component {
 
           {
             this.state.curPageIndex == 2 || this.state.curPageIndex == 3 || this.state.curPageIndex == 4
-              ? <TouchableOpacity
+              ? <Theme.TouchableOpacity
+                  color={'view'}
                   style={{
                     justifyContent: 'center',
                     alignSelf: 'center',
@@ -1176,16 +1119,7 @@ export default class NewMessageScreen extends React.Component {
                     marginLeft: 138,
                     borderRadius: 40,
                     position: 'absolute',
-                    backgroundColor: '#0DF5E3',
-                    justifyContent: 'center',
-
-                    shadowColor: '#0DF5E3',
-                    shadowOffset: {
-                      width: 0,
-                      height: 0
-                    },
-                    shadowOpacity: 0.4,
-                    shadowRadius: 15.00
+                    justifyContent: 'center'
                   }}
                   onPress={() => {
                     if (this.state.curPageIndex == 2) 
@@ -1195,7 +1129,7 @@ export default class NewMessageScreen extends React.Component {
                     else 
                       this.openUploadPictureModal();
                     }}>
-                  <FontAwesomeIcon
+                  <Theme.Icon
                     style={{
                       alignSelf: 'center',
                       textAlign: 'center',
@@ -1206,7 +1140,7 @@ export default class NewMessageScreen extends React.Component {
                     icon={this.state.curPageIndex == 2
                       ? faPlus
                       : faUpload}/>
-                </TouchableOpacity>
+                </Theme.TouchableOpacity>
               : void 0
           }
 

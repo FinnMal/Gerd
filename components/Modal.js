@@ -83,7 +83,7 @@ export default class GerdModal extends React.Component {
         onDismiss={() => console.log("onDismiss")}
         onRequestClose={() => this._onRequestClose()}
         onOrientationChange={() => console.log("onOrientationChange")}>
-        <Theme.View>
+        <Theme.View color={'background_view'}>
           <View
             style={{
               padding: 20,

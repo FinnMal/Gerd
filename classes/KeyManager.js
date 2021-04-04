@@ -55,9 +55,6 @@ export default class KeyManager {
 
   async saveKey(name, value) {
     try {
-      console.log('SAVING KEY TO EncryptedStorage ...')
-      console.log(name)
-      console.log(value)
       await EncryptedStorage.setItem(name, value);
     } catch (error) {
       console.log(error)

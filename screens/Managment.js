@@ -103,13 +103,6 @@ class ManagmentScreen extends React.Component {
           actionButtonIcon={faPlusCircle}
           actionButtonOnPress={() => this._openAddClub()}>
           {clubCards}
-          {clubCards}
-          {clubCards}
-          {clubCards}
-          {clubCards}
-          {clubCards}
-          {clubCards}
-          {clubCards}
         </HeaderScrollView>
       );
     }
