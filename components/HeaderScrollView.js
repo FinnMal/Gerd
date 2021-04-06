@@ -99,10 +99,7 @@ class HeaderScrollView extends React.Component {
           }
         }
       }
-    ], {
-      useNativeDriver: false,
-      listener: event => this._onScroll(event.nativeEvent.contentOffset.y)
-    }).bind(this);
+    ]).bind(this);
   }
 
   addItemToFlatList(item, toStart = true) {
@@ -203,7 +200,6 @@ class HeaderScrollView extends React.Component {
   };
 
   _getHeaderHeadlineMarginTop = () => {
-    const {scrollY, marginTop} = this.state;
     return this.state.scrollY.interpolate({
       inputRange: [
         -5, 50
