@@ -21,7 +21,6 @@ import {
   FlatList
 } from 'react-native';
 
-import {Headlines} from './../app/constants.js';
 import {withNavigation} from 'react-navigation';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import database from '@react-native-firebase/database';
@@ -32,6 +31,7 @@ import Chat from './../classes/Chat.js';
 import InputBox from './../components/InputBox.js';
 import {Theme} from './../app/index.js';
 
+// CHAT class: screen for end-to-end-encrypted chat
 class ChatScreen extends React.Component {
   typingInverval = null;
   messageCards = null;
@@ -69,8 +69,6 @@ class ChatScreen extends React.Component {
     .bind(this), 3000)
 
     chat.startMessagesListener(function(messages, addToStart = true) {
-      //alert("TEXT: " + messages[0].getText())
-
       messages.forEach((mes, i) => {
         if (addToStart) 
           this.state.flatListData.push(mes);
@@ -79,7 +77,6 @@ class ChatScreen extends React.Component {
         }
       );
       this.forceUpdate();
-
     }.bind(this), function(mes) {
       this.state.headerScrollView.removeItemFromFlatList(mes)
     }.bind(this));
@@ -105,7 +102,6 @@ class ChatScreen extends React.Component {
   }
 
   render() {
-    var s = require('./../app/style.js');
     const chat = this.state.chat;
     const utils = this.props.navigation.getParam('utils', null)
 
@@ -116,12 +112,15 @@ class ChatScreen extends React.Component {
     if (partner) 
       partner_user_name = partner.getName();
     
+    // show keyboard on start
     if (this.state.focused) {
+      this.state.focused = false
       setTimeout(function() {
         if (this.textInput) 
           this.textInput.focus();
-        }
-      .bind(this), 300)
+        this.forceUpdate().bind(this)
+      }, 300)
+
     }
     return (
       <Theme.BackgroundView style={{

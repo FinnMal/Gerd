@@ -15,6 +15,7 @@ import {Message} from './Message.js';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faInbox, faTimesCircle} from '@fortawesome/free-solid-svg-icons';
 
+// MESSAGESLIST class: manages a list of clubs messsages. similar to DataList.js
 export class MessagesList {
   limit = 5;
   messages = {};

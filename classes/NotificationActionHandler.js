@@ -5,6 +5,7 @@ import database from '@react-native-firebase/database';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import KeyManager from './KeyManager.js'
 
+// NotificationActionHandler class: handels nofication onpress
 export default class NotificationActionHandler {
   constructor(notification) {
     this.data = notification.notification.payload.additionalData
@@ -18,7 +19,7 @@ export default class NotificationActionHandler {
   handle() {
     console.log(this.data)
     if (this.data.type == 'group_queue') {
-      utils.showAlert('Anfrage', this.data.user + " möchte der Gruppe " + this.data.group + ' beitreten.', [
+      utils.showAlert('Anfrage', this.data.user_name + " möchte der Gruppe " + this.data.group_name + ' beitreten.', [
         'Ok', 'Abbrechen'
       ], function(button_index) {
         if (button_index == 0) {
@@ -40,7 +41,7 @@ export default class NotificationActionHandler {
           console.log('nicht erlaubt')
       }.bind(this))
     } else if (this.data.type == "group_queue_accepted") {
-      utils.showAlert('Bestätigung', 'Du bist nun Mitglied von ' + this.data.group_id, ['Ok'], function() {
+      utils.showAlert('Bestätigung', 'Du bist nun Mitglied von ' + this.data.group_name, ['Ok'], function() {
         //store group key
         var keyRef = database().ref('clubs/' + this.data.club_id + '/groups/' + this.data.group_id + '/queue/' + this.data.user_id)
         keyRef.once("value", async function(snap) {

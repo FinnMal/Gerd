@@ -4,6 +4,7 @@ import {Theme} from './../app/index.js';
 import BottomSheet from './BottomSheet.js';
 import InputBox from './InputBox.js';
 
+// DATEPICKER class: modifyed version of react-native-date-picker (see app/theme.js)
 export default class DatePicker extends React.Component {
   constructor(props) {
     super(props);

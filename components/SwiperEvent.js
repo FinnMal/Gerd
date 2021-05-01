@@ -39,10 +39,10 @@ import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
 import CameraRoll from '@react-native-community/cameraroll';
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
-import {ModalCard} from './../app/components.js';
 import {Theme} from './../app/index.js';
 import Button from './../components/Button.js';
 
+// SWIPEREVENT class: component for clubs events in swiper
 export default class SwiperEvent extends React.Component {
   event = null;
   imageScale = new Animated.Value(1);
@@ -146,7 +146,6 @@ export default class SwiperEvent extends React.Component {
     const club = this.event.getClub();
     const user = this.event.getUser();
     const s_width = Dimensions.get("window").width;
-    var s = require("./../app/style.js");
 
     const textOpacity = this.textOpacity.interpolate({
       inputRange: [

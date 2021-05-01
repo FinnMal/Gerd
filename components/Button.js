@@ -12,11 +12,13 @@ import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
 import ReactNativeHapticFeedback from "react-native-haptic-feedback"
 import {Theme} from './../app/index.js';
 
+// BUTTON class: modifyed react native button component
 export default class Button extends React.Component {
   constructor(props) {
     super(props);
 
     const s_width = Dimensions.get("window").width;
+    // default margins and text sizes
     sizes = {
       small: [
         5, 12, 17

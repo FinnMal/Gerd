@@ -20,7 +20,6 @@ import {
   Pressable
 } from 'react-native';
 import HomeScreen from './Home';
-import EventsScreen from './Events';
 import ManagmentScreen from './Managment';
 import MessagesScreen from './Messages';
 import SettingsScreen from './Settings';
@@ -76,6 +75,7 @@ function CNavbar(props) {
     ]}>{props.children}</View>;
 }
 
+//ScreenHandler class: shows and hides screens that are accessible with the naviagtion icons
 export default class ScreenHandler extends React.Component {
   navVisible: true;
   lastScrollPos: 0;
@@ -117,7 +117,6 @@ export default class ScreenHandler extends React.Component {
         }
       ]
     };
-    this.holeMargin = new Animated.Value(40);
     this.navbarMarginBottom = new Animated.Value(0);
     auth().onAuthStateChanged((function(user) {
       database().ref('users/' + user.uid + '/account_type').once('value', (function(snap) {
@@ -195,7 +194,6 @@ export default class ScreenHandler extends React.Component {
   }
 
   render() {
-    var s = require('./../app/style');
     const numbers = [1, 2, 3, 4, 5];
     const {navigate} = this.props.navigation;
     const {goBack} = this.props.navigation;
@@ -205,17 +203,10 @@ export default class ScreenHandler extends React.Component {
       ],
       outputRange: [-100, 0]
     });
-    const marginLeft = this.holeMargin.interpolate({
-      inputRange: [
-        0, 2000
-      ],
-      outputRange: [0, 2000]
-    });
-
     if (this.state.first_start_done) {
       console.log('first start is done 1')
       return (
-        <this.AppContext.Provider style={s.container}>
+        <this.AppContext.Provider>
           <CStatusBar/>
           <Toast ref={(toast) => {
               utils.setToast(toast)

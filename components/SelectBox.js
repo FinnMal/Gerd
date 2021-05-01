@@ -4,6 +4,7 @@ import {Theme} from './../app/index.js';
 import BottomSheet from './BottomSheet.js';
 import InputBox from './InputBox.js';
 
+// SELECTBOX class: component for a item selection
 export default class SelectBox extends React.Component {
   constructor(props) {
     super(props);

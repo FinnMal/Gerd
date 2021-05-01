@@ -56,6 +56,7 @@ import {Theme} from './../app/index.js';
 import {default as Modal} from "./../components/Modal.js";
 import {default as InputBox} from "./../components/InputBox.js";
 
+// FILE class: component for club files
 export default class File extends React.Component {
   constructor(props) {
     super(props);

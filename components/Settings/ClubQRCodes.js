@@ -106,7 +106,10 @@ export default class ClubQRCodes extends React.Component {
         this.forceUpdate();
         this.inviteModal.open();
       } else if (buttonIndex === 2) {
-        this._shareIntiveCode(code);
+        if (!this.props.club.getInviteCodes()[code].qr_code_ready) 
+          this._shareIntiveCode(code);
+        else 
+          alert('QR-Code wird noch verarbeitet')
       } else if (buttonIndex === 3) {
         //delete qrcode
         this._deleteCode(code)
@@ -285,34 +288,31 @@ export default class ClubQRCodes extends React.Component {
       }
     });
 
-    var groupsList = <Theme.Text>No invite codes</Theme.Text>;
-    if (club.hasInviteCodes()) {
-      if (club.hasGroups()) {
-        var current_invite = this.state.modal.invite;
-        if (current_invite) {
-          if (current_invite.groups) {
-            var club_groups = club.getGroups();
-            groupsList = Object.keys(club_groups).map(g_key => {
-              var group = club_groups[g_key];
-              var group_active = current_invite.groups[g_key];
+    var groupsList = <Theme.Text>No groups</Theme.Text>;
+    if (club.hasGroups()) {
+      var current_invite = this.state.modal.invite;
+      if (current_invite) {
+        if (current_invite.groups) {
+          var club_groups = club.getGroups();
+          groupsList = Object.keys(club_groups).map(g_key => {
+            var group = club_groups[g_key];
+            var group_active = current_invite.groups[g_key];
 
-              return (
-                <Theme.CheckBox
-                  label={group.name}
-                  checked={current_invite.groups[g_key]}
-                  onChange={(checked, rerender) => {
-                    current_invite.groups[g_key] = checked;
-                    if (rerender) 
-                      this.forceUpdate();
-                    }}/>
-              );
-            });
-          }
+            return (
+              <Theme.CheckBox
+                label={group.name}
+                checked={current_invite.groups[g_key]}
+                onChange={(checked, rerender) => {
+                  current_invite.groups[g_key] = checked;
+                  if (rerender) 
+                    this.forceUpdate();
+                  }}/>
+            );
+          });
         }
-      } else 
-        groupsList = <Theme.Text>No groups</Theme.Text>;
       }
-    
+    }
+
     return (
       <View>
         <Modal ref={m => {

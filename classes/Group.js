@@ -1,7 +1,8 @@
 import React from "react";
 import DatabaseConnector from "./database/DatabaseConnector";
 
-export default class Club extends DatabaseConnector {
+// GROUP class: manages a club group in Firebase Database
+export default class Group extends DatabaseConnector {
   id = null;
   club_id = null;
   user = null;

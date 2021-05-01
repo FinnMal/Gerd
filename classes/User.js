@@ -24,6 +24,7 @@ import DatabaseConnector from "./database/DatabaseConnector";
 import Chat from './Chat.js';
 import Club from './Club.js';
 
+// USER class: manages a user object in firebase database
 export default class User extends DatabaseConnector {
   uid = null;
 
@@ -120,12 +121,15 @@ export default class User extends DatabaseConnector {
     var has_notif = this.hasEventSubscribed(club_id, event_id);
     this.setValue(!has_notif, 'events/' + club_id + "_" + event_id + '/notification_subscribed', true)
 
+    // notification before event starts
     OneSignal.sendTag(
       club_id + "_" + event_id + "_before",
       !has_notif
         ? "yes"
         : "no"
     );
+
+    // notification when event starts
     OneSignal.sendTag(
       club_id + "_" + event_id + "_start",
       !has_notif
@@ -226,6 +230,8 @@ export default class User extends DatabaseConnector {
       this.getValue('public_key', function(public_key) {
         if (public_key) 
           cb(JSON.stringify(public_key))
+        else 
+          cb(false)
       }.bind(this))
     } else 
       return JSON.stringify(this.getValue('public_key'))
@@ -242,7 +248,6 @@ export default class User extends DatabaseConnector {
       this.getChats(function(chats) {
         var chat_found = false;
         chats.forEach((chat, i) => {
-          //alert(chat.getPartnerUserId())
           if (chat) {
             if (chat.getPartnerUserId() == partner.getUID()) {
               chat_found = true;
@@ -256,7 +261,7 @@ export default class User extends DatabaseConnector {
           }
 
           if (i == chats.length - 1 && !chat_found) {
-            // create chat if nothing found
+            // create chat if no one was found
             var new_chat = {
               user_id_1: this.getUID(),
               user_id_2: partner.getUID()

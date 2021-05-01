@@ -16,10 +16,9 @@ import {
   AsyncStorage,
   Keyboard
 } from 'react-native';
-import {Headlines} from './../app/constants.js';
+
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faAngleRight, faAngleLeft} from '@fortawesome/free-solid-svg-icons';
-import {NotificationCard} from './../app/components.js';
 import database from '@react-native-firebase/database';
 import {withNavigation} from 'react-navigation';
 import auth from '@react-native-firebase/auth';
@@ -30,6 +29,7 @@ import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import KeyManager from './../classes/KeyManager.js';
 
+// FirstStartScreen class: login screen
 class FirstStartScreen extends React.Component {
   constructor(props) {
     super(props);
@@ -117,7 +117,6 @@ class FirstStartScreen extends React.Component {
   }
 
   render() {
-    var s = require('./../app/style.js');
     const s_width = Dimensions.get("window").width;
     const s_height = Dimensions.get("window").height;
     const slider = this.slider[this.state.slider_pos];

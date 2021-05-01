@@ -2,6 +2,7 @@ import React from "react";
 import database from "@react-native-firebase/database";
 import {openDatabase} from 'react-native-sqlite-storage';
 
+// DatabaseConnector class: Manages the connection for Lists in the Firebase Database
 export default class DatabaseConnector {
   id = null;
   db = null;
@@ -28,6 +29,7 @@ export default class DatabaseConnector {
     }
   }
 
+  // runs SQL command on local database no connection to firebase
   executeSQL(s, p = [], cb) {
     if (s.indexOf('"?"') > -1 || s.indexOf("'?'") > -1) 
       alert('[DatabaseConnector] Error: symbol "?" should not be used with quotation marks')
@@ -42,7 +44,10 @@ export default class DatabaseConnector {
       );
     });
   }
+
   /*
+  returns the value of the path, if path is already downloaded
+  if the path is not stored locally, it calls getDatabaseValue with a callback function
   @param print_path is for debugging purposes
   */
   getValue(path, cb = null, print_path = false) {
@@ -73,6 +78,10 @@ export default class DatabaseConnector {
       }
   }
 
+  /*
+  stores a value to the given path locally
+  @param store if true it stores in the firebase database additionally
+  */
   setValue(value, path, store = false) {
     if (path) {
       path_arr = path.split("/");
@@ -99,6 +108,9 @@ export default class DatabaseConnector {
     }
   }
 
+  /*
+  pushes a new element to an array
+  */
   pushValue(value, path, cb) {
     var key = database().ref(this.parent_path + "/" + this.id + "/" + path).push(value).key;
     if (cb) 
@@ -107,6 +119,9 @@ export default class DatabaseConnector {
       return key;
     }
   
+  /*
+  counts path one up
+  */
   countUp(path, cb) {
     this.getDatabaseValue(path, function(value) {
       value = value + 1;
@@ -117,14 +132,24 @@ export default class DatabaseConnector {
     .bind(this))
   }
 
+  /*
+  returns true if path is downloaded
+  if cb is not null it checks if the value is stored in the database
+  */
   hasValue(path, cb = false) {
     return this.getValue(path) != undefined && this.getValue(path) != [] && this.getValue(path) != "";
   }
 
+  /*
+  removes the element
+  */
   remove() {
     database().ref(this.parent_path + "/" + this.id).remove();
   }
 
+  /*
+  removes a value on path
+  */
   removeValue(path) {
     path_arr = path.split("/");
 
@@ -148,6 +173,9 @@ export default class DatabaseConnector {
     }
   }
 
+  /*
+  gives the current value from path in firebase datbase to callback function
+  */
   getDatabaseValue(path, cb) {
     database().ref(this.parent_path + "/" + this.id + "/" + path).once("value", function(snap) {
       this.setValue(snap.val(), path);
@@ -155,6 +183,9 @@ export default class DatabaseConnector {
     }.bind(this));
   }
 
+  /*
+  starts a listener for a path
+  */
   startListener(path, cb) {
     if (Array.isArray(path)) {
       path.forEach((path_value, i) => {
@@ -191,6 +222,9 @@ export default class DatabaseConnector {
     }
   }
 
+  /*
+  stops every listener for a path
+  */
   stopListener(path) {
     if (this.listener) {
       if (this.listener[path]) {
@@ -201,6 +235,9 @@ export default class DatabaseConnector {
     }
   }
 
+  /*
+  stops every listener
+  */
   stopAllListener() {
     if (this.listener) {
       for (var path in this.listener) {

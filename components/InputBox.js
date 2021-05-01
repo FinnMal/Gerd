@@ -14,6 +14,7 @@ import {
 import {Theme} from './../app/index.js';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 
+// INPUTBOX class: component based on react natives TextInput
 export default class InputBox extends React.Component {
   has_focus = false;
   constructor(props) {

@@ -18,7 +18,7 @@ import {
 
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faPlusCircle} from '@fortawesome/free-solid-svg-icons';
-import {Headlines} from './../app/constants.js';
+
 import {withNavigation} from 'react-navigation';
 import ClubCard from './../components/ClubCard.js';
 import database from '@react-native-firebase/database';
@@ -38,6 +38,7 @@ class ManagmentScreen extends React.Component {
     };
     this.margin = new Animated.Value(0);
 
+    // fetch clubs from firebase
     database().ref('users/' + this.uid + '/clubs').once('value', (function(snap) {
       var clubs = snap.val();
       var i = 0;
@@ -67,7 +68,6 @@ class ManagmentScreen extends React.Component {
   render() {
     const s_width = Dimensions.get('window').width;
 
-    var s = require('./../app/style.js');
     const marginLeft = this.margin.interpolate({
       inputRange: [
         0, 2000

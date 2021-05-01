@@ -16,6 +16,7 @@ import Club from './Club.js';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faInbox, faTimesCircle} from '@fortawesome/free-solid-svg-icons';
 
+// EVENTSLIST class: Similar to DataList class. Not used anymore
 export class EventsList {
   limit = 20;
   events = {};

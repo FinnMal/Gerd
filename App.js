@@ -37,6 +37,8 @@ import Firebase from "firebase";
 import auth from "@react-native-firebase/auth";
 import {openDatabase} from 'react-native-sqlite-storage';
 import {useDarkMode} from 'react-native-dynamic'
+
+// access data for firebase
 const firebaseConfig = {
   apiKey: "AIzaSyA8WgcS53qQskfdqzJInCK-VlBOU_gPMYI",
   authDomain: "gerd-eu.firebaseapp.com",
@@ -51,7 +53,7 @@ const app = Firebase.initializeApp(firebaseConfig);
 
 AppRegistry.registerComponent("app", () => App);
 
-//create database if not exists
+//create SQL Database file if not exists
 var db = openDatabase('gerd.db');
 db.transaction(function(txn) {
   //txn.executeSql('DROP TABLE chat_messages')
@@ -63,6 +65,7 @@ db.transaction(function(txn) {
   txn.executeSql('CREATE TABLE IF NOT EXISTS "local_files" ("ID"	TEXT, "club_id"	INTEGER,"local_path"	TEXT );', [])
 });
 
+// firebase anonymous login
 auth().signInAnonymously().then(() => {
   console.log("User signed in anonymously");
 }).catch(error => {
@@ -77,6 +80,7 @@ navigationOptions = {
   gestureEnabled: true
 };
 
+// create navigator for screens
 const MainNavigator = createStackNavigator({
   ScreenHandler: {
     screen: ScreenHandler,
@@ -137,10 +141,7 @@ const AppContainer = createAppContainer(MainNavigator);
 export default class App extends Component {
   constructor(properties) {
     super(properties);
-    //Remove this method to stop OneSignal Debugging
-    OneSignal.setLogLevel(6, 0);
 
-    // Replace 'YOUR_ONESIGNAL_APP_ID' with your OneSignal App ID.
     OneSignal.init("18ae4cf5-c5af-4a62-accb-2324b9e03f2c", {
       kOSSettingsKeyAutoPrompt: false,
       kOSSettingsKeyInAppLaunchURL: false,
@@ -148,36 +149,39 @@ export default class App extends Component {
     });
     OneSignal.inFocusDisplaying(2); // Controls what should happen if a notification is received while the app is open. 2 means that the notification will go directly to the device's notification center.
 
-    // The promptForPushNotifications function code will show the iOS push notification prompt. We recommend removing the following code and instead using an In-App Message to prompt for notification permission (See step below)
-    OneSignal.promptForPushNotificationsWithUserResponse(myiOSPromptCallback);
+    OneSignal.promptForPushNotificationsWithUserResponse(iOSPromptCallback);
 
     OneSignal.addEventListener("received", this.onReceived);
     OneSignal.addEventListener("opened", this.onOpened);
     OneSignal.addEventListener("ids", this.onIds);
 
-    OneSignal.sendTag("2", "ja");
+    //OneSignal.sendTag("2", "ja");
   }
+
   componentWillUnmount() {
+    // stop onesignal listener
     OneSignal.removeEventListener("received", this.onReceived);
     OneSignal.removeEventListener("opened", this.onOpened);
     OneSignal.removeEventListener("ids", this.onIds);
   }
 
   onReceived(notification) {
+    // callback test
     console.log("Notification received: ", notification);
   }
 
   onOpened(openResult) {
+    // pass opened notification to the NofiticationHandler
     handler = new NotificationActionHandler(openResult)
     handler.handle()
   }
 
   async onIds(device) {
+    // save onesignal id
     console.log("Device info: ", device);
     try {
       await AsyncStorage.setItem("onesignal_id", device.userId);
     } catch (e) {}
-    //database().ref('users/' + uid + '/onesignal_id').set(device.userId);
   }
 
   render() {
@@ -186,6 +190,8 @@ export default class App extends Component {
       }}/>);
   }
 }
-function myiOSPromptCallback(permission) {
+
+// callback for ios notifcation prompt
+function iOSPromptCallback(permission) {
   console.log(permission);
 }

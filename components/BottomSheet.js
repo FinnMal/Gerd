@@ -14,6 +14,10 @@ import {Theme} from './../app/index.js';
 
 const SUPPORTED_ORIENTATIONS = ["portrait", "portrait-upside-down", "landscape", "landscape-left", "landscape-right"];
 
+/* BOTTOMSHEET class: component for bottom sheet
+modifyed for this project, based on:
+https://github.com/nysamnang/react-native-raw-bottom-sheet
+*/
 class BottomSheet extends Component {
   constructor(props) {
     super(props);
@@ -102,14 +106,17 @@ class BottomSheet extends Component {
     });
   }
 
+  // show sheet
   open(props) {
     this.setModalVisible(true, props);
   }
 
+  // hide sheet
   close(props) {
     this.setModalVisible(false, props);
   }
 
+  // done button callback
   _onDone() {
     this.close()
     if (this.props.onDone) 

@@ -60,6 +60,7 @@ import {useDarkMode} from 'react-native-dynamic'
 import Event from './Event.js';
 import File from './File.js';
 
+// function element for dark an night mode -> moved to theme.js
 function CView(props) {
   const isDarkMode = useDarkMode()
   return <View style={[
@@ -71,6 +72,7 @@ function CView(props) {
     ]}>{props.children}</View>;
 }
 
+// MESSAGE class: manges a clubs message
 export class Message {
   data = {};
   club = {};
@@ -370,7 +372,7 @@ export class Message {
     const mes = this.data;
     const club = this.club;
     const s_width = Dimensions.get("window").width;
-    var s = require("./../app/style.js");
+
     if (mes) {
       if (mes.headline && mes.short_text && club.color && club.logo && club.name) {
 

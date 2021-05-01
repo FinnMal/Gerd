@@ -15,6 +15,8 @@ import {Message} from './Message.js';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {faInbox, faTimesCircle} from '@fortawesome/free-solid-svg-icons';
 
+// DATALIST class: manager for lists in the firebase database. Calls callbacks as soon as an element has been added or deleted
+
 export class DataList {
   limit = 20;
   list = {};

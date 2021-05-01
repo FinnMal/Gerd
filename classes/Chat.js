@@ -10,7 +10,8 @@ import {
   Modal,
   Platform,
   Dimensions,
-  Image
+  Image,
+  Alert
 } from "react-native";
 import AutoHeightImage from "react-native-auto-height-image";
 import FileViewer from "react-native-file-viewer";
@@ -83,6 +84,9 @@ export default class Chat extends DatabaseConnector {
     return this.getValue(this.getPartnerUserId() + '_typing') === true
   }
 
+  /*
+  returns the firebase id of the current chatpartner
+  */
   getPartnerUserId() {
     var user_id_1 = this.getValue('user_id_1');
     if (user_id_1 != this.getUID()) 
@@ -122,6 +126,9 @@ export default class Chat extends DatabaseConnector {
     this.countUnreadMessages()
   }
 
+  /*
+  limit for max visible messsages
+  */
   getLimit() {
     return this.limit;
   }
@@ -131,6 +138,9 @@ export default class Chat extends DatabaseConnector {
     this.loadMessagesFromSQL();
   }
 
+  /*
+  triggers callback functions when message gets added or removed
+  */
   startMessagesListener(added, removed) {
     this.messages = {};
     this.offset = 0;
@@ -141,6 +151,9 @@ export default class Chat extends DatabaseConnector {
     this.loadMessagesFromSQL();
   }
 
+  /*
+  loads encrypted messages from local SQL Database
+  */
   loadMessagesFromSQL() {
     var message_added_cb = this.message_added_cb;
     var sql_start_time = Date.now();
@@ -239,6 +252,9 @@ export default class Chat extends DatabaseConnector {
     return this.getValue('current_page');
   }
 
+  /*
+  encrypts and sends a message
+  */
   sendMessage(text, cb) {
     if (text) {
       //this.setTyping(false)
@@ -267,6 +283,8 @@ export default class Chat extends DatabaseConnector {
             this.setTyping(false);
             this.setValue(mes_id, 'unread_by_' + this.getPartnerUserId() + '/' + data.send_at)
           }.bind(this))
+        } else {
+          alert('Öffentlicher Schlüssel von ' + partner.getName() + ' wurde nicht gefunden')
         }
       }.bind(this))
     }

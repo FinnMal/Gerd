@@ -2,6 +2,7 @@ import React from 'react';
 import {StyleSheet, Text, View, TouchableOpacity} from 'react-native';
 import {Theme} from './../app/index.js';
 
+// GROUP class: component for club group
 export default class Group extends React.Component {
   constructor(props) {
     super(props);

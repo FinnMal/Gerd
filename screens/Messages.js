@@ -15,7 +15,6 @@ import {
   Dimensions
 } from 'react-native';
 
-import {Headlines} from './../app/constants.js';
 import database from '@react-native-firebase/database';
 import {withNavigation} from 'react-navigation';
 import HeaderScrollView from './../components/HeaderScrollView.js';

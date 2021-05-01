@@ -18,7 +18,6 @@ import {
 
 import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
 import {faPlusCircle} from "@fortawesome/free-solid-svg-icons";
-import {Headlines} from "./../app/constants.js";
 import {withNavigation} from "react-navigation";
 import database from "@react-native-firebase/database";
 import HeaderScrollView from "./../components/HeaderScrollView.js";
@@ -46,6 +45,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
 
+// user settings screen
 class SettingsScreen extends React.Component {
   user: null;
 
@@ -99,7 +99,7 @@ class SettingsScreen extends React.Component {
     const s_width = Dimensions.get("window").width;
 
     const user = this.user;
-    var s = require("./../app/style.js");
+
     const marginLeft = this.margin.interpolate({
       inputRange: [
         0, 2000

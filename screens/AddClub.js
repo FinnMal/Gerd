@@ -17,7 +17,7 @@ import {
   Linking,
   ActivityIndicator
 } from 'react-native';
-import {Headlines} from './../app/constants.js';
+
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
   faUserCircle,
@@ -180,7 +180,6 @@ class AddClubScreen extends React.Component {
       var searching_by_name = true;
       this.forceUpdate();
 
-      console.log('>' + str + '<')
       this.state.search_results = []
       this.forceUpdate();
       this.searchClubByCode(str, function(club) {
@@ -434,8 +433,6 @@ class AddClubScreen extends React.Component {
     preSelectedGroupsList = preSelectedGroupsList.filter(function(e) {
       return e !== undefined;
     });
-
-    var s = require('./../app/style.js');
 
     const qrc_r = this.state.qr_code_result;
     if (this.props.show || this.props.navigation.getParam('show', null)) {

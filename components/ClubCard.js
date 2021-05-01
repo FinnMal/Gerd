@@ -24,6 +24,7 @@ import {AnimatedCircularProgress} from 'react-native-circular-progress';
 import {useDarkMode} from 'react-native-dynamic'
 import {Theme} from './../app/index.js';
 
+// CLUBCARD class: component for a club card
 export default class ClubCard extends React.Component {
   onPress() {
     if (this.props.navigateable) 

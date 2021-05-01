@@ -40,6 +40,7 @@ import {useDarkMode} from 'react-native-dynamic'
 import {Theme} from './../app/index.js';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback"
 
+// HeaderScrollView class: component for a ScrollView with an animated headline
 class HeaderScrollView extends React.Component {
   lastScrollTick: 0;
   isDarkMode: false;
@@ -51,7 +52,6 @@ class HeaderScrollView extends React.Component {
   constructor(props) {
     super(props);
 
-    //this.isDarkMode =
     this.viewHeight = new Animated.Value(
       this.props.height
         ? this.props.height
@@ -99,7 +99,7 @@ class HeaderScrollView extends React.Component {
           }
         }
       }
-    ]).bind(this);
+    ], {useNativeDriver: false}).bind(this);
   }
 
   addItemToFlatList(item, toStart = true) {

@@ -19,7 +19,7 @@ import {
   RefreshControl
 } from 'react-native';
 import {BlurView} from '@react-native-community/blur';
-import {Headlines} from './../app/constants.js';
+
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
   faChevronCircleLeft,
@@ -30,7 +30,6 @@ import {
   faEnvelope,
   faPhoneAlt
 } from '@fortawesome/free-solid-svg-icons';
-import {NotificationCard} from './../app/components.js';
 import database from '@react-native-firebase/database';
 import {SafeAreaView} from 'react-navigation';
 import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
@@ -99,6 +98,7 @@ export default class MessageScreen extends React.Component {
       });
     }
 
+    // render file cards
     this.files = [];
     if (mes.getFiles().length > 0) {
       mes.getFiles().forEach((file, i) => {
@@ -416,7 +416,6 @@ export default class MessageScreen extends React.Component {
     const imageOpacity = this._getImageOpacity();
 
     const cardMarginTop = this._getCardMarginTop();
-    var s = require('./../app/style.js');
 
     /*
     var downloadsElements = null;

@@ -20,6 +20,7 @@ import SwiperEvent from './SwiperEvent.js';
 
 import database from "@react-native-firebase/database";
 
+// SWIPER class: swiper component for events on homescreen
 export default class Swiper extends React.Component {
   cur_index = 0;
   data = [];

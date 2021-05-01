@@ -25,6 +25,7 @@ import database from "@react-native-firebase/database";
 import {Theme} from './../app/index.js';
 import DatabaseConnector from "./../classes/database/DatabaseConnector";
 
+// CHATMESSAGE class: component for a chat message on screens/Chat.js
 export default class ChatMessage extends DatabaseConnector {
   chat = null;
   listener = {};
@@ -202,6 +203,7 @@ export default class ChatMessage extends DatabaseConnector {
       outputRange: [0, 1]
     });
     if (this.getText() && this.getSendAt() > 0) {
+      // show emojis with bigger font size
       const isEmoji = this.isEmoji(this.getText())
       return (
         <Animated.View

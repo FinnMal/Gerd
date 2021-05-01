@@ -38,7 +38,6 @@ import {
   faCheck,
   faChevronLeft
 } from "@fortawesome/free-solid-svg-icons";
-import {Headlines} from "./../app/constants.js";
 import {withNavigation} from "react-navigation";
 import ClubCard from "./../components/ClubCard.js";
 import InputBox from "./../components/InputBox.js";
@@ -49,6 +48,7 @@ import {default as Modal} from "./../components/Modal.js";
 import HeaderScrollView from "./../components/HeaderScrollView.js";
 import database from "@react-native-firebase/database";
 
+// Screen for a user or club setting
 export default class Setting extends React.Component {
   toast = null;
   child = null;

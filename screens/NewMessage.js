@@ -20,7 +20,6 @@ import {
   Pressable
 } from 'react-native';
 
-import {Headlines} from './../app/constants.js';
 import InputScrollView from 'react-native-input-scroll-view';
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
@@ -48,7 +47,6 @@ import {
   faFilePdf,
   faLink
 } from '@fortawesome/free-solid-svg-icons';
-import {ModalCard, EventCard, FileCard} from './../app/components.js';
 import InputBox from './../components/InputBox.js';
 import database from '@react-native-firebase/database';
 import {SafeAreaView} from 'react-navigation'; //added this import
@@ -60,6 +58,7 @@ import {default as Modal} from "./../components/Modal.js";
 
 import storage from '@react-native-firebase/storage';
 
+// NewMessageScreen class: screen to send a new message to members
 export default class NewMessageScreen extends React.Component {
   constructor(props) {
     super(props);
@@ -67,7 +66,7 @@ export default class NewMessageScreen extends React.Component {
     const user = this.props.navigation.getParam('user', null)
 
     this.state = {
-      curPageIndex: 5,
+      curPageIndex: 0,
       clubsList: [],
       event_modal_visible: false,
       events: [],
@@ -92,6 +91,7 @@ export default class NewMessageScreen extends React.Component {
           'lit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril ' +
           'delenit augue duis dolore te feugait nulla facilisi. ipsum dolor sit amet,'
     };
+    // -> default text values for debugging
 
     this.headlineMarginLeft = new Animated.Value(40);
     this.nextHeadlineMarginLeft = new Animated.Value(40);
@@ -252,13 +252,13 @@ export default class NewMessageScreen extends React.Component {
   }
 
   editFile(key, name) {
-    // TODO: edit name in cloud
+    // TODO: edit name in database
     this.state.files[key].name = name;
     this.forceUpdate();
   }
 
   deleteFile(key) {
-    // TODO: Delete from cloud
+    // TODO: Delete from database
     var files = [...this.state.files];
     files.splice(key, 1);
     this.setState({files: files});
@@ -528,8 +528,6 @@ export default class NewMessageScreen extends React.Component {
   }
 
   render() {
-    var s = require('./../app/style.js');
-
     const headlineMarginLeft = this.headlineMarginLeft.interpolate({
       inputRange: [
         0, 50, 100

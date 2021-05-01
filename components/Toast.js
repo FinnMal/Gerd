@@ -26,6 +26,10 @@ import {AnimatedCircularProgress} from "react-native-circular-progress";
 import {Theme} from './../app/index.js';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback"
 
+/* TOAST class: component to make changes visible at the bottom of the screen
+the change can be undone by pressing the button on the toast
+*/
+
 export default class Toast extends React.Component {
   visible = false;
   constructor(props) {

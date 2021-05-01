@@ -44,6 +44,8 @@ import storage from "@react-native-firebase/storage";
 import {getColorFromURL} from 'rn-dominant-color';
 import DatabaseConnector from "./database/DatabaseConnector";
 
+/* EVENT class: Manages a club event in firebase database
+has some older functions that are no longer used. In particular, the render functions at the bottom */
 export default class Event extends DatabaseConnector {
   text_color = "#000000";
   imageScale = new Animated.Value(1);
@@ -61,7 +63,6 @@ export default class Event extends DatabaseConnector {
     this.club = club;
     this.user = user;
     this.setReadyListener(function() {
-      this._loadClubData();
       this.downloadStorageImage()
     }.bind(this))
   }
@@ -77,26 +78,6 @@ export default class Event extends DatabaseConnector {
       cb();
     }
   
-  _loadClubData() {
-    /*console.log('in _loadClubData')
-      club.setReadyListener(funciton() {
-      database().ref("colors/" + snap.val()).on("value", function(snap) {
-        var color = snap.val();
-        club.setColor("#" + color.hex)
-        club.setTextColor("#" + color.font_hex);
-        this.user.getDatabaseValue("events/" + this.getClubID() + "_" + this.getID(), function(value) {
-          this.calculateTextColor(function() {
-            this.ready_to_render = true;
-            if (this.renderListener)
-              this.renderListener(this)
-          }.bind(this))
-        }.bind(this));
-
-      }.bind(this));
-    }.bind(this)
-  )*/
-  }
-
   setRenderListener(cb) {
     if (this.ready_to_render) 
       return cb();
@@ -416,7 +397,7 @@ export default class Event extends DatabaseConnector {
     const club = this.club;
     const user = this.data.utils.getUser();
     const s_width = Dimensions.get("window").width;
-    var s = require("./../app/style.js");
+
 
     const textOpacity = this.textOpacity.interpolate({
       inputRange: [
@@ -560,7 +541,7 @@ export default class Event extends DatabaseConnector {
     const event = this.data;
     const club = this.club;
     const s_width = Dimensions.get("window").width;
-    var s = require("./../app/style.js");
+
     if (event) {
       return <View
         style={{
@@ -654,7 +635,6 @@ export default class Event extends DatabaseConnector {
     const event = this.data;
     const club = this.club;
     const s_width = Dimensions.get("window").width;
-    var s = require("./../app/style.js");
 
     if (event) {
       var backgroundColor = '#121212';

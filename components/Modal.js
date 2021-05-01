@@ -16,7 +16,8 @@ import GestureRecognizer, {swipeDirections} from "react-native-swipe-gestures";
 import {Theme} from './../app/index.js';
 import Button from "./../components/Button.js";
 
-export default class GerdModal extends React.Component {
+// MODAL class: component based on react natives modal
+export default class GModal extends React.Component {
   constructor(props) {
     super(props);
     this.state = {

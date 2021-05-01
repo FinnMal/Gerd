@@ -58,6 +58,7 @@ import {Theme} from './../app/index.js';
 import DatabaseConnector from "./database/DatabaseConnector";
 import storage from '@react-native-firebase/storage';
 
+// FILE class: managed a club file obejct in firebase database
 export default class File extends DatabaseConnector {
   id = null;
   club_id = null;
@@ -202,6 +203,9 @@ export default class File extends DatabaseConnector {
     this.remove();
   }
 
+  /*
+  returns the local path of the file, if file is already downloaded
+  */
   hasLocalPath(cb) {
     this.executeSQL('SELECT * FROM local_files WHERE ID="' + this.getID() + '"', [], function(tx, results) {
       const res = results.rows.raw()
@@ -236,6 +240,7 @@ export default class File extends DatabaseConnector {
     this.data.local_path = v;
   }
 
+  // saves the path to the downloaded file in local SQL Database
   saveLocalPath(v, cb) {
     this.data.local_path = v;
     this.hasLocalPath(function(has_path) {
@@ -252,6 +257,7 @@ export default class File extends DatabaseConnector {
     }.bind(this))
   }
 
+  // edits the local path in SQL database if file gets renamed
   editLocalPath(new_path, cb) {
     this.getLocalPath(function(old_path) {
       if (new_path != old_path) {
@@ -320,12 +326,13 @@ export default class File extends DatabaseConnector {
     return Math.round(this.getValue('downloaded_percentage'))
   }
 
+  // old render function -> moved to components/file.js
   getRender(type = "new_message") {
     if (!this.data) 
       return;
     const club = this.club;
     const s_width = Dimensions.get("window").width;
-    var s = require("./../app/style.js");
+
     return (
       <View style={{
           marginBottom: 30

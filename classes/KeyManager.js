@@ -1,5 +1,6 @@
 import EncryptedStorage from 'react-native-encrypted-storage';
 
+// KEYMANAGER class: Handels encryption and decryption of strings
 export default class KeyManager {
   constructor() {
     var RSAKey = require('react-native-rsa');
@@ -32,6 +33,7 @@ export default class KeyManager {
     return null
   }
 
+  // generate a new key pair
   generate() {
     this.rsa.generate(1024, '10001');
     var publicKey = this.rsa.getPublicString();

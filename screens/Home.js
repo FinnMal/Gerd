@@ -16,7 +16,7 @@ import {
   RefreshControl,
   FlatList
 } from 'react-native';
-import {Headlines} from './../app/constants.js';
+
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
   faPlusCircle,
@@ -29,7 +29,6 @@ import {
   faNewspaper,
   faSignOutAlt
 } from '@fortawesome/free-solid-svg-icons';
-import {NotificationCard} from './../app/components.js';
 import database from '@react-native-firebase/database';
 import {withNavigation} from 'react-navigation';
 import {Message} from './../classes/Message.js';
@@ -72,7 +71,6 @@ AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 class HomeScreen extends React.Component {
   constructor(props) {
     super(props);
-    console.log('in HomeScreen constructor')
 
     var utils = this.props.utilsObject;
 
@@ -88,6 +86,7 @@ class HomeScreen extends React.Component {
     this.state.eventsList = new EventsList(this.state.utils.getUser());
     this.margin = new Animated.Value(0);
 
+    // listener for clubs messages
     this.state.messagesList.startMessagesListener(function(mes) {
       // message added
       if (this.state.messages.indexOf(mes) == -1) {
@@ -115,13 +114,12 @@ class HomeScreen extends React.Component {
       this.forceUpdate();
     }.bind(this));
 
-    console.log('starting EventsListener 3 ...')
+    // listener for clubs events
     this.state.eventsList.startEventsListener(function(event) {
       // events added
       if (this.state.events.indexOf(event) == -1) {
         const event_index = this.state.events.length;
 
-        console.log('in event added')
         console.log(event);
         event.setRenderListener(function(new_event) {
           this.state.events[event_index] = new_event;
@@ -163,7 +161,6 @@ class HomeScreen extends React.Component {
   render() {
     const s_width = Dimensions.get("window").width;
     const s_height = Dimensions.get("window").height;
-    var s = require('./../app/style.js');
     const marginLeft = this.margin.interpolate({
       inputRange: [
         0, 2000
@@ -361,7 +358,6 @@ class HomeScreen extends React.Component {
   }
 
   componentWillUnmount() {
-    console.log('in home componentWillUnmount')
     if (this.state.eventsList) 
       this.state.eventsList.stopEventsListener();
     }

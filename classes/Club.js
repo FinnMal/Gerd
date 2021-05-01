@@ -26,6 +26,7 @@ import storage from '@react-native-firebase/storage';
 import RNFS from 'react-native-fs';
 import KeyManager from './KeyManager'
 
+// CLUB class: Manages a club object in firebase databse
 export default class Club extends DatabaseConnector {
   id = null;
   user = null;

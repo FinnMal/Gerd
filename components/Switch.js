@@ -2,6 +2,7 @@ import React from "react";
 import {View, Text} from "react-native";
 import {Theme} from './../app/index.js';
 
+// SWITCH class: component based on react native switch
 export default class Switch extends React.Component {
   constructor(props) {
     super(props);

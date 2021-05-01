@@ -22,7 +22,7 @@ import {AnimatedCircularProgress as ReactAnimatedCircularProgress} from "react-n
 import {Keyboard} from 'react-native'
 import {default as ReactDatePicker} from 'react-native-date-picker'
 
-// first value is for darkmode old white color: F2F1F6
+// THEME Class: manages the view of dark and light mode for different React Navite elements
 const colors = {
   "view": [
     "#1C1C1E", "#F2F1F6"

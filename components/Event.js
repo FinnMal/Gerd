@@ -57,6 +57,7 @@ import {Theme} from './../app/index.js';
 import {default as Modal} from "./../components/Modal.js";
 import {default as InputBox} from "./../components/InputBox.js";
 
+// EVENT class: component for club events
 export default class Event extends React.Component {
   constructor(props) {
     super(props);

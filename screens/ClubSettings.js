@@ -32,7 +32,6 @@ import {
   faLock,
   faCloudUploadAlt
 } from "@fortawesome/free-solid-svg-icons";
-import {Headlines} from "./../app/constants.js";
 import {withNavigation} from "react-navigation";
 import ClubCard from "./../components/ClubCard.js";
 import Setting from "./../components/Setting.js";
@@ -53,6 +52,7 @@ import {default as QRCodesSetting} from './../components/Settings/ClubQRCodes.js
 import {default as NameSetting} from './../components/Settings/ClubName.js';
 import {default as ColorSetting} from './../components/Settings/ClubColor.js';
 
+// CLUBSETTINGS class: screen with club settings
 class ClubSettings extends React.Component {
   constructor(props) {
     super(props);
@@ -76,13 +76,14 @@ class ClubSettings extends React.Component {
       }
     };
 
+    // fetch name, logo, and public from firebase
     club.startListener([
       'name', 'logo', 'public'
     ], function(name) {
       this.forceUpdate();
     }.bind(this))
 
-    club.setReadyListener(function(club) {}.bind(this))
+    //club.setReadyListener(function(club) {}.bind(this))
   }
 
   openImagePicker() {
@@ -138,9 +139,6 @@ class ClubSettings extends React.Component {
 
   render() {
     const s_width = Dimensions.get("window").width;
-
-    var s = require("./../app/style.js");
-
     const club = this.state.club;
     return (
       <View>

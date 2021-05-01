@@ -18,6 +18,7 @@ import {Theme} from './../app/index.js';
 
 import database from "@react-native-firebase/database";
 
+// SETTING class: component for a setting element (used for User Settings)
 export default class Setting extends React.Component {
   constructor(props) {
     super(props);
