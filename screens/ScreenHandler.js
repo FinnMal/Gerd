@@ -46,7 +46,7 @@ import ReactNativeHapticFeedback from "react-native-haptic-feedback"
 
 function CStatusBar() {
   const isDarkMode = useDarkMode()
-  return <StatusBar hidden={false} barStyle={isDarkMode
+  return <StatusBar hidden={false} animated={true} barStyle={isDarkMode
       ? "light-content"
       : "dark-content"}/>
 }
@@ -77,8 +77,8 @@ function CNavbar(props) {
 
 //ScreenHandler class: shows and hides screens that are accessible with the naviagtion icons
 export default class ScreenHandler extends React.Component {
-  navVisible: true;
-  lastScrollPos: 0;
+  navVisible = true;
+  lastScrollPos = 0;
   AppContext = null;
   constructor() {
     super();
@@ -132,6 +132,9 @@ export default class ScreenHandler extends React.Component {
           utils.setUser(new User(user.uid))
           utils.setUserID(user.uid);
           utils.setAccountType(snap.val());
+          utils.getUser().startListener('account_type', function(){
+            this.forceUpdate()
+          }.bind(this))
           utils.setNavigation(this.props.navigation);
           this.AppContext = React.createContext(utils);
           this.state.nav[0].visible = true;
@@ -203,6 +206,7 @@ export default class ScreenHandler extends React.Component {
       ],
       outputRange: [-100, 0]
     });
+
     if (this.state.first_start_done) {
       console.log('first start is done 1')
       return (

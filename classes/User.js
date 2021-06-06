@@ -122,20 +122,24 @@ export default class User extends DatabaseConnector {
     this.setValue(!has_notif, 'events/' + club_id + "_" + event_id + '/notification_subscribed', true)
 
     // notification before event starts
+    /*
     OneSignal.sendTag(
       club_id + "_" + event_id + "_before",
       !has_notif
         ? "yes"
         : "no"
     );
+    */
 
     // notification when event starts
+    /*
     OneSignal.sendTag(
       club_id + "_" + event_id + "_start",
       !has_notif
         ? "yes"
         : "no"
     );
+    */
 
     if (cb) 
       cb(!has_notif);
@@ -205,6 +209,17 @@ export default class User extends DatabaseConnector {
       }.bind(this))
     } else 
       return this.getValue('club_roles')
+  }
+
+  getClubGroups(club, cb=null){
+    if(cb){
+      this.getDatabaseValue('clubs/'+club.getID()+'/groups', function(groups){
+        this.setValue(groups, club.getID()+'_roles')
+        if(groups) cb(groups)
+        else cb(false)
+      }.bind(this))
+    }
+    else return this.getValue(club.getID()+'_roles')
   }
 
   updateAccountType() {

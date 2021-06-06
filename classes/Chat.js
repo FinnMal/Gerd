@@ -15,10 +15,10 @@ import {
 } from "react-native";
 import AutoHeightImage from "react-native-auto-height-image";
 import FileViewer from "react-native-file-viewer";
-import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
-import {faChevronCircleRight} from "@fortawesome/free-solid-svg-icons";
-import {withNavigation} from "react-navigation";
-import {useNavigation} from "@react-navigation/native";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import { faChevronCircleRight } from "@fortawesome/free-solid-svg-icons";
+import { withNavigation } from "react-navigation";
+import { useNavigation } from "@react-navigation/native";
 import database from "@react-native-firebase/database";
 import functions from '@react-native-firebase/functions';
 import ChatMessage from './../components/ChatMessage.js';
@@ -36,9 +36,9 @@ export default class Chat extends DatabaseConnector {
   messages = {};
   partner_user = null;
   last_message = null;
-  partnerUserCreatedCb: null;
+  partnerUserCreatedCb = null;
   unreadMessagesCount = 0;
-  _unreadMessagesCountListener: null;
+  _unreadMessagesCountListener = null;
   last_message_id = null;
   message_added_cb = null;
   message_removed_cb = null;
@@ -52,7 +52,7 @@ export default class Chat extends DatabaseConnector {
 
     this.state = {}
     this.key_manager = new KeyManager()
-    this.setReadyListener(function() {
+    this.setReadyListener(function () {
       this.partner_user = new User(this.getPartnerUserId(), ['name', 'public_key'])
     }.bind(this))
 
@@ -64,7 +64,7 @@ export default class Chat extends DatabaseConnector {
   }
 
   isActive() {
-    if (this.checkIfReady() && this.getValue('user_id_2') == null) 
+    if (this.checkIfReady() && this.getValue('user_id_2') == null)
       return false;
     return true;
   }
@@ -74,7 +74,7 @@ export default class Chat extends DatabaseConnector {
   }
 
   setTypingListener(cb) {
-    this.startListener(this.getPartnerUserId() + '_typing', function(value) {
+    this.startListener(this.getPartnerUserId() + '_typing', function (value) {
       value = value === true;
       cb(value);
     });
@@ -89,7 +89,7 @@ export default class Chat extends DatabaseConnector {
   */
   getPartnerUserId() {
     var user_id_1 = this.getValue('user_id_1');
-    if (user_id_1 != this.getUID()) 
+    if (user_id_1 != this.getUID())
       return user_id_1
     return this.getValue('user_id_2');
   }
@@ -98,7 +98,7 @@ export default class Chat extends DatabaseConnector {
     if (!this.partner_user) {
       this.partner_user = new User(this.getPartnerUserId())
     }
-    if (cb) 
+    if (cb)
       return cb(this.partner_user)
     return this.partner_user;
   }
@@ -106,12 +106,12 @@ export default class Chat extends DatabaseConnector {
   setUnreadMessagesCount(value) {
     //alert('in setUnreadMessagesCount: ' + value)
     this.unreadMessagesCount = value;
-    if (this.unread_messages_count_cb) 
+    if (this.unread_messages_count_cb)
       this.unread_messages_count_cb(this.unreadMessagesCount)
   }
 
   countUnreadMessages() {
-    this.executeSQL('SELECT text, read FROM chat_messages WHERE chat_id=? AND read=0 AND is_own=0', [this.getID()], function(tx, results) {
+    this.executeSQL('SELECT text, read FROM chat_messages WHERE chat_id=? AND read=0 AND is_own=0', [this.getID()], function (tx, results) {
       //console.log(results.rows.raw(0)) alert('UNREAD: ' + results.rows.length)
       this.setUnreadMessagesCount(results.rows.length)
     }.bind(this))
@@ -159,7 +159,7 @@ export default class Chat extends DatabaseConnector {
     var sql_start_time = Date.now();
     this.executeSQL('SELECT send_at, text, is_own, read FROM chat_messages WHERE chat_id=? ORDER BY send_at DESC LIMIT ? OFFSET ?', [
       this.getID(), this.limit, this.offset
-    ], function(tx, results) {
+    ], function (tx, results) {
       this.offset = this.offset + this.limit;
       var sql_end_time = Date.now();
       var diff = sql_end_time - sql_start_time;
@@ -184,14 +184,14 @@ export default class Chat extends DatabaseConnector {
     this.stopListener('unread_by_' + this.getUID())
 
     // load unread messages
-    this.startListener('unread_by_' + this.getUID(), function(messages) {
+    this.startListener('unread_by_' + this.getUID(), function (messages) {
       if (messages) {
         var total_unread = Object.keys(messages).length;
         Object.keys(messages).forEach((send_at, i) => {
           var mes_id = messages[send_at];
           this.removeValue('unread_by_' + this.getUID() + '/' + send_at)
           // download message from firebase
-          this.getDatabaseValue('messages/' + mes_id, async function(mes) {
+          this.getDatabaseValue('messages/' + mes_id, async function (mes) {
             // delete message
             this.removeValue('messages/' + mes_id)
             if (mes) {
@@ -202,7 +202,7 @@ export default class Chat extends DatabaseConnector {
               data.text = await this.key_manager.decryptWithPrivate(mes.encrypted_message);
               data.is_own = mes.sender == this.getUID()
               console.log(data)
-              new ChatMessage(this, data, false, function(mes) {
+              new ChatMessage(this, data, false, function (mes) {
                 this.messages[mes.getSendAt()] = mes;
                 this.countUnreadMessages()
                 this.message_added_cb([mes], false);
@@ -223,7 +223,7 @@ export default class Chat extends DatabaseConnector {
   triggerLastMessageListener() {
     this.executeSQL('SELECT send_at, text, is_own, read FROM chat_messages WHERE chat_id=? ORDER BY send_at DESC LIMIT ?', [
       this.getID(), 1, this.offset
-    ], function(tx, results) {
+    ], function (tx, results) {
       var message = results.rows.raw(0)[0];
       console.log(message)
 
@@ -244,10 +244,10 @@ export default class Chat extends DatabaseConnector {
 
   setLastMessage(mes) {
     this.last_message = mes;
-    if (this.last_message_cb) 
+    if (this.last_message_cb)
       this.last_message_cb(mes);
-    }
-  
+  }
+
   getCurrentPage(cb) {
     return this.getValue('current_page');
   }
@@ -260,7 +260,7 @@ export default class Chat extends DatabaseConnector {
       //this.setTyping(false)
 
       const partner = this.getPartnerUser()
-      partner.getPublicKey(function(partner_public_key) {
+      partner.getPublicKey(function (partner_public_key) {
         if (partner_public_key) {
           const encrypted_message = this.key_manager.encrypt(text, partner_public_key)
 
@@ -279,7 +279,7 @@ export default class Chat extends DatabaseConnector {
           data.text = null;
 
           console.log('sending chat message ...')
-          this.pushValue(data, 'messages', function(mes_id) {
+          this.pushValue(data, 'messages', function (mes_id) {
             this.setTyping(false);
             this.setValue(mes_id, 'unread_by_' + this.getPartnerUserId() + '/' + data.send_at)
           }.bind(this))

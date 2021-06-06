@@ -8,25 +8,14 @@ import {
   StyleSheet,
   ActivityIndicator,
   Platform,
-  Alert
+  Alert,
+  ScrollView
 } from 'react-native';
 import AutoHeightImage from 'react-native-auto-height-image';
 import FileViewer from 'react-native-file-viewer';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import {
-  faChevronCircleRight,
   faArrowAltCircleDown,
-  faQuoteRight,
-  faCalendar,
-  faMapMarker,
-  faPen,
-  faTrash,
-  faChevronCircleLeft,
-  faChevronLeft,
-  faChevronRight,
-  faPlus,
-  faPlusCircle,
-  faUpload,
   faCloudUploadAlt,
   faFile,
   faEllipsisV,
@@ -39,89 +28,86 @@ import {
   faFileVideo,
   faFileImage,
   faFileAlt,
-  faTimesCircle,
-  faCheck,
-  faPaperPlane,
   faFilePdf,
   faCloudDownloadAlt
 } from '@fortawesome/free-solid-svg-icons';
-import {withNavigation} from 'react-navigation';
-import {useNavigation} from '@react-navigation/native';
+import { withNavigation } from 'react-navigation';
+import { useNavigation } from '@react-navigation/native';
 import RNFetchBlob from 'rn-fetch-blob';
 import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
 import CameraRoll from '@react-native-community/cameraroll';
-import {AnimatedCircularProgress} from 'react-native-circular-progress';
-import {Theme} from './../app/index.js';
-import {default as Modal} from "./../components/Modal.js";
-import {default as InputBox} from "./../components/InputBox.js";
+import { AnimatedCircularProgress } from 'react-native-circular-progress';
+import { Theme } from './../app/index.js';
+import { default as Modal } from "./../components/Modal.js";
+import { default as InputBox } from "./../components/InputBox.js";
+import { fromRight } from 'react-navigation-transitions';
 
 // FILE class: component for club files
 export default class File extends React.Component {
   constructor(props) {
-    super(props);
-
+    super(props)
     this.state = {
       download_progress: 0,
       downloaded: false,
       path: '',
-      name: this.props.name,
+      name: props.name,
       modal_visible: false,
-      size: this.props.file.getSize()
+      size: props.file.getSize()
     };
 
-    if (this.props.path) 
+    if (props.path)
       this.state.path = this.props.path;
 
-    }
-  
+  }
+
   _getFormattedSize() {
     const size = this.props.file.getSize()
-    if (size < 1000) 
+    if (size < 1000)
       return Math.round(this.state.size) + ' B';
-    else if (size < 1000000) 
+    else if (size < 1000000)
       return Math.round(this.state.size / 1000) + ' KB';
-    else if (size < 1000000000) 
+    else if (size < 1000000000)
       return Math.round(this.state.size / 1000000) + ' MB';
-    else if (size < 1000000000000) 
+    else if (size < 1000000000000)
       return Math.round(this.state.size / 1000000000) + ' GB';
-    else 
+    else
       return Math.round(this.state.size / 1000000000000) + ' TB';
-    }
-  
+  }
+
   _getIcon() {
     const file = this.props.file;
     if (file.getType()) {
-      if (this.props.downloadable && !file.isDownloaded()) 
+      if (this.props.downloadable && !file.isDownloaded())
         return faArrowAltCircleDown;
-      
+
       if (file.isDownloaded() || !this.props.downloadable) {
-        if (file.getType() == 'application/pdf') 
+        if (file.getType() == 'application/pdf')
           return faFilePdf;
-        if (file.getType() == 'application/msword') 
+        if (file.getType() == 'application/msword')
           return faFileWord;
-        if (file.getType() == 'application/mspowerpoint') 
+        if (file.getType() == 'application/mspowerpoint')
           return faFilePowerpoint;
-        if (file.getType() == 'application/msexcel') 
+        if (file.getType() == 'application/msexcel')
           return faFileExcel;
-        if (file.getType() == 'application/pdf') 
+        if (file.getType() == 'application/pdf')
           return faFilePdf;
-        if (file.getType() == 'application/zip') 
+        if (file.getType() == 'application/zip')
           return faFileArchive;
-        if (file.getType() == 'text/comma-separated-values	') 
+        if (file.getType() == 'text/comma-separated-values	')
           return faFileCsv;
-        
+
         if (!this.props.icon) {
-          if (file.getType().includes('audio')) 
+          if (file.getType().includes('audio'))
             return faFileAudio;
-          if (file.getType().includes('video')) 
+          if (file.getType().includes('video'))
             return faFileVideo;
-          if (file.getType().includes('image')) 
+          if (file.getType().includes('image'))
             return faFileImage;
-          if (file.getType().includes('text')) 
+          if (file.getType().includes('text'))
             return faFileAlt;
-          }
         }
+      }
     }
 
     return faFile;
@@ -133,13 +119,13 @@ export default class File extends React.Component {
       Platform.OS === 'android'
         ? 'file://' + file.getLocalPath()
         : '' + file.getLocalPath()
-    ).then(() => {}).catch(error => {});
+    ).then(() => { }).catch(error => { });
   }
 
   _showOptions() {
     var options = ['Abbrechen', 'Herunterladen', 'Teilen', 'Bearbeiten', 'Löschen']
-    this.props.file.getLocalPath(function(path) {
-      if (path) 
+    this.props.file.getLocalPath(function (path) {
+      if (path)
         options[1] = 'Öffnen'
       ActionSheetIOS.showActionSheetWithOptions({
         options: options,
@@ -164,24 +150,24 @@ export default class File extends React.Component {
   }
 
   _onPress() {
-    this.props.file.getLocalPath(function(path) {
-      if (path) 
+    this.props.file.getLocalPath(function (path) {
+      if (path)
         this._open()
-      else 
+      else
         this._download()
     }.bind(this))
   }
 
   _download() {
     const file = this.props.file
-    file.download(function(percentage, downloading) {
+    file.download(function (percentage, downloading) {
       this.forceUpdate()
       if (percentage == 100) {
         FileViewer.open(
           Platform.OS === 'android'
             ? 'file://' + file.getLocalPath()
             : '' + file.getLocalPath()
-        ).then(() => {}).catch(error => {});
+        ).then(() => { }).catch(error => { });
       }
     }.bind(this))
   }
@@ -214,7 +200,7 @@ export default class File extends React.Component {
       };
       btns.push(btn);
     });
-    Alert.alert('Datei löschen?', 'Die Datei wird nur vom Server gelöscht, auf deinem Gerät bleibt sie jedoch erhalten.', btns, {cancelable: true});
+    Alert.alert('Datei löschen?', 'Die Datei wird nur vom Server gelöscht, auf deinem Gerät bleibt sie jedoch erhalten.', btns, { cancelable: true });
   }
 
   render() {
@@ -222,8 +208,8 @@ export default class File extends React.Component {
     if (file.getType()) {
       const modalView = (
         <Modal ref={m => {
-            this.modal = m;
-          }} headline={file.getName() + '.' + file.getExtension()} onDone={() => this._saveEdit()}>
+          this.modal = m;
+        }} headline={file.getName() + '.' + file.getExtension()} onDone={() => this._saveEdit()}>
           <View>
             <InputBox
               boxColor={'light'}
@@ -233,7 +219,7 @@ export default class File extends React.Component {
               onChange={v => {
                 file.setName(v)
                 this.forceUpdate()
-              }}/>
+              }} />
           </View>
         </Modal>
       )
@@ -241,9 +227,9 @@ export default class File extends React.Component {
       if (this.props.card_size == 'small') {
         return (
           <Theme.View style={{
-              borderRadius: 13,
-              marginBottom: 20
-            }}>
+            borderRadius: 13,
+            marginBottom: 20
+          }}>
             {modalView}
             <Theme.TouchableOpacity
               style={{
@@ -255,16 +241,16 @@ export default class File extends React.Component {
                 flexDirection: "row"
               }}
               onPress={() => this._showOptions()}>
-              <Theme.Icon size={35} color={'primary'} icon={this._getIcon()}/>
+              <Theme.Icon size={35} color={'primary'} icon={this._getIcon()} />
               <View style={{
-                  marginLeft: 20,
-                  maxWidth: 220,
-                  justifyContent: "center"
-                }}>
+                marginLeft: 20,
+                maxWidth: 220,
+                justifyContent: "center"
+              }}>
                 <Theme.Text style={{
-                    fontFamily: "Poppins-SemiBold",
-                    fontSize: 20
-                  }}>
+                  fontFamily: "Poppins-SemiBold",
+                  fontSize: 20
+                }}>
                   {file.getName() + '.' + file.getExtension()}
                 </Theme.Text>
                 <Theme.Text
@@ -284,56 +270,62 @@ export default class File extends React.Component {
                   alignSelf: 'flex-end'
                 }}
                 onPress={() => this._showOptions()}>
-                <Theme.Icon size={20} icon={faEllipsisV}/>
+                <Theme.Icon size={20} icon={faEllipsisV} />
               </Theme.TouchableOpacity>
             </Theme.TouchableOpacity>
             {
               file.isUploading() || file.isDownloading()
                 ? <View><Theme.View
-                    color={'primary'}
+                  color={'primary'}
+                  style={{
+                    height: 25,
+                    width: file.isUploading()
+                      ? file.getUploadedPercentage() + "%"
+                      : file.getDownloadedPercentage() + "%",
+                    paddingLeft: 20,
+                    borderBottomLeftRadius: 13,
+                    borderTopRightRadius: 13,
+                    borderBottomRightRadius: 13
+                  }}>
+                    <Theme.Text
+                      style={{
+                        opacity: 0.85,
+                        fontFamily: 'Poppins-Bold',
+                        fontSize: 17,
+                        marginTop:2,
+                        position: 'absolute',
+                        right: 7
+                      }}
+                      backgroundColor={'primary'}>
+                        {
+                        file.isUploading()
+                          ? file.getUploadedPercentage() + "%"
+                          : file.getDownloadedPercentage() + "%"
+                      }
+                    </Theme.Text>
+                  </Theme.View>
+                  <View
                     style={{
-                      height: 25,
-                      width: file.isUploading()
-                        ? file.getUploadedPercentage() + "%"
-                        : file.getDownloadedPercentage() + "%",
+                      marginTop: -25,
+                      padding: 0,
                       paddingLeft: 20,
                       borderBottomLeftRadius: 13,
-                      borderTopRightRadius: 13,
-                      borderBottomRightRadius: 13
-                    }}/>
-                    <View
+                      borderBottomRightRadius: 13,
+                      flexWrap: "wrap",
+                      flexDirection: "row"
+                    }}>
+                    <Theme.Icon
                       style={{
-                        marginTop: -25,
-                        padding: 0,
-                        paddingLeft: 20,
-                        borderBottomLeftRadius: 13,
-                        borderBottomRightRadius: 13,
-                        flexWrap: "wrap",
-                        flexDirection: "row"
-                      }}>
-                      <Theme.Icon
-                        style={{
-                          opacity: 0.85
-                        }}
-                        size={24}
-                        icon={file.isUploading()
-                          ? faCloudUploadAlt
-                          : faCloudDownloadAlt}
-                        backgroundColor={'primary'}/>
-                      <Theme.Text
-                        style={{
-                          opacity: 0.85,
-                          fontFamily: 'Poppins-Bold',
-                          fontSize: 18,
-                          marginLeft: 25
-                        }}
-                        backgroundColor={'primary'}>{
-                          file.isUploading()
-                            ? file.getUploadedPercentage() + "%"
-                            : file.getDownloadedPercentage() + "%"
-                        }</Theme.Text>
-                    </View>
+                        opacity: 0.85
+                      }}
+                      size={24}
+                      icon={file.isUploading()
+                        ? faCloudUploadAlt
+                        : faCloudDownloadAlt}
+                      backgroundColor={'primary'} />
+                    
                   </View>
+                </View>
                 : void 0
             }
 
@@ -342,22 +334,18 @@ export default class File extends React.Component {
       } else {
         return (
           <View style={{
-              marginBottom: 30
-            }}>
+            marginBottom: 30
+          }}>
             {
               file.isOwn()
                 ? <Modal ref={m => {
-                      this.modal = m;
-                    }} headline="Datei bearbeiten" onDone={() => alert('MODAL DONE')}>
-                    <ScrollView
-                      style={{
-                        marginLeft: -20,
-                        marginBottom: 40,
-                        backgroundColor: '#1e1e1e'
-                      }}>
-                      <InputBox label="Name" marginTop={20} value={file.getName()} onChange={v => file.setName(v, true)}/>
-                    </ScrollView>
-                  </Modal>
+                  this.modal = m;
+                }} headline="Datei bearbeiten" onDone={() => {
+                  file.setName(file.getName(), true)
+                  this.forceUpdate()
+                }}>
+                    <InputBox label="Name" marginTop={20} value={file.getName()} onChange={v => file.setName(v)} />
+                </Modal>
                 : void 0
             }
 
@@ -374,28 +362,30 @@ export default class File extends React.Component {
                 style={{
                   justifyContent: 'flex-start',
                   flexWrap: 'wrap',
-                  flexDirection: 'row'
+                  flexDirection: 'row',
+
+                opacity:0.8,
                 }}>
                 <View style={{
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  }}>
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}>
                   <Theme.Icon style={{
-                      zIndex: 0
-                    }} size={35} icon={this._getIcon()}></Theme.Icon>
+                    zIndex: 0
+                  }} size={35} icon={this._getIcon()}></Theme.Icon>
                   {
                     file.isDownloading()
                       ? <Theme.AnimatedCircularProgress
-                          size={41}
-                          width={2}
-                          style={{
-                            position: 'absolute',
-                            marginTop: 13,
-                            marginLeft: 12
-                          }}
-                          fill={file.getDownloadedPercentage()}
-                          tintColor={"blue"}
-                          backgroundColor="#121212"/>
+                        size={41}
+                        width={2}
+                        style={{
+                          position: 'absolute',
+                          marginTop: 13,
+                          marginLeft: 12
+                        }}
+                        fill={file.getDownloadedPercentage()}
+                        tintColor={"blue"}
+                        backgroundColor="#121212" />
                       : void 0
                   }
                 </View>
@@ -403,9 +393,7 @@ export default class File extends React.Component {
                 <View
                   style={{
                     marginLeft: 20,
-                    width: this.props.card_size != 'normal'
-                      ? 225
-                      : 207
+                    width: "66%"
                   }}>
                   <Theme.Text
                     style={{
@@ -430,44 +418,41 @@ export default class File extends React.Component {
                 </View>
                 {
                   file.isOwn()
-                    ? <View
-                        style={{
-                          padding: 1,
-                          justifyContent: 'center',
-                          alignItems: 'center'
-                        }}>
-                        <TouchableOpacity onPress={() => this._openOptions()} style={{
-                            zIndex: 0
-                          }}>
-                          <Theme.Icon size={20} color="#D1CFD5" icon={faEllipsisV}/>
-                        </TouchableOpacity>
-                      </View>
+                    ? 
+                      <TouchableOpacity onPress={() => this._showOptions()} style={{
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        width:"14%",
+                      }}>
+                        <Theme.Icon style={{
+                        alignSelf: 'flex-end'}} size={20} icon={faEllipsisV} />
+                      </TouchableOpacity>
                     : void 0
                 }
               </Theme.View>
               {
-                false
+                !file.isUploading()
                   ? <View style={{
-                        marginLeft: 15,
-                        marginRight: 15,
-                        marginTop: -2
-                      }}>
-                      <View
-                        style={{
-                          borderRadius: 3,
-                          shadowColor: '#0DF5E3',
-                          shadowOffset: {
-                            width: 6,
-                            height: 6
-                          },
-                          shadowOpacity: 0.5,
-                          shadowRadius: 20.00,
-                          backgroundColor: '#0DF5E3',
-                          height: 2,
-                          width: '' + file.getUploadedPercentage() + '%',
-                          maxWidth: 1000
-                        }}/>
-                    </View>
+                    marginLeft: 15,
+                    marginRight: 15,
+                    marginTop: -2
+                  }}>
+                    <View
+                      style={{
+                        borderRadius: 3,
+                        shadowColor: '#0DF5E3',
+                        shadowOffset: {
+                          width: 6,
+                          height: 6
+                        },
+                        shadowOpacity: 0.5,
+                        shadowRadius: 20.00,
+                        backgroundColor: '#0DF5E3',
+                        height: 2,
+                        width: '' + file.getUploadedPercentage() + '%',
+                        maxWidth: 1000
+                      }} />
+                  </View>
                   : void 0
               }
             </Theme.TouchableOpacity>

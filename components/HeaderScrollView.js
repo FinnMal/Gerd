@@ -19,9 +19,9 @@ import {
   ImageBackground,
   View
 } from "react-native";
-import {BlurView} from "@react-native-community/blur";
-import {withNavigation} from "react-navigation";
-import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
+import { BlurView } from "@react-native-community/blur";
+import { withNavigation } from "react-navigation";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import {
   faPlus,
   faChevronCircleLeft,
@@ -36,14 +36,14 @@ import {
   faCheck,
   faChevronLeft
 } from "@fortawesome/free-solid-svg-icons";
-import {useDarkMode} from 'react-native-dynamic'
-import {Theme} from './../app/index.js';
+import { useDarkMode } from 'react-native-dynamic'
+import { Theme } from './../app/index.js';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback"
 
 // HeaderScrollView class: component for a ScrollView with an animated headline
 class HeaderScrollView extends React.Component {
-  lastScrollTick: 0;
-  isDarkMode: false;
+  lastScrollTick = 0;
+  isDarkMode = false;
   viewHeight = null;
   subheadlineMarginTop = new Animated.Value(15)
   subheadlineOpacity = new Animated.Value(0)
@@ -86,7 +86,7 @@ class HeaderScrollView extends React.Component {
       flatListData: []
     };
 
-    if (this.props.hasFlatList) 
+    if (this.props.hasFlatList)
       this.state.scrollY.setValue(100)
   }
 
@@ -99,17 +99,17 @@ class HeaderScrollView extends React.Component {
           }
         }
       }
-    ], {useNativeDriver: false}).bind(this);
+    ], { useNativeDriver: false }).bind(this);
   }
 
   addItemToFlatList(item, toStart = true) {
     var list = this.state.flatListData;
-    if (toStart) 
+    if (toStart)
       list.push(item);
-    else 
+    else
       list.unshift(item);
     console.log('mes added')
-    this.setState({flatListData: list})
+    this.setState({ flatListData: list })
     //this.forceUpdate();
   }
 
@@ -131,7 +131,7 @@ class HeaderScrollView extends React.Component {
       toValue: this.state.keyboardVisibleHeight,
       duration: 150,
       easing: Easing.ease
-    }).start(() => {});
+    }).start(() => { });
   }
 
   keyboardDidHide() {
@@ -141,7 +141,7 @@ class HeaderScrollView extends React.Component {
       toValue: this.state.height,
       duration: 150,
       easing: Easing.ease
-    }).start(() => {});
+    }).start(() => { });
   }
 
   _onScroll(y) {
@@ -171,7 +171,7 @@ class HeaderScrollView extends React.Component {
 
   _getViewHeight = () => {
     const s_height = Dimensions.get("window").height;
-    const {height, marginTop} = this.state;
+    const { height, marginTop } = this.state;
     return this.viewHeight.interpolate({
       inputRange: [
         0, 100
@@ -186,7 +186,7 @@ class HeaderScrollView extends React.Component {
   }
 
   _getHeaderHeadlineOpacity = () => {
-    const {scrollY, marginTop} = this.state;
+    const { scrollY, marginTop } = this.state;
     return this.state.scrollY.interpolate({
       inputRange: [
         20, 50
@@ -213,7 +213,7 @@ class HeaderScrollView extends React.Component {
   };
 
   _getHeaderBlurOpacity = () => {
-    const {scrollY, showHeader} = this.state;
+    const { scrollY, showHeader } = this.state;
     return this.state.scrollY.interpolate({
       inputRange: [
         showHeader
@@ -232,7 +232,7 @@ class HeaderScrollView extends React.Component {
   };
 
   _getHeaderSubheadlineMarginTop = () => {
-    const {scrollY} = this.state;
+    const { scrollY } = this.state;
     return this.subheadlineMarginTop.interpolate({
       inputRange: [
         -100, 100
@@ -246,7 +246,7 @@ class HeaderScrollView extends React.Component {
   };
 
   _getHeaderSubheadlineOpacity = () => {
-    const {scrollY} = this.state;
+    const { scrollY } = this.state;
     return this.subheadlineOpacity.interpolate({
       inputRange: [
         0, 1
@@ -260,7 +260,7 @@ class HeaderScrollView extends React.Component {
   };
 
   _getHeaderMarginTop = () => {
-    const {scrollY} = this.state;
+    const { scrollY } = this.state;
     return this.headerMarginTop.interpolate({
       inputRange: [
         -100, 100
@@ -303,7 +303,7 @@ class HeaderScrollView extends React.Component {
     }).start();
   }
 
-  renderItem = ({item, index}) => (
+  renderItem = ({ item, index }) => (
     <View
       style={{
         marginTop: index == this.state.flatListData.length - 1
@@ -324,117 +324,118 @@ class HeaderScrollView extends React.Component {
     return (
       <Theme.BackgroundView
         style={[{
-            height: viewHeight,
-            flexWrap: 'wrap',
-            alignItems: 'flex-start',
-            flexDirection: 'row'
-          }
+          height: viewHeight,
+          flexWrap: 'wrap',
+          alignItems: 'flex-start',
+          flexDirection: 'row'
+        }
         ]}>
         {
           !this.props.hasFlatList
             ? <Animated.ScrollView
+              style={{
+                minHeight: s_height,
+                paddingLeft: 15,
+                paddingRight: 15
+              }}
+              ref={component => {
+                this._scrollView = component;
+                if (this.props.scrollToEnd && this._scrollView)
+                  this._scrollView.scrollToEnd({ animated: true });
+              }}
+              refreshControl={this.props.refreshControl}
+              showsVerticalScrollIndicator={false}
+              onScroll={this.getScrollCallback()}
+              nestedScrollEnabled={true}
+              onContentSizeChange={() => {
+                if (this._scrollView && this.props.scrollToEnd)
+                  this._scrollView.scrollToEnd({ animated: true });
+              }}>
+              {
+                this.state.showHeader || this.props.headline
+                  ? <View
+                    style={{
+                      zIndex: 100,
+                      marginTop: this.state.showHeader
+                        ? this.state.blur_view_height / 1.2
+                        : 10,
+                      marginBottom: 30,
+                      flexWrap: "wrap",
+                      flexDirection: "row",
+                      alignItems: 'center'
+                    }}>
+                    <Theme.Text
+                      style={{
+                        marginRight: 'auto',
+                        alignSelf: 'flex-start',
+                        fontSize: this.state.headlineFontSize,
+                        fontFamily: "Poppins-ExtraBold",
+                        opacity: .9
+                      }}>
+                      {this.props.headline}
+                    </Theme.Text>
+                    {
+                      this.props.actionButtonIcon && !this.state.backButton
+                        ? <TouchableOpacity onPress={this.props.actionButtonOnPress}>
+                          <Theme.Icon style={{
+                            opacity: .96
+                          }} size={25} icon={this.props.actionButtonIcon} />
+                        </TouchableOpacity>
+                        : void 0
+                    }
+                  </View>
+                  : void 0
+              }
+
+              <Theme.BackgroundView
                 style={{
-                  minHeight: s_height,
+                  marginTop: !this.props.showHeader
+                    ? 10
+                    : this.state.blur_view_height,
+                  paddingBottom: 50
+                }}
+                onLayout={event => {
+                  var {
+                    x,
+                    y,
+                    width,
+                    height
+                  } = event.nativeEvent.layout;
+                  if (this._scrollView) {
+                    var enabled = height + y + 100 > Dimensions.get("window").height;
+                    this._scrollView.setNativeProps({ scrollEnabled: enabled });
+                  }
+                }}>
+                {this.props.children}
+              </Theme.BackgroundView>
+            </Animated.ScrollView>
+            : <View style={{}}>
+              <Animated.FlatList
+                onEndReached={() => {
+                  this.props.onEndReached()
+                }}
+                onEndReachedThreshold={0.5}
+                inverted={true}
+                initialNumToRender={1}
+                style={{
+                  width: s_width,
                   paddingLeft: 15,
                   paddingRight: 15
                 }}
-                ref={component => {
-                  this._scrollView = component;
-                  if (this.props.scrollToEnd && this._scrollView) 
-                    this._scrollView.scrollToEnd({animated: true});
-                  }}
-                refreshControl={this.props.refreshControl}
-                showsVerticalScrollIndicator={false}
-                onScroll={this.getScrollCallback()}
-                onContentSizeChange={() => {
-                  if (this._scrollView && this.props.scrollToEnd) 
-                    this._scrollView.scrollToEnd({animated: true});
-                  }}>
-                {
-                  this.state.showHeader || this.props.headline
-                    ? <View
-                        style={{
-                          zIndex: 100,
-                          marginTop: this.state.showHeader
-                            ? this.state.blur_view_height / 1.2
-                            : 10,
-                          marginBottom: 30,
-                          flexWrap: "wrap",
-                          flexDirection: "row",
-                          alignItems: 'center'
-                        }}>
-                        <Theme.Text
-                          style={{
-                            marginRight: 'auto',
-                            alignSelf: 'flex-start',
-                            fontSize: this.state.headlineFontSize,
-                            fontFamily: "Poppins-ExtraBold",
-                            opacity: .9
-                          }}>
-                          {this.props.headline}
-                        </Theme.Text>
-                        {
-                          this.props.actionButtonIcon && !this.state.backButton
-                            ? <TouchableOpacity onPress={this.props.actionButtonOnPress}>
-                                <Theme.Icon style={{
-                                    opacity: .96
-                                  }} size={25} icon={this.props.actionButtonIcon}/>
-                              </TouchableOpacity>
-                            : void 0
-                        }
-                      </View>
-                    : void 0
-                }
-
-                <Theme.BackgroundView
-                  style={{
-                    marginTop: !this.props.showHeader
-                      ? 10
-                      : this.state.blur_view_height,
-                    paddingBottom: 50
-                  }}
-                  onLayout={event => {
-                    var {
-                      x,
-                      y,
-                      width,
-                      height
-                    } = event.nativeEvent.layout;
-                    if (this._scrollView) {
-                      var enabled = height + y + 100 > Dimensions.get("window").height;
-                      this._scrollView.setNativeProps({scrollEnabled: enabled});
-                    }
-                  }}>
-                  {this.props.children}
-                </Theme.BackgroundView>
-              </Animated.ScrollView>
-            : <View style={{}}>
-                <Animated.FlatList
-                  onEndReached={() => {
-                    this.props.onEndReached()
-                  }}
-                  onEndReachedThreshold={0.5}
-                  inverted={true}
-                  initialNumToRender={1}
-                  style={{
-                    width: s_width,
-                    paddingLeft: 15,
-                    paddingRight: 15
-                  }}
-                  data={this.props.flatListData}
-                  renderItem={({item, index}) => {
-                    return <View
-                      style={{
-                        marginTop: index == this.props.flatListData.length - 1
-                          ? this.state.blur_view_height + 20
-                          : 0,
-                        marginBottom: index == 0
-                          ? -40
-                          : 0
-                      }}>{item.getRender()}</View>
-                  }}
-                  keyExtractor={(item, index) => index.toString()}/>
-              </View>
+                data={this.props.flatListData}
+                renderItem={({ item, index }) => {
+                  return <View
+                    style={{
+                      marginTop: index == this.props.flatListData.length - 1
+                        ? this.state.blur_view_height + 20
+                        : 0,
+                      marginBottom: index == 0
+                        ? -40
+                        : 0
+                    }}>{item.getRender()}</View>
+                }}
+                keyExtractor={(item, index) => index.toString()} />
+            </View>
         }
 
         <Animated.View
@@ -452,7 +453,7 @@ class HeaderScrollView extends React.Component {
               flexWrap: 'wrap',
               alignItems: 'flex-start',
               flexDirection: 'row'
-            }}/>
+            }} />
         </Animated.View>
 
         <View
@@ -482,77 +483,77 @@ class HeaderScrollView extends React.Component {
           {
             this.state.backButton && this.state.showHeader
               ? <View
+                style={{
+                  width: s_width * 0.89,
+                  marginTop: 40,
+                  flexWrap: 'wrap',
+                  alignItems: 'flex-start',
+                  flexDirection: 'row',
+                  marginLeft: 20,
+                  paddingTop: 5,
+                  paddingBottom: 13
+                }}>
+                <TouchableOpacity
                   style={{
-                    width: s_width * 0.89,
-                    marginTop: 40,
-                    flexWrap: 'wrap',
-                    alignItems: 'flex-start',
-                    flexDirection: 'row',
-                    marginLeft: 20,
-                    paddingTop: 5,
-                    paddingBottom: 13
-                  }}>
-                  <TouchableOpacity
-                    style={{
-                      zIndex: 100
-                    }}
-                    onPress={(
-                      ) => !this.props.backButtonOnPress
+                    zIndex: 100
+                  }}
+                  onPress={(
+                  ) => !this.props.backButtonOnPress
                       ? this._navigateBack()
                       : this.props.backButtonOnPress()}>
-                    <Theme.Icon
-                      style={{
-                        opacity: .96
-                      }}
-                      icon={this.props.backButtonIcon
-                        ? this.props.backButtonIcon
-                        : faChevronCircleLeft}
-                      size={25}/>
-                  </TouchableOpacity>
-                  <Animated.View
+                  <Theme.Icon
                     style={{
-                      flex: 1,
-                      marginTop: this._getHeaderMarginTop(),
-                      position: "absolute",
-                      justifyContent: 'center',
-                      width: s_width * .89,
-                      alignItems: 'center'
-                    }}>
-                    <Theme.Text
-                      style={{
-                        fontSize: 23,
-                        fontFamily: 'Poppins-Bold',
-                        marginTop: this._getHeaderHeadlineMarginTop(),
-                        opacity: this._getHeaderHeadlineOpacity()
-                      }}>{this.props.headline}</Theme.Text>
-                    {
-                      this.props.subheadline
-                        ? <Theme.Text
-                            color={"primary"}
-                            style={{
-                              fontSize: 16,
-                              fontFamily: 'Poppins-SemiBold',
-                              marginTop: this._getHeaderSubheadlineMarginTop()
-                            }}>{this.props.subheadline}</Theme.Text>
-                        : void 0
-                    }
-
-                  </Animated.View>
+                      opacity: .96
+                    }}
+                    icon={this.props.backButtonIcon
+                      ? this.props.backButtonIcon
+                      : faChevronCircleLeft}
+                    size={25} />
+                </TouchableOpacity>
+                <Animated.View
+                  style={{
+                    flex: 1,
+                    marginTop: this._getHeaderMarginTop(),
+                    position: "absolute",
+                    justifyContent: 'center',
+                    width: s_width * .89,
+                    alignItems: 'center'
+                  }}>
+                  <Theme.Text
+                    style={{
+                      fontSize: 23,
+                      fontFamily: 'Poppins-Bold',
+                      marginTop: this._getHeaderHeadlineMarginTop(),
+                      opacity: this._getHeaderHeadlineOpacity()
+                    }}>{this.props.headline}</Theme.Text>
                   {
-                    this.props.actionButtonIcon
-                      ? <View
-                          style={{
-                            marginLeft: 'auto',
-                            alignSelf: 'flex-end',
-                            opacity: .96
-                          }}>
-                          <TouchableOpacity onPress={this.props.actionButtonOnPress}>
-                            <Theme.Icon size={25} icon={this.props.actionButtonIcon}/>
-                          </TouchableOpacity>
-                        </View>
+                    this.props.subheadline
+                      ? <Theme.Text
+                        color={"primary"}
+                        style={{
+                          fontSize: 16,
+                          fontFamily: 'Poppins-SemiBold',
+                          marginTop: this._getHeaderSubheadlineMarginTop()
+                        }}>{this.props.subheadline}</Theme.Text>
                       : void 0
                   }
-                </View>
+
+                </Animated.View>
+                {
+                  this.props.actionButtonIcon
+                    ? <View
+                      style={{
+                        marginLeft: 'auto',
+                        alignSelf: 'flex-end',
+                        opacity: .96
+                      }}>
+                      <TouchableOpacity onPress={this.props.actionButtonOnPress}>
+                        <Theme.Icon size={25} icon={this.props.actionButtonIcon} />
+                      </TouchableOpacity>
+                    </View>
+                    : void 0
+                }
+              </View>
 
               : void 0
           }

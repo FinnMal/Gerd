@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import AutoHeightImage from 'react-native-auto-height-image';
 import FileViewer from 'react-native-file-viewer';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import {
   faCalendar,
   faMapMarker,
@@ -32,14 +32,14 @@ import {
   faBell,
   faEllipsisV
 } from '@fortawesome/free-solid-svg-icons';
-import {withNavigation} from 'react-navigation';
-import {useNavigation} from '@react-navigation/native';
+import { withNavigation } from 'react-navigation';
+import { useNavigation } from '@react-navigation/native';
 import RNFetchBlob from 'rn-fetch-blob';
 import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
 import CameraRoll from '@react-native-community/cameraroll';
-import {AnimatedCircularProgress} from 'react-native-circular-progress';
-import {Theme} from './../app/index.js';
+import { AnimatedCircularProgress } from 'react-native-circular-progress';
+import { Theme } from './../app/index.js';
 import Button from './../components/Button.js';
 
 // SWIPEREVENT class: component for clubs events in swiper
@@ -54,6 +54,10 @@ export default class SwiperEvent extends React.Component {
   constructor(event) {
     super();
     this.event = event;
+  }
+
+  componentwillunmount(){
+    this.event.stopAllListeners()
   }
 
   onShow(direction) {
@@ -83,7 +87,7 @@ export default class SwiperEvent extends React.Component {
       easing: Easing.ease
     }).start();
 
-    setTimeout(function() {
+    setTimeout(function () {
       if (this.visible) {
         Animated.timing(this.imageScale, {
           useNativeDriver: false,
@@ -130,7 +134,7 @@ export default class SwiperEvent extends React.Component {
     const event = this.event;
     const user = event.getUser();
     const club = event.getClub();
-    user.toggleEventNotification(club.getID(), event.getID(), function(subscribed) {
+    user.toggleEventNotification(club.getID(), event.getID(), function (subscribed) {
       this.triggerRenderListener();
     }.bind(this))
   }
@@ -141,7 +145,7 @@ export default class SwiperEvent extends React.Component {
     }
   }
 
-  render(width) {
+  render(width, index) {
     const event = this.event;
     const club = this.event.getClub();
     const user = this.event.getUser();
@@ -176,11 +180,11 @@ export default class SwiperEvent extends React.Component {
     });
 
     if (event) {
-      return <View style={{
-          flex: 1,
-          height: "100%",
-          width: width
-        }}>
+      return <View key={index} style={{
+        flex: 1,
+        height: "100%",
+        width: width
+      }}>
         <View
           style={{
             backgroundColor: club.getTextColor() == "white"
@@ -189,7 +193,7 @@ export default class SwiperEvent extends React.Component {
             position: "absolute",
             width: "100%",
             height: "100%"
-          }}/>
+          }} />
         <Animated.Image
           style={{
             transform: [
@@ -205,7 +209,7 @@ export default class SwiperEvent extends React.Component {
           source={{
             cache: 'force-cache',
             url: event.getImage()
-          }}/>
+          }} />
         <Theme.LinearGradient
           color={club.getColor()}
           style={{
@@ -221,10 +225,10 @@ export default class SwiperEvent extends React.Component {
             y: 0.9
           }}>
           <View style={{
-              position: "absolute",
-              bottom: 15,
-              right: 15
-            }}>
+            position: "absolute",
+            bottom: 15,
+            right: 15
+          }}>
             <Button
               onPress={() => this.onClickBell()}
               padding={9}
@@ -234,7 +238,7 @@ export default class SwiperEvent extends React.Component {
                 : "#000000"}
               icon={user.hasEventSubscribed(club.getID(), event.getID())
                 ? faBell
-                : faBellSlash}/>
+                : faBellSlash} />
           </View>
           <Animated.View
             style={{
@@ -260,7 +264,7 @@ export default class SwiperEvent extends React.Component {
                 alignItems: 'flex-start',
                 flexDirection: 'row'
               }}>
-              <FontAwesomeIcon color={club.getTextColor()} size={15} icon={faMapMarkerAlt}/>
+              <FontAwesomeIcon color={club.getTextColor()} size={15} icon={faMapMarkerAlt} />
               <Text
                 style={{
                   marginLeft: 7,

@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 
 import {
   AppRegistry,
@@ -13,8 +13,8 @@ import {
 import database from '@react-native-firebase/database';
 import Event from './Event.js';
 import Club from './Club.js';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
-import {faInbox, faTimesCircle} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faInbox, faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 
 // EVENTSLIST class: Similar to DataList class. Not used anymore
 export class EventsList {
@@ -70,32 +70,28 @@ export class EventsList {
       this.refs = [];
     }
 
-    this.user.getClubsList(function(clubs) {
+    this.user.getClubsList(function (clubs) {
       if (this.active) {
         console.log('in getClubsList 3')
-        clubs.forEach(function(c) {
+        clubs.forEach(function (c) {
           var ref = database().ref('clubs/' + c.getID() + '/events').orderByChild('starts_at').limitToLast(this.limit);
           this.refs.push(ref);
-          ref.on('child_added', function(snap) {
+          ref.on('child_added', function (snap) {
             if (!this.events[snap.key + c.getID()]) {
               var e = new Event(snap.key, c, this.user, snap.val(), ['name', 'logo']);
-              e.setRenderListener(function() {
-                console.log('after setRenderListener')
-              })
-              e.setReadyListener(function() {
-                if (this.event_added_cb) 
+              e.setReadyListener(function () {
+                if (this.event_added_cb)
                   this.event_added_cb(e);
-                }
-              .bind(this))
+              }.bind(this))
               this.events[snap.key + c.getID()] = e;
             }
           }.bind(this));
-          ref.on('child_removed', function(snap) {
+          ref.on('child_removed', function (snap) {
             if (this.events[snap.key + c.getID()]) {
-              if (this.event_removed_cb) 
+              if (this.event_removed_cb)
                 this.event_removed_cb(this.events[snap.key + c.getID()]);
-              }
-            }.bind(this));
+            }
+          }.bind(this));
         }.bind(this));
       }
     }.bind(this))
@@ -107,7 +103,7 @@ export class EventsList {
       if (e) {
         if (e.object) {
           this.state.events[event_id].refreshing = true;
-          e.object.refresh((function() {
+          e.object.refresh((function () {
             this.state.events[event_id].refreshing = false;
           }).bind(this));
         }
@@ -119,12 +115,12 @@ export class EventsList {
       Object.keys(this.state.events).map(event_id => {
         var e = this.state.events[event_id];
         if (e) {
-          if (!e.refreshing) 
+          if (!e.refreshing)
             total_refreshing--;
-          }
-        });
+        }
+      });
     }
-    if (cb) 
+    if (cb)
       cb();
-    }
   }
+}

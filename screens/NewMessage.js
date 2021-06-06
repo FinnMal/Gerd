@@ -55,22 +55,31 @@ import ImagePicker from "react-native-image-crop-picker";
 import CheckBox from '@react-native-community/checkbox';
 import {Theme} from './../app/index.js';
 import {default as Modal} from "./../components/Modal.js";
+import DatePicker from './../components/DatePicker.js'
+import SelectBox from './../components/SelectBox.js'
+import {default as EventCard} from '../components/Event.js'
+import {default as FileCard} from '../components/File.js'
+import Event from '../classes/Event.js'
+import File from '../classes/File.js'
+import Switch from "./../components/Switch.js";
 
 import storage from '@react-native-firebase/storage';
+import Club from '../classes/Club.js';
 
 // NewMessageScreen class: screen to send a new message to members
 export default class NewMessageScreen extends React.Component {
   constructor(props) {
     super(props);
     const utils = this.props.navigation.getParam('utils', null);
+    this.utils = utils;
     const user = this.props.navigation.getParam('user', null)
 
     this.state = {
       curPageIndex: 0,
       clubsList: [],
       event_modal_visible: false,
-      events: [],
-      files: [],
+      events: {},
+      files: {},
       picture: {},
       group_serach: '',
       uid: utils.getUserID(),
@@ -78,6 +87,27 @@ export default class NewMessageScreen extends React.Component {
       link_modal: {
         club_key: '',
         group_key: ''
+      },
+      modal: {
+        event: {
+          full_day:false,
+          title:"",
+          location:"",
+          starts_at: new Date(),
+          ends_at:new Date()
+        },
+        file: {
+          download_url:"",
+          downloads:0,
+          extension:"mp3",
+          name: "",
+          size_bytes:0,
+          storage_path:"",
+          type:"",
+          uploaded_at:0,
+          uploaded_percentage:0,
+          uploading:false
+        }
       },
       headlineInputValue: 'Lorem ipsum dolor sit',
       shortTextInputValue: 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At' +
@@ -176,140 +206,79 @@ export default class NewMessageScreen extends React.Component {
   }
 
   async setPicture(res) {
-    var file = {
-      name: res.name,
-      path: res.path,
-      width: res.width,
-      height: res.height,
-      data: res.data,
-      uploading: true,
-      uploaded_percentage: 0,
-      storage_path: 'userfiles/' + this.state.uid + '/' + res.name
-    };
-
-    this.state.picture = file;
-    this.forceUpdate();
-
-    const reference = storage().ref(file.storage_path);
-    const pathToFile = file.path;
-    const task = reference.putFile(pathToFile);
-
-    task.on('state_changed', taskSnapshot => {
-      if (this.state.picture) {
-        if (this.state.picture.storage_path == taskSnapshot.metadata.name) {
-          this.state.picture.uploaded_percentage = taskSnapshot.bytesTransferred / taskSnapshot.totalBytes * 100;
-          this.forceUpdate();
-          return;
-        }
+    this.state.picture = res
+    var clubID = this._getSelectedClubs()[0].club_id
+    var club = new Club(clubID, this.utils.getUser())
+    club.uploadThumbnail(res, function(status, param) {
+      console.log('[NEWMESSAGE SCREEN] NEW STATUS: '+status)
+      if (status == 'uploaded_percentage') {
+        this.state.picture.uploading = true
+        this.state.picture.uploaded_percentage = param
       }
-      task.cancel();
-    });
+      if (status == 'download_url'){
+        this.state.picture.uploading = false
+        this.state.picture.download_url = param
+        this.state.picture.thumbnail_download_url = param
+        this.state.picture.uploaded_percentage = 0
+      }
+      this.forceUpdate()
 
-    task.then(async () => {
-      const url = await storage().ref(this.state.picture.storage_path).getDownloadURL();
-      this.state.picture.download_url = url;
-      this.state.picture.thumbnail_download_url = url;
-      this.state.picture.uploading = false;
-    });
+      if (status == 'error') 
+        alert('Error while uploading file')
+    }.bind(this))
+
+    
   }
 
   async addFile(res) {
-    var file = {
-      name: res.name,
-      path: res.uri,
-      size: res.size,
-      type: res.type,
-      uploading: true,
-      uploaded_percentage: 0,
-      storage_path: 'userfiles/' + this.state.uid + '/' + res.name + '_' + new Date().getTime()
-    };
-
-    var pos = this.state.files.length;
-    this.state.files[pos] = file;
-    this.forceUpdate();
-    const reference = storage().ref(file.storage_path);
-    const pathToFile = file.path;
-    const task = reference.putFile(pathToFile);
-
-    task.on('state_changed', taskSnapshot => {
-      if (this.state.files[pos]) {
-        if (taskSnapshot.metadata.name) {
-          if (this.state.files[pos].storage_path == taskSnapshot.metadata.name) {
-            this.state.files[pos].uploaded_percentage = taskSnapshot.bytesTransferred / taskSnapshot.totalBytes * 100;
-            this.forceUpdate();
-            return;
-          }
-        }
+    var clubID = this._getSelectedClubs()[0].club_id
+    var club = new Club(clubID, this.utils.getUser())
+    club.uploadFile(res, function(status, file) {
+      console.log('[NEWMESSAGE SCREEN] NEW STATUS: '+status)
+      if (status == 'file_created') {
+        this.state.files[file.getID()] = file;
+        this.forceUpdate()
       }
-      task.cancel();
-    });
-
-    task.then(async () => {
-      const url = await storage().ref(this.state.files[pos].storage_path).getDownloadURL();
-      this.state.files[pos].download_url = url;
-      this.state.files[pos].uploading = false;
-    });
+      if (status == 'done' || status == 'uploaded_percentage'){
+        this.forceUpdate()
+      } 
+      if (status == 'error') 
+        alert('error while uploading file')
+    }.bind(this))
   }
 
-  editFile(key, name) {
-    // TODO: edit name in database
-    this.state.files[key].name = name;
-    this.forceUpdate();
-  }
-
-  deleteFile(key) {
-    // TODO: Delete from database
-    var files = [...this.state.files];
-    files.splice(key, 1);
-    this.setState({files: files});
-    this.forceUpdate();
-  }
-
-  openAddEventModal() {
-    if (this.state.event_modal_visible) {
-      this.state.event_modal_visible = false;
-      this.forceUpdate();
-      setTimeout((function() {
-        this.state.event_modal_visible = true;
-        this.forceUpdate();
-      }).bind(this), 0);
-    } else {
-      this.state.event_modal_visible = true;
-      this.forceUpdate();
+  _openCreateEventModal(){
+    this.state.modal.event = {
+      full_day:false,
+      title:"",
+      location:"",
+      starts_at: new Date(),
+      ends_at:new Date()
     }
+    this.forceUpdate()
+    this.event_modal.open()
   }
 
-  addEvent(name, date, location) {
-    this.state.event_modal_visible = false;
-
-    var event = {
-      modal_visible: false,
-      name: name,
-      date: date,
-      location: location
-    };
-
-    this.state.events[this.state.events.length] = event;
-    this.forceUpdate();
+  createEvent() {
+    var event = this.state.modal.event;
+    event.repeat = 'never';
+    event.created_by = this.state.uid;
+    event.image_name = 'pipes.png';
+    event.starts_at = event.starts_at.getTime() / 1000;
+    event.ends_at = event.ends_at.getTime() / 1000;
+    var clubID = this._getSelectedClubs()[0].club_id
+    var eventID = database().ref('clubs/' + clubID + '/events').push(event).key
+    this.state.events[eventID] = new Event(eventID, new Club(clubID, this.utils.getUser()), this.utils.getUser());
+    this.state.events[eventID].setReadyListener(function(){
+      this.forceUpdate()
+    }.bind(this))
   }
 
-  editEvent(key, name, date, location) {
-    var event = {
-      modal_visible: false,
-      name: name,
-      date: date,
-      location: location
-    };
-
-    this.state.events[key] = event;
-    this.forceUpdate();
-  }
-
-  deleteEvent(key) {
-    var events = [...this.state.events];
-    events.splice(key, 1);
-    this.setState({events: events});
-    this.forceUpdate();
+  deleteEvent(eventID) {
+    alert('in deleteEvent')
+    this.state.events[eventID].stopAllListeners()
+    this.state.events[eventID] = null;
+    this.forceUpdate()
   }
 
   selectClub(key) {
@@ -414,6 +383,16 @@ export default class NewMessageScreen extends React.Component {
     }).bind(this));
   }
 
+  _getSelectedClubs(){
+    var selected_clubs = [];
+    this.state.clubsList.forEach((club, i) => {
+      if (club.selected) {
+        selected_clubs.push(club)
+      }
+    });
+    return selected_clubs
+  }
+
   sendMessage() {
     // Check clubs and groups
     var send_at_groups = {};
@@ -449,61 +428,72 @@ export default class NewMessageScreen extends React.Component {
       return this._showError('Subtext fehlt', 1);
     if (!this.state.textInputValue) 
       return this._showError('Text fehlt', 1);
-    
-    //Check events
-    this.state.events.forEach((event, i) => {
-      if (!event.name) 
-        return this._showError('Name des Events fehlt', 2);
-      if (!event.date) 
-        return this._showError('Datum des Events fehlt', 2);
-      if (!event.location) 
-        return this._showError('Location des Events fehlt', 2);
-      }
-    );
 
     //Check files
-    this.state.files.forEach((file, i) => {
-      if (file.uploading) 
-        return this._showError('Upload nicht abgeschlossen (Noch ' + Math.round(100 - file.uploaded_percentage) + '%)', 3);
-      if (!file.path || !file.storage_path || !file.icon) 
-        return this._showError('Fehler beim Upload. Bitte erneut versuchen', 3);
+    var events_check = Object.keys(this.state.events).map(eventID => {
+      const event = this.state.events[eventID]
+      if (!event.getTitle()){
+        this._showError('Name des Events fehlt', 2);
+        return false
       }
-    );
-
-    this.state.clubsList.forEach((club, i) => {
-      if (club.selected) {
-        var files = [];
-        this.state.files.forEach((file, i) => {
-          file.path = null;
-          file.storage_path = null;
-          file.uploading = null;
-          file.uploaded_percentage = null;
-          file.icon = null;
-          files.push(file);
-        });
-
-        var events = [];
-        this.state.events.forEach((event, i) => {
-          events.push({date: event.date, name: event.name, location: event.location});
-        });
-
-        var mes = {
-          show_author: true,
-          author: this.state.uid,
-          headline: this.state.headlineInputValue,
-          short_text: this.state.shortTextInputValue,
-          long_text: this.state.textInputValue,
-          send_at: new Date().getTime() / 1000,
-          img: this.state.picture.download_url,
-          img_thumbnail: this.state.picture.thumbnail_download_url,
-          files: files,
-          events: events,
-          groups: send_at_groups
-        };
-
-        database().ref('clubs/' + club.club_id + '/messages').push(mes).then(() => this.props.navigation.navigate('ScreenHandler').bind(this));
+      if (!event.getLocation()){
+        this._showError('Location des Events fehlt', 2);
+        return false
       }
+      if (!event.getValue('starts_at')){
+        this._showError('Datum des Events fehlt', 2);
+        return false
+      }
+      return true
     });
+    var events_ok = !events_check.includes(false)
+
+    //Check files
+    var files_check = Object.keys(this.state.files).map(fileID => {
+      const file = this.state.files[fileID]
+      if (file.isUploading()){
+        this._showError('Datei-Upload noch nicht abgeschlossen', 3);
+        return false
+      }
+      if (!file.getDownloadURL()){
+        this._showError('Fehler beim Datei-Upload. Bitte erneut versuchen', 2);
+        return false
+      }
+      return true
+    });
+    var files_ok = !files_check.includes(false)
+
+    if (events_ok && files_ok){
+      this.state.clubsList.forEach((club, i) => {
+        if (club.selected) {
+          var files = {};
+          Object.keys(this.state.files).forEach(function (fileID) {
+            files[fileID] = true;
+          })
+
+          var events = {};
+          Object.keys(this.state.events).forEach(function (eventID) {
+            events[eventID] = true;
+          })
+
+          var mes = {
+            show_author: true,
+            author: this.state.uid,
+            headline: this.state.headlineInputValue,
+            short_text: this.state.shortTextInputValue,
+            long_text: this.state.textInputValue,
+            send_at: new Date().getTime() / 1000,
+            img: this.state.picture.download_url,
+            img_thumbnail: this.state.picture.thumbnail_download_url,
+            files: files,
+            events: events,
+            groups: send_at_groups
+          };
+
+          database().ref('clubs/' + club.club_id + '/messages').push(mes).then(() => this.props.navigation.navigate('ScreenHandler').bind(this));
+        }
+      });
+    }
   }
 
   onChangeText(type, value) {
@@ -528,6 +518,7 @@ export default class NewMessageScreen extends React.Component {
   }
 
   render() {
+    const s_width = Dimensions.get("window").width;
     const headlineMarginLeft = this.headlineMarginLeft.interpolate({
       inputRange: [
         0, 50, 100
@@ -600,20 +591,15 @@ export default class NewMessageScreen extends React.Component {
       );
     } else if (this.state.curPageIndex == 2) {
       pageHeadline = 'Events hinzufügen';
-      if (this.state.events.length > 0) {
-        pageContent = Object.keys(this.state.events).map(key => {
-          var event = this.state.events[key];
+      if (Object.keys(this.state.events).length > 0) {
+        pageContent = Object.keys(this.state.events).map(eventID => {
+          const eventObj = this.state.events[eventID];
           return (
             <EventCard
-              key={key}
-              pos={key}
+              key={eventID}
               card_type="new_message"
               editable={true}
-              name={event.name}
-              date={event.date}
-              location={event.location}
-              onChange={this.editEvent.bind(this)}
-              onDelete={this.deleteEvent.bind(this)}/>
+              event={eventObj}/>
           );
         });
       } else 
@@ -642,23 +628,16 @@ export default class NewMessageScreen extends React.Component {
       }
     else if (this.state.curPageIndex == 3) {
       pageHeadline = 'Dateien hinzufügen';
-      if (this.state.files.length > 0) {
+      if (Object.keys(this.state.files).length > 0) {
         pageContent = Object.keys(this.state.files).map(key => {
           var file = this.state.files[key];
           return (
             <FileCard
               key={key}
-              pos={key}
+              card_size={'small'}
               editable={true}
               downloadable={false}
-              type={file.type}
-              path={file.path}
-              name={file.name}
-              uploading={file.uploading}
-              uploaded_percentage={file.uploaded_percentage}
-              size={file.size}
-              onDelete={this.deleteFile.bind(this)}
-              onEdit={this.editFile.bind(this)}/>
+              file={file}/>
           );
         });
       } else 
@@ -688,25 +667,24 @@ export default class NewMessageScreen extends React.Component {
     else if (this.state.curPageIndex == 4) {
       pageHeadline = 'Beitragsbild hinzufügen';
 
-      if (this.state.picture.data) {
+      if (this.state.picture.path) {
         pageContent = (
           <View>
             {
-              this.state.picture.uploaded_percentage < 100
-                ? <Text
+              this.state.picture.uploading
+                ? <Theme.Text
                     style={{
-                      color: 'white',
                       fontFamily: 'Poppins-Bold',
                       fontSize: 18
                     }}>
                     Hochgeladen: {Math.round(this.state.picture.uploaded_percentage)}
                     %
-                  </Text>
+                  </Theme.Text>
                 : void 0
             }
 
             <AutoHeightImage width={335} source={{
-                uri: this.state.picture.data
+                uri: this.state.picture.path
               }}/>
           </View>
         );
@@ -801,8 +779,7 @@ export default class NewMessageScreen extends React.Component {
                         color: 'white',
                         opacity: 0.6
                       }}>
-                      {group.members.toLocaleString() + " "}
-                      Mitglieder
+                      {group.members.toLocaleString() + " "} Mitglieder
                     </Theme.Text>
                   </View>
                   {
@@ -934,7 +911,7 @@ export default class NewMessageScreen extends React.Component {
           }}>
           <Modal ref={m => {
               this.link_modal = m;
-            }} headline={'Gruppe verlinken'} onDone={() => this._editEvent()}>
+            }} headline={'Gruppe verlinken'}>
             <ScrollView style={{
                 paddingRight: 20
               }}>
@@ -1002,6 +979,73 @@ export default class NewMessageScreen extends React.Component {
           flex: 1
         }} keyboardShouldPersistTaps="always">
 
+        <Modal ref={m => {
+            this.event_modal = m;
+          }} headline={'Event erstellen'} onDone={() => this.createEvent()}>
+          <ScrollView>
+            <InputBox label="Name" width={s_width * .95} marginTop={20} value={this.state.modal.event.title} onChange={v => (this.state.modal.event.title = v)}/>
+            <InputBox label="Ort" width={s_width * .95} marginTop={20} value={this.state.modal.event.location} onChange={v => (this.state.modal.event.location = v)}/>
+
+            <Switch
+              onValueChange={() => {
+                this.state.modal.event.full_day = !this.state.modal.event.full_day;
+                this.forceUpdate();
+              }}
+              value={this.state.modal.event.full_day}
+              label="Ganztägig"/>
+            <DatePicker
+              label={!this.state.modal.event.full_day
+                ? 'Beginn'
+                : 'Datum'}
+              mode={!this.state.modal.event.full_day
+                ? 'datetime'
+                : 'date'}
+              value={this.state.modal.event.starts_at}
+              onChange={v => {
+                this.state.modal.event.starts_at = v;
+                this.forceUpdate()
+              }}
+              width={s_width * .95}></DatePicker>
+            {
+              !this.state.modal.event.full_day
+                ? <View>
+                    <DatePicker
+                      label='Ende'
+                      mode={'datetime'}
+                      marginTop={20}
+                      value={this.state.modal.event.ends_at}
+                      onChange={v => {
+                        this.state.modal.event.ends_at = v;
+                        this.forceUpdate()
+                      }}
+                      width={s_width * .95}/></View>
+                : void 0
+            }
+
+            <SelectBox
+              marginTop={20}
+              width={s_width * .95}
+              picker_width={170}
+              label="Wiederholen"
+              sheet_headline="Intervall auswählen"
+              elements={[
+                'Nie',
+                'Täglich',
+                'Wöchentlich',
+                'Alle 2 Wochen',
+                'Monatlich',
+                'Jährlich'
+              ]}
+              value={this.state.modal.event.repeat}
+              onChange={(value, index) => {
+                console.log(value)
+                this.state.modal.event.repeat = value
+                this.forceUpdate()
+              }}/>
+
+          </ScrollView>
+        </Modal>
+
         {
           pageHeadline != ''
             ? <View
@@ -1053,13 +1097,6 @@ export default class NewMessageScreen extends React.Component {
               </TouchableOpacity>
             : void 0
         }
-
-        <ModalCard
-          visible={this.state.event_modal_visible}
-          name="Neue Veranstaltung"
-          location=""
-          date={new Date().toLocaleString()}
-          onDone={(name, date, location) => this.addEvent(name, date, location)}/>
 
         <View
           style={{
@@ -1121,7 +1158,7 @@ export default class NewMessageScreen extends React.Component {
                   }}
                   onPress={() => {
                     if (this.state.curPageIndex == 2) 
-                      this.openAddEventModal();
+                      this._openCreateEventModal()
                     else if (this.state.curPageIndex == 3) 
                       this.openUploadFileModal();
                     else 

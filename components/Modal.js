@@ -84,7 +84,7 @@ export default class GModal extends React.Component {
         onDismiss={() => console.log("onDismiss")}
         onRequestClose={() => this._onRequestClose()}
         onOrientationChange={() => console.log("onOrientationChange")}>
-        <Theme.View color={'background_view'}>
+        <Theme.BackgroundView color={"view"}>
           <View
             style={{
               padding: 20,
@@ -118,7 +118,7 @@ export default class GModal extends React.Component {
                 this.setState({contentHeight: height})
               }}>{this.props.children}</View>
           </ScrollView>
-        </Theme.View>
+        </Theme.BackgroundView>
       </Modal>
     );
   }

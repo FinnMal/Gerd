@@ -14,15 +14,14 @@ import {
   Easing,
   Animated
 } from "react-native";
-import * as utils from './../utils.js';
 import AutoHeightImage from "react-native-auto-height-image";
 import FileViewer from "react-native-file-viewer";
-import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
-import {faChevronCircleRight} from "@fortawesome/free-solid-svg-icons";
-import {withNavigation} from "react-navigation";
-import {useNavigation} from "@react-navigation/native";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import { faChevronCircleRight } from "@fortawesome/free-solid-svg-icons";
+import { withNavigation } from "react-navigation";
+import { useNavigation } from "@react-navigation/native";
 import database from "@react-native-firebase/database";
-import {Theme} from './../app/index.js';
+import { Theme } from './../app/index.js';
 import DatabaseConnector from "./../classes/database/DatabaseConnector";
 
 // CHATMESSAGE class: component for a chat message on screens/Chat.js
@@ -53,7 +52,7 @@ export default class ChatMessage extends DatabaseConnector {
   saveLocal(data, cb) {
     this.executeSQL('INSERT INTO chat_messages VALUES (?, ?, ?, ?, ?)', [
       data.send_at, this.chat.getID(), data.text, data.is_own, 0
-    ], function() {
+    ], function () {
       console.log("saved " + data.send_at + " into local database")
       cb(this)
     }.bind(this))
@@ -144,11 +143,44 @@ export default class ChatMessage extends DatabaseConnector {
   }
 
   getAgoSec() {
-    return utils.getAgoSec(this.getSendAt() / 1000)
+    var time = this.getSendAt() / 1000;
+    var cur_time = new Date().getTime() / 1000;
+    if (cur_time > time)
+      return cur_time - time;
+    if (time > cur_time)
+      return time - cur_time;
+    return 0;
   }
 
   getAgoText() {
-    return utils.getAgoText(this.getSendAt() / 1000)
+    var time = this.getSendAt() / 1000
+    var ago_pre = "";
+    var cur_time = new Date().getTime() / 1000;
+    if (cur_time > time) {
+      var diff = cur_time - time;
+      ago_pre = "Vor "
+    } else if (time > cur_time) {
+      var diff = time - cur_time;
+      ago_pre = "In  "
+    } else
+      return "Gerade eben"
+
+    var ago = ''
+    if (diff < 60)
+      ago = Math.round(diff) + " Sek."
+    else if (diff < 3600)
+      ago = Math.round(diff / 60) + " Min."
+    else if (diff < 86400)
+      ago = Math.round(diff / 3600) + " Std."
+    else if (diff < 604800)
+      ago = Math.round(diff / 86400) + " Tagen"
+    else if (diff < 2592000)
+      ago = Math.round(diff / 604800) + " Wochen"
+    else if (diff < 31536000)
+      ago = Math.round(diff / 2592000) + " Monaten"
+    else if (diff > 31535999)
+      ago = Math.round(diff / 31536000) + " Jahren"
+    return ago_pre + ago;
   }
 
   isOwn() {
@@ -168,7 +200,7 @@ export default class ChatMessage extends DatabaseConnector {
         : 0,
       this.chat.getID(),
       this.getSendAt()
-    ], function() {
+    ], function () {
       this.chat.countUnreadMessages();
     }.bind(this))
   }
@@ -180,9 +212,9 @@ export default class ChatMessage extends DatabaseConnector {
   isEmoji(str) {
     var ranges = [
       '(?:[\u2700-\u27bf]|(?:\ud83c[\udde6-\uddff]){2}|[\ud800-\udbff][\udc00-\udfff]|[\u0023-\u0039]\ufe0f?\u20e3|\u3299|\u3297|\u303d|\u3030|\u24c2|\ud83c[\udd70-' +
-          '\udd71]|\ud83c[\udd7e-\udd7f]|\ud83c\udd8e|\ud83c[\udd91-\udd9a]|\ud83c[\udde6-\uddff]|[\ud83c[\ude01-\ude02]|\ud83c\ude1a|\ud83c\ude2f|[\ud83c[\ude32-\ude3a]' +
-          '|[\ud83c[\ude50-\ude51]|\u203c|\u2049|[\u25aa-\u25ab]|\u25b6|\u25c0|[\u25fb-\u25fe]|\u00a9|\u00ae|\u2122|\u2139|\ud83c\udc04|[\u2600-\u26FF]|\u2b05|\u2b06|' +
-          '\u2b07|\u2b1b|\u2b1c|\u2b50|\u2b55|\u231a|\u231b|\u2328|\u23cf|[\u23e9-\u23f3]|[\u23f8-\u23fa]|\ud83c\udccf|\u2934|\u2935|[\u2190-\u21ff])' // U+1F680 to U+1F6FF
+      '\udd71]|\ud83c[\udd7e-\udd7f]|\ud83c\udd8e|\ud83c[\udd91-\udd9a]|\ud83c[\udde6-\uddff]|[\ud83c[\ude01-\ude02]|\ud83c\ude1a|\ud83c\ude2f|[\ud83c[\ude32-\ude3a]' +
+      '|[\ud83c[\ude50-\ude51]|\u203c|\u2049|[\u25aa-\u25ab]|\u25b6|\u25c0|[\u25fb-\u25fe]|\u00a9|\u00ae|\u2122|\u2139|\ud83c\udc04|[\u2600-\u26FF]|\u2b05|\u2b06|' +
+      '\u2b07|\u2b1b|\u2b1c|\u2b50|\u2b55|\u231a|\u231b|\u2328|\u23cf|[\u23e9-\u23f3]|[\u23f8-\u23fa]|\ud83c\udccf|\u2934|\u2935|[\u2190-\u21ff])' // U+1F680 to U+1F6FF
     ];
     if (str.match(ranges.join('|'))) {
       return true;
@@ -192,9 +224,9 @@ export default class ChatMessage extends DatabaseConnector {
   }
 
   getRender() {
-    if (!this.getRead()) 
+    if (!this.getRead())
       this.setRead(true);
-    
+
     const s_width = Dimensions.get("window").width;
     const opacity = this.viewOpacity.interpolate({
       inputRange: [

@@ -70,23 +70,6 @@ export function showToast(text, icon = false, has_btn = false, cb) {
     TOAST.show();
   }
 
-export async function setMessageRead(mes_id, read = true) {
-  try {
-    await AsyncStorage.setItem(mes_id + "_read", "yes");
-  } catch (e) {}
-}
-
-export function hasReadMessage(mes_id) {
-  const read = AsyncStorage.getItem(mes_id + "_read");
-
-  if (read == "yes") 
-    alert(mes_id + " read");
-  else 
-    alert(mes_id + " not read");
-  
-  return read == "yes";
-}
-
 export function getAgoSec(time) {
   var cur_time = new Date().getTime() / 1000;
   if (cur_time > time) 
@@ -247,7 +230,7 @@ export function format_int(num) {
 
 //Shows an alert
 export function showAlert(title, msg, btnText = "Ok", callback = false, error = true, cancelable = true) {
-  if (callback === false || isNull(callback)) 
+  if (callback === false) 
     callback = function() {
       console.log(btnText + " pressed");
     };

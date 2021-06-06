@@ -196,7 +196,7 @@ export default class File extends DatabaseConnector {
   }
 
   isOwn() {
-    return false;
+    return true;
   }
 
   delete() {
@@ -275,7 +275,7 @@ export default class File extends DatabaseConnector {
           } else 
             this.saveLocalPath(new_path, cb)
         }).catch((err) => {
-          alert('Fehler: Datei konnte nicht umbenannt werden. Eine Datei mit diesem Namen existiert bereits.')
+          //alert('Fehler: Datei konnte nicht umbenannt werden. Eine Datei mit diesem Namen existiert bereits.')
           cb(false)
         });
       } else 

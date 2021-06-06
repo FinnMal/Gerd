@@ -59,6 +59,14 @@ export default class Club extends DatabaseConnector {
     this.setValue(v, "logo");
   }
 
+  getLogo(){
+    return this.getImage()
+  }
+
+  setLogo(v){
+    return this.setImage(v)
+  }
+
   updateImage(v) {
     this.setValue(v, "logo", true);
   }
@@ -308,24 +316,27 @@ export default class Club extends DatabaseConnector {
       file.setValue(file_info.size, 'size_bytes')
       file.setLocalPath(RNFS.DocumentDirectoryPath + '/' + this.getID() + '/' + file_info.name + '.' + file_info.extension)
       RNFS.copyFile(file_info.uri, file.getLocalPath()).then(() => {
-        console.log('FILE COPYED');
         file.saveLocalPath(file.getLocalPath())
       }).catch((err) => {
-        alert(err.message)
       });
       file.saveLocalPath(file_info.uri)
       cb('file_created', file)
 
       task.on('state_changed', taskSnapshot => {
-        if (taskSnapshot.metadata.name) {
-          if (file_info.storage_path == taskSnapshot.metadata.name) {
-            uploaded_percentage = taskSnapshot.bytesTransferred / taskSnapshot.totalBytes * 100;
-            file.setUploadedPercentage(uploaded_percentage)
-            //cb(uploaded_percentage, true, file_info)
-            return;
+        if (taskSnapshot){
+          if (taskSnapshot.metadata){
+            if (taskSnapshot.metadata.name) {
+              if (file_info.storage_path == taskSnapshot.metadata.name) {
+                uploaded_percentage = taskSnapshot.bytesTransferred / taskSnapshot.totalBytes * 100;
+                file.setUploading(true)
+                file.setUploadedPercentage(uploaded_percentage)
+                cb('uploaded_percentage', uploaded_percentage)
+                return;
+              }
+            }
+            task.cancel();
           }
         }
-        task.cancel();
       });
 
       task.then(async () => {
@@ -335,6 +346,41 @@ export default class Club extends DatabaseConnector {
         file.setUploading(false)
         file.setDownloadUrl(url);
         cb('done', file)
+      });
+    } else 
+      return cb('error', null)
+  }
+
+  async uploadThumbnail(file_info, cb) {
+    console.log(file_info)
+    if (file_info) {
+      var uploaded_percentage = 0;
+      var [name, extension] = this._getFilenameAndExtension(file_info.name)
+      file_info.name = name
+      file_info.extension = extension
+      file_info.storage_path = 'clubfiles/' + this.getID() + '/' + file_info.name + '_' + new Date().getTime() + '.' + file_info.extension
+
+      const reference = storage().ref(file_info.storage_path);
+      const task = reference.putFile(file_info.path);
+
+      task.on('state_changed', taskSnapshot => {
+        if (taskSnapshot){
+          if (taskSnapshot.metadata){
+            if (taskSnapshot.metadata.name) {
+              if (file_info.storage_path == taskSnapshot.metadata.name) {
+                uploaded_percentage = taskSnapshot.bytesTransferred / taskSnapshot.totalBytes * 100;
+                cb('uploaded_percentage', uploaded_percentage)
+                return;
+              }
+            }
+            task.cancel();
+          }
+        }
+      });
+
+      task.then(async () => {
+        const url = await storage().ref(file_info.storage_path).getDownloadURL();
+        cb('download_url', url)
       });
     } else 
       return cb('error', null)

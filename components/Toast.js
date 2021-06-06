@@ -14,16 +14,16 @@ import {
 } from "react-native";
 import AutoHeightImage from "react-native-auto-height-image";
 import FileViewer from "react-native-file-viewer";
-import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
-import {faInfoCircle} from "@fortawesome/free-solid-svg-icons";
-import {withNavigation} from "react-navigation";
-import {useNavigation} from "@react-navigation/native";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
+import { withNavigation } from "react-navigation";
+import { useNavigation } from "@react-navigation/native";
 import RNFetchBlob from "rn-fetch-blob";
 import Share from "react-native-share";
 import RNFS from "react-native-fs";
 import CameraRoll from "@react-native-community/cameraroll";
-import {AnimatedCircularProgress} from "react-native-circular-progress";
-import {Theme} from './../app/index.js';
+import { AnimatedCircularProgress } from "react-native-circular-progress";
+import { Theme } from './../app/index.js';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback"
 
 /* TOAST class: component to make changes visible at the bottom of the screen
@@ -50,9 +50,9 @@ export default class Toast extends React.Component {
     this.marginTop = new Animated.Value(725);
     this.reamingBarWidth = new Animated.Value(100);
 
-    if (this.props.ref) 
-      this.props.ref(this);
-    
+    if (this.ref)
+      this.ref(this);
+
     this.hide(false);
   }
 
@@ -82,7 +82,7 @@ export default class Toast extends React.Component {
   }
 
   hide(animated = true) {
-    if (animated) 
+    if (animated)
       ReactNativeHapticFeedback.trigger("notificationSuccess");
     this.reamingBarWidth.setValue(0);
 
@@ -96,7 +96,7 @@ export default class Toast extends React.Component {
       easing: Easing.ease
     }).start(() => {
       this.visible = false;
-      setTimeout(function() {
+      setTimeout(function () {
         if (this.state.pressed) {
           this.state.pressed = false;
           this._onAction();
@@ -112,21 +112,21 @@ export default class Toast extends React.Component {
   }
 
   _onHide() {
-    if (this.props.onHide) 
+    if (this.props.onHide)
       this.props.onHide();
-    }
-  
+  }
+
   _onAction() {
     ReactNativeHapticFeedback.trigger("impactHeavy");
-    if (this.buttonCallback) 
+    if (this.buttonCallback)
       this.buttonCallback();
-    }
-  
+  }
+
   _callback(action) {
-    if (this.props.callback) 
+    if (this.props.callback)
       this.props.callback(action);
-    }
-  
+  }
+
   isVisible() {
     return this.visible;
   }
@@ -156,9 +156,9 @@ export default class Toast extends React.Component {
   }
 
   render() {
-    if (this.type == "progress") 
+    if (this.type == "progress")
       this.reamingBarWidth.setValue(this.props.progress);
-    
+
     const barWidth = this.reamingBarWidth.interpolate({
       inputRange: [
         0, 100
@@ -193,10 +193,10 @@ export default class Toast extends React.Component {
           shadowRadius: 14.0
         }}>
         <View style={{
-            height: 65,
-            justifyContent: "center",
-            alignItems: "center"
-          }}>
+          height: 65,
+          justifyContent: "center",
+          alignItems: "center"
+        }}>
           <View
             style={{
               flexWrap: "wrap",
@@ -212,7 +212,7 @@ export default class Toast extends React.Component {
               color="white"
               icon={this.state.icon
                 ? this.state.icon
-                : faInfoCircle}/>
+                : faInfoCircle} />
             <Theme.Text
               style={{
                 marginTop: 5,
@@ -226,44 +226,44 @@ export default class Toast extends React.Component {
             {
               this.state.btn_visible
                 ? <TouchableOpacity
+                  style={{
+                    borderRadius: 7,
+                    backgroundColor: "#1e1e1e",
+                    paddingTop: 7,
+                    paddingBottom: 7,
+                    paddingLeft: 9,
+                    paddingRight: 9,
+                    marginTop: -2,
+                    marginLeft: 20,
+                    fontSize: 20
+                  }}
+                  onPress={() => this._btnClick()}>
+                  <Theme.Text
                     style={{
-                      borderRadius: 7,
-                      backgroundColor: "#1e1e1e",
-                      paddingTop: 7,
-                      paddingBottom: 7,
-                      paddingLeft: 9,
-                      paddingRight: 9,
-                      marginTop: -2,
-                      marginLeft: 20,
-                      fontSize: 20
-                    }}
-                    onPress={() => this._btnClick()}>
-                    <Theme.Text
-                      style={{
-                        textTransform: "uppercase",
-                        fontSize: 17,
-                        fontFamily: "Poppins-ExtraBold",
-                        color: "white",
-                        opacity: 0.77
-                      }}>
-                      {this.state.btn_text}
-                    </Theme.Text>
-                  </TouchableOpacity>
+                      textTransform: "uppercase",
+                      fontSize: 17,
+                      fontFamily: "Poppins-ExtraBold",
+                      color: "white",
+                      opacity: 0.77
+                    }}>
+                    {this.state.btn_text}
+                  </Theme.Text>
+                </TouchableOpacity>
                 : void 0
             }
           </View>
         </View>
         <View style={{
-            width: 334,
-            position: "absolute",
-            marginLeft: 10,
-            marginTop: 61
-          }}>
+          width: 334,
+          position: "absolute",
+          marginLeft: 10,
+          marginTop: 61
+        }}>
           <Theme.LightView style={{
-              height: 4,
-              borderRadius: 4,
-              width: barWidth
-            }}/>
+            height: 4,
+            borderRadius: 4,
+            width: barWidth
+          }} />
         </View>
       </Theme.View>
     );

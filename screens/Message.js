@@ -1,46 +1,30 @@
 import React from 'react';
-import AutoHeightImage from 'react-native-auto-height-image';
 import {
-  Alert,
-  TextInput,
-  StyleSheet,
-  Text,
   View,
-  StatusBar,
   Image,
   TouchableOpacity,
   ActionSheetIOS,
-  ScrollView,
   Animated,
   Easing,
   Dimensions,
-  Modal,
   ImageBackground,
-  RefreshControl
 } from 'react-native';
-import {BlurView} from '@react-native-community/blur';
-
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
   faChevronCircleLeft,
   faClock,
-  faArrowAltCircleDown,
   faEllipsisV,
-  faTimes,
   faEnvelope,
-  faPhoneAlt
 } from '@fortawesome/free-solid-svg-icons';
 import database from '@react-native-firebase/database';
-import {SafeAreaView} from 'react-navigation';
-import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
 import Toast from './../components/Toast.js';
 import File from './../components/File.js';
-import EventCard from './../components/EventCard.js';
+import Event from './../components/Event.js';
 import cloneDeep from 'lodash/cloneDeep';
-import {SharedElement} from 'react-navigation-shared-element';
-import {useDarkMode} from 'react-native-dynamic'
-import Button from './../components/Button.js';
-import {Theme} from './../app/index.js';
+import Button from "./../components/Button.js";
+import { Theme } from './../app/index.js';
+import Modal from "./../components/Modal.js";
+import InputBox from "./../components/InputBox.js";
+import ReactNativeHapticFeedback from "react-native-haptic-feedback"
 
 export default class MessageScreen extends React.Component {
   constructor(props) {
@@ -53,7 +37,7 @@ export default class MessageScreen extends React.Component {
 
     this.state = {
       mes: mes,
-      mes_before_edit: null,
+      mes_before_edit: cloneDeep(mes),
       club: club,
       scrollY: new Animated.Value(0),
       cardMarginTop: new Animated.Value(0),
@@ -81,7 +65,7 @@ export default class MessageScreen extends React.Component {
       author_info: {}
     };
 
-    mes.setRenderListener(this.render);
+    // mes.setReadyListener(this.render.bind(this));
 
     //utils.setMessageRead(mes.id);
     database().ref('users/' + utils.getUserID() + '/messages/' + mes.id + '/read').set(true);
@@ -91,8 +75,8 @@ export default class MessageScreen extends React.Component {
     if (mes.getEvents().length > 0) {
       this.eventCards = [];
       mes.getEvents().forEach((event, i) => {
-        event.setReadyListener(function() {
-          this.eventCards.push(event.getRender())
+        event.setReadyListener(function () {
+          this.eventCards.push(<Event key={i} event={event}/>)
           this.forceUpdate();
         }.bind(this))
       });
@@ -102,7 +86,7 @@ export default class MessageScreen extends React.Component {
     this.files = [];
     if (mes.getFiles().length > 0) {
       mes.getFiles().forEach((file, i) => {
-        file.setReadyListener(function() {
+        file.setReadyListener(function () {
           this.files.push(file)
           this.forceUpdate();
         }.bind(this))
@@ -111,7 +95,7 @@ export default class MessageScreen extends React.Component {
 
     // load author info
     if (mes.showAuthor()) {
-      mes.getAuthorInfo(function(info) {
+      mes.getAuthorInfo(function (info) {
         this.state.author_info = info;
         this.forceUpdate();
       }.bind(this))
@@ -119,7 +103,7 @@ export default class MessageScreen extends React.Component {
   }
 
   _getHeadlineMarginTop = () => {
-    const {scrollY, inputRange} = this.state;
+    const { scrollY, inputRange } = this.state;
     return scrollY.interpolate({
       inputRange: inputRange,
       outputRange: [
@@ -131,7 +115,7 @@ export default class MessageScreen extends React.Component {
   };
 
   _getHeadlineLines = () => {
-    const {scrollY, inputRange} = this.state;
+    const { scrollY, inputRange } = this.state;
     return scrollY.interpolate({
       inputRange: inputRange,
       outputRange: [
@@ -142,7 +126,7 @@ export default class MessageScreen extends React.Component {
   };
 
   _getHeadlineMarginLeft = () => {
-    const {scrollY, shortInputRange} = this.state;
+    const { scrollY, shortInputRange } = this.state;
     return scrollY.interpolate({
       inputRange: shortInputRange,
       outputRange: [
@@ -154,7 +138,7 @@ export default class MessageScreen extends React.Component {
   };
 
   _getHeadlineFontScale = () => {
-    const {scrollY, shortInputRange} = this.state;
+    const { scrollY, shortInputRange } = this.state;
     return scrollY.interpolate({
       inputRange: shortInputRange,
       outputRange: [
@@ -166,7 +150,7 @@ export default class MessageScreen extends React.Component {
   };
 
   _getBackButtonMarginLeft = () => {
-    const {scrollY, inputRange} = this.state;
+    const { scrollY, inputRange } = this.state;
 
     return scrollY.interpolate({
       inputRange: inputRange,
@@ -179,7 +163,7 @@ export default class MessageScreen extends React.Component {
   };
 
   _getBackButtonMarginTop = () => {
-    const {scrollY, inputRange} = this.state;
+    const { scrollY, inputRange } = this.state;
 
     return scrollY.interpolate({
       inputRange: inputRange,
@@ -192,7 +176,7 @@ export default class MessageScreen extends React.Component {
   };
 
   _getImageScale = () => {
-    const {scrollY, shortInputRange} = this.state;
+    const { scrollY, shortInputRange } = this.state;
 
     return scrollY.interpolate({
       inputRange: shortInputRange,
@@ -205,7 +189,7 @@ export default class MessageScreen extends React.Component {
   };
 
   _getImageOpacity = () => {
-    const {scrollY, shortInputRange} = this.state;
+    const { scrollY, shortInputRange } = this.state;
 
     return scrollY.interpolate({
       inputRange: shortInputRange,
@@ -218,7 +202,7 @@ export default class MessageScreen extends React.Component {
   };
 
   _getBlurHeaderOpacity = () => {
-    const {scrollY, inputRange} = this.state;
+    const { scrollY, inputRange } = this.state;
 
     return scrollY.interpolate({
       inputRange: inputRange,
@@ -259,7 +243,8 @@ export default class MessageScreen extends React.Component {
           // cancel
         } else if (buttonIndex === 1) {
           this.state.mes_before_edit = cloneDeep(this.state.mes);
-          this._openModal();
+          this.forceUpdate()
+          this.modal.open()
         } else if (buttonIndex === 2) {
           this._deleteMessage();
         }
@@ -273,41 +258,21 @@ export default class MessageScreen extends React.Component {
     utils.getUser().startChat(mes.getAuthor(), utils);
   }
 
-  _openModal() {
-    if (this.state.modal_visible) {
-      this.state.modal_visible = false;
-      this.forceUpdate();
-      setTimeout((function() {
-        this.state.modal_visible = true;
-        this.forceUpdate();
-      }).bind(this), 0);
-    } else {
-      this.state.modal_visible = true;
-      this.forceUpdate();
-    }
-  }
-
-  _closeModal() {
-    this.state.modal_visible = false;
-    this.forceUpdate();
-  }
-
   _deleteMessage() {
     const message = this.state.mes;
-    message.delete((function(deleted) {
-      if (deleted) 
+    message.delete((function (deleted) {
+      if (deleted)
         this.props.navigation.navigate('ScreenHandler');
-      }
+    }
     ).bind(this));
     //database().ref('messages/list/' + this.state.mes.id + '/invisible').set(true);
   }
 
   _editMessage() {
     const mes = this.state.mes;
-    const message = this.state.mes;
     this.state.headlineHeight = -1;
 
-    setTimeout((function() {
+    setTimeout((function () {
       this.state.toast.visible = true;
       this.forceUpdate();
     }).bind(this), 500);
@@ -315,18 +280,20 @@ export default class MessageScreen extends React.Component {
     this.state.toast.pressed = false;
     this.state.toast.text = 'Beitrag bearbeitet';
     this.state.toast.action = 'Rückgängig';
-    this.state.toast.callback = (function() {
-      const message = this.state.mes;
+    this.state.toast.callback = (function () {
+      const mes = this.state.mes;
       const mbe = this.state.mes_before_edit;
-      message.set({headline: mbe.headline, short_text: mbe.short_text, long_text: mbe.long_text});
+      mes.setHeadline(mbe.getHeadline())
+      mes.setShortText(mbe.getShortText())
+      mes.setLongText(mbe.getLongText())
       this.state.headlineHeight = -1;
-      this.state.mes = mbe;
       this.forceUpdate();
     }).bind(this);
 
-    message.set({headline: mes.headline, short_text: mes.short_text, long_text: mes.long_text});
+    mes.storeValue('headline')
+    mes.storeValue('shortText')
+    mes.storeValue('longText')
 
-    this._closeModal();
     this.forceUpdate();
   }
 
@@ -352,7 +319,7 @@ export default class MessageScreen extends React.Component {
     const utils = this.props.navigation.getParam('utils', null);
     utils.showAlert('Event löschen?', '', [
       'Ja', 'Nein'
-    ], (function(btn_id) {
+    ], (function (btn_id) {
       if (btn_id == 0) {
         // delete event
         const mes_id = this.state.mes.id;
@@ -371,7 +338,7 @@ export default class MessageScreen extends React.Component {
 
     file.name = name;
 
-    setTimeout((function() {
+    setTimeout((function () {
       this.state.toast.visible = true;
       this.forceUpdate();
     }).bind(this), 500);
@@ -379,7 +346,7 @@ export default class MessageScreen extends React.Component {
     this.state.toast.pressed = false;
     this.state.toast.text = 'Datei bearbeitet';
     this.state.toast.action = 'Rückgängig';
-    this.state.toast.callback = (function() {
+    this.state.toast.callback = (function () {
       const message = this.state.mes;
 
       message.setFileName(pos, old_name);
@@ -394,7 +361,7 @@ export default class MessageScreen extends React.Component {
   }
 
   renderCards(cards) {
-    return cards.map(function(card) {
+    return cards.map(function (card) {
       return card;
     });
   }
@@ -445,171 +412,57 @@ export default class MessageScreen extends React.Component {
       directionalOffsetThreshold: 80
     };
 
-    const fileCards = this.files.map(function(file) {
-      return <File file={file} downloadable={true}/>
+    const fileCards = this.files.map(function (file) {
+      return <File file={file} downloadable={true} />
     });
 
     return (
-      <Theme.View>
+      <Theme.View color={'background_view'}>
         <Toast
           visible={this.state.toast.visible}
           text={this.state.toast.text}
           action={this.state.toast.action}
-          callback={(function(action) {
-            if (action == 'button_pressed') 
+          callback={(function (action) {
+            if (action == 'button_pressed')
               this.state.toast.pressed = true;
             else if (action == 'toast_invisible') {
-              if (this.state.toast.pressed) 
+              if (this.state.toast.pressed)
                 this.state.toast.callback();
               this.state.toast.visible = false;
               this.forceUpdate();
             }
-          }).bind(this)}/>
-        <Modal animationType="slide" presentationStyle="formSheet" visible={this.state.modal_visible}>
-          <View style={{
-              padding: 20,
-              backgroundColor: '#121212',
-              height: '100%'
-            }}>
-            <View
-              style={{
-                marginBottom: 10,
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                flexDirection: 'row'
-              }}>
-              <Text
-                style={{
-                  fontFamily: 'Poppins-Bold',
-                  color: 'white',
-                  fontSize: 25,
-                  width: '76%'
-                }}
-                numberOfLines={1}>
-                {
-                  this.state.mes.headline
-                    ? this.state.mes.headline
-                    : 'Mitteilung bearbeiten'
-                }
-              </Text>
-              <TouchableOpacity
-                style={{
-                  height: 30,
-                  borderRadius: 10,
-                  marginLeft: 10,
-                  width: 70,
-                  padding: 5,
-                  paddingLeft: 10,
-                  backgroundColor: '#0DF5E3'
-                }}
-                onPress={text => this._editMessage()}>
-                <Text style={{
-                    fontSize: 18,
-                    fontFamily: 'Poppins-Bold',
-                    color: '#1e1e1e'
-                  }}>FERTIG</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View
-              style={{
-                marginLeft: -20,
-                height: 0.5,
-                marginBottom: 40,
-                backgroundColor: '#1e1e1e',
-                width: '140%'
-              }}/>
-
-            <ScrollView>
-              <View style={{
-                  marginBottom: 20
-                }}>
-                <Text
-                  style={{
-                    fontFamily: 'Poppins-SemiBold',
-                    marginLeft: 10,
-                    color: '#5C5768'
-                  }}>Überschrift</Text>
-                <Theme.View style={{
-                    borderRadius: 20
-                  }}>
-                  <TextInput
-                    multiline={true}
-                    autoCorrect={false}
-                    keyboardType="default"
-                    style={{
-                      fontFamily: 'Poppins-Medium',
-                      marginTop: 8,
-                      padding: 15,
-                      fontSize: 17,
-                      color: '#D5D3D9'
-                    }}
-                    value={this.state.mes.headline}
-                    onChangeText={text => this._onChangeText('headline', text)}/>
-                </Theme.View>
-              </View>
-              <View style={{
-                  marginBottom: 20
-                }}>
-                <Text
-                  style={{
-                    fontFamily: 'Poppins-SemiBold',
-                    marginLeft: 10,
-                    color: '#5C5768'
-                  }}>Subtext</Text>
-                <View style={{
-                    borderRadius: 10,
-                    backgroundColor: '#1e1e1e'
-                  }}>
-                  <TextInput
-                    multiline={true}
-                    autoCorrect={false}
-                    keyboardType="default"
-                    style={{
-                      fontFamily: 'Poppins-Medium',
-                      marginTop: 8,
-                      padding: 15,
-                      fontSize: 17,
-                      color: '#D5D3D9'
-                    }}
-                    value={this.state.mes.short_text}
-                    onChangeText={text => this._onChangeText('short_text', text)}/>
-                </View>
-              </View>
-              <View style={{
-                  marginBottom: 20
-                }}>
-                <Text
-                  style={{
-                    fontFamily: 'Poppins-SemiBold',
-                    marginLeft: 10,
-                    color: '#5C5768'
-                  }}>Text</Text>
-                <View style={{
-                    borderRadius: 10,
-                    backgroundColor: '#1e1e1e'
-                  }}>
-                  <TextInput
-                    multiline={true}
-                    autoCorrect={false}
-                    keyboardType="default"
-                    style={{
-                      fontFamily: 'Poppins-Medium',
-                      marginTop: 8,
-                      padding: 15,
-                      fontSize: 17,
-                      color: '#D5D3D9'
-                    }}
-                    value={this.state.mes.long_text}
-                    onChangeText={text => this._onChangeText('text', text)}/>
-                </View>
-              </View>
-            </ScrollView>
-          </View>
+          }).bind(this)} />
+        <Modal ref={m => {
+          this.modal = m;
+        }} headline={
+          this.state.mes.headline
+            ? this.state.mes.headline
+            : 'Mitteilung bearbeiten'
+        } onDone={() => this._editMessage()}>
+          <InputBox
+            marginTop={30}
+            width={"100%"}
+            label={'Überschrift'}
+            value={this.state.mes_before_edit.getHeadline()}
+            onChange={(value) => this.state.mes.setHeadline(value, false)} />
+          <InputBox
+            multiline={true}
+            marginTop={25}
+            width={"100%"}
+            label={'Subtext'}
+            value={this.state.mes_before_edit.getShortText()}
+            onChange={(value) => this.state.mes.setShortText(value, false)} />
+          <InputBox
+            multiline={true}
+            marginTop={25}
+            width={"100%"}
+            label={'Text'}
+            value={this.state.mes_before_edit.getLongText()}
+            onChange={(value) => this.state.mes.setLongText(value, false)} />
         </Modal>
         <View style={{
-            position: 'absolute'
-          }}>
+          position: 'absolute'
+        }}>
           <Theme.BackgroundView
             color={'background_view'}
             invertedColor={true}
@@ -620,8 +473,8 @@ export default class MessageScreen extends React.Component {
               position: 'absolute'
             }}>
             <View style={{
-                position: 'absolute'
-              }}>
+              position: 'absolute'
+            }}>
               <Animated.View
                 style={{
                   marginRight: 30,
@@ -641,7 +494,7 @@ export default class MessageScreen extends React.Component {
                     height
                   } = event.nativeEvent.layout;
                   if (this.state.headlineHeight == -1) {
-                    this.setState({headlineHeight: height});
+                    this.setState({ headlineHeight: height });
                     this.setState({
                       inputRange: [
                         0, 82 + height,
@@ -683,7 +536,7 @@ export default class MessageScreen extends React.Component {
                   position: 'absolute',
                   marginLeft: 20
                 }}>
-                <Theme.Icon size={13} color="view" icon={faClock}/>
+                <Theme.Icon size={13} color="view" icon={faClock} />
                 <Theme.Text
                   color="view"
                   style={{
@@ -692,7 +545,7 @@ export default class MessageScreen extends React.Component {
                     fontSize: 15,
                     marginLeft: 10
                   }}>
-                  Lesezeit: 30 Sec.
+                  Lesezeit: {mes.getReadingTime()} Min.
                 </Theme.Text>
               </View>
             </View>
@@ -743,7 +596,7 @@ export default class MessageScreen extends React.Component {
                 }
               }
             }
-          ], {useNativeDriver: false})}>
+          ], { useNativeDriver: false })}>
           <Theme.View
             color={'background_view'}
             style={{
@@ -761,10 +614,10 @@ export default class MessageScreen extends React.Component {
               shadowRadius: 10.0
             }}>
             <View style={{
-                marginTop: 20,
-                marginLeft: 25,
-                marginRight: 25
-              }}>
+              marginTop: 20,
+              marginLeft: 25,
+              marginRight: 25
+            }}>
               <View
                 style={{
                   flexWrap: 'wrap',
@@ -781,8 +634,8 @@ export default class MessageScreen extends React.Component {
                   source={{
                     uri: this.state.author_info.img
                       ? this.state.author_info.img
-                      : club.logo
-                  }}/>
+                      : club.getLogo()
+                  }} />
                 <View
                   style={{
                     marginTop: 5,
@@ -791,12 +644,12 @@ export default class MessageScreen extends React.Component {
                     justifyContent: 'center'
                   }}>
                   <Theme.Text style={{
-                      fontFamily: "Poppins-SemiBold",
-                      fontSize: 18
-                    }}>{
+                    fontFamily: "Poppins-SemiBold",
+                    fontSize: 18
+                  }}>{
                       this.state.author_info.name
                         ? this.state.author_info.name
-                        : club.name
+                        : club.getName()
                     }</Theme.Text>
                   <Theme.Text
                     style={{
@@ -805,22 +658,22 @@ export default class MessageScreen extends React.Component {
                       fontSize: 14
                     }}>{
                       this.state.author_info.name
-                        ? 'Für ' + club.name
-                        : mes.getAgoText()
+                        ? 'Für ' + club.getName()
+                        : mes.getValue('ago')
                     }</Theme.Text>
                 </View>
                 {
                   !mes.isOwnMessage()
                     ? <Button
-                        style={{
-                          top: 5,
-                          position: 'absolute',
-                          right: 0
-                        }}
-                        color={club.color}
-                        padding={9}
-                        onPress={this.startChat.bind(this)}
-                        icon={faEnvelope}/>
+                      style={{
+                        top: 5,
+                        position: 'absolute',
+                        right: 0
+                      }}
+                      color={'#'+club.getColor()}
+                      padding={9}
+                      onPress={this.startChat.bind(this)}
+                      icon={faEnvelope} />
                     : void 0
                 }
 
@@ -841,74 +694,74 @@ export default class MessageScreen extends React.Component {
             {
               mes.hasFiles() || mes.hasEvents()
                 ? <Theme.View
-                    style={{
-                      height: "100%",
-                      paddingTop: 20,
-                      paddingBottom: 40,
-                      paddingLeft: 30,
-                      borderTopLeftRadius: 30,
-                      marginLeft: 0,
-                      marginTop: 0
-                    }}>
-                    {
-                      mes.hasFiles()
-                        ? <View>
-                            <Theme.Text
-                              style={{
-                                opacity: 0.3,
-                                fontFamily: 'Poppins-ExtraBold',
-                                marginTop: 20,
-                                fontSize: 40
-                              }}>Dateien</Theme.Text>
-                            <View style={{
-                                marginTop: 20,
-                                marginRight: 20
-                              }}>
-                              {fileCards}
-                            </View>
-                          </View>
-                        : void 0
-                    }
+                  style={{
+                    height: "100%",
+                    paddingTop: 20,
+                    paddingBottom: 40,
+                    paddingLeft: 30,
+                    borderTopLeftRadius: 30,
+                    marginLeft: 0,
+                    marginTop: 0
+                  }}>
+                  {
+                    mes.hasFiles()
+                      ? <View>
+                        <Theme.Text
+                          style={{
+                            opacity: 0.3,
+                            fontFamily: 'Poppins-ExtraBold',
+                            marginTop: 20,
+                            fontSize: 40
+                          }}>Dateien</Theme.Text>
+                        <View style={{
+                          marginTop: 20,
+                          marginRight: 20
+                        }}>
+                          {fileCards}
+                        </View>
+                      </View>
+                      : void 0
+                  }
 
-                    {
-                      mes.hasEvents()
-                        ? <View>
-                            <Theme.Text
-                              style={{
-                                opacity: 0.3,
-                                fontFamily: 'Poppins-ExtraBold',
-                                marginTop: 20,
-                                fontSize: 40
-                              }}>
-                              Events
+                  {
+                    mes.hasEvents()
+                      ? <View>
+                        <Theme.Text
+                          style={{
+                            opacity: 0.3,
+                            fontFamily: 'Poppins-ExtraBold',
+                            marginTop: 20,
+                            fontSize: 40
+                          }}>
+                          Events
                             </Theme.Text>
-                            <View style={{
-                                marginTop: 20,
-                                marginRight: 20
-                              }}>
-                              {this.renderCards(this.eventCards)}
-                            </View>
-                          </View>
-                        : void 0
-                    }
-                  </Theme.View>
+                        <View style={{
+                          marginTop: 20,
+                          marginRight: 20
+                        }}>
+                          {this.renderCards(this.eventCards)}
+                        </View>
+                      </View>
+                      : void 0
+                  }
+                </Theme.View>
                 : void 0
             }
           </Theme.View>
         </Animated.ScrollView>
 
         <Animated.View style={{
-            position: 'absolute',
-            opacity: blurHeaderOpacity,
-            zIndex: 200
-          }}>
+          position: 'absolute',
+          opacity: blurHeaderOpacity,
+          zIndex: 200
+        }}>
           <Theme.BlurView style={{
-              width: s_width,
-              height: s_width * 0.1
-            }}/>
+            width: s_width,
+            height: s_width * 0.1
+          }} />
         </Animated.View>
         <Animated.View
-          style={([s.headlineIcon], {
+          style={{
             zIndex: 20,
             position: 'absolute',
             marginTop: backButtonMarginTop,
@@ -916,7 +769,7 @@ export default class MessageScreen extends React.Component {
             justifyContent: 'flex-start',
             flexWrap: 'wrap',
             flexDirection: 'row'
-          })}
+          }}
           onLayout={event => {
             var {
               x,
@@ -924,32 +777,34 @@ export default class MessageScreen extends React.Component {
               width,
               height
             } = event.nativeEvent.layout;
-            this.setState({backBtnY: y});
+            this.setState({ backBtnY: y });
           }}>
           <TouchableOpacity
             style={{}}
             onPress={() => {
+              ReactNativeHapticFeedback.trigger("impactMedium");
               this.state.cardMarginTop.setValue(240 + this.state.headlineHeight - 90);
               Animated.timing(this.state.cardMarginTop, {
                 useNativeDriver: false,
                 toValue: 1000 + this.state.headlineHeight - 90,
                 duration: 210,
                 easing: Easing.ease
-              }).start(() => {});
+              }).start(() => { });
               this.props.navigation.navigate('ScreenHandler')
+
             }}>
             <Theme.Icon color="view" style={{
-                zIndex: 0
-              }} size={25} icon={faChevronCircleLeft}/>
+              zIndex: 0
+            }} size={25} icon={faChevronCircleLeft} />
           </TouchableOpacity>
           {
             mes.isOwnMessage()
               ? <TouchableOpacity style={{
-                    zIndex: 0,
-                    marginLeft: 290
-                  }} onPress={() => this._openMessageModal()}>
-                  <Theme.Icon size={22} color="view" icon={faEllipsisV}/>
-                </TouchableOpacity>
+                zIndex: 0,
+                marginLeft: 290
+              }} onPress={() => this._openMessageModal()}>
+                <Theme.Icon size={22} color="view" icon={faEllipsisV} />
+              </TouchableOpacity>
               : void 0
           }
 

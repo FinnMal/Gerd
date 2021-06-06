@@ -340,6 +340,7 @@ function Icon(props) {
         : colors[props.color][1];
     }
   }
+
   return <FontAwesomeIcon
     size={props.size}
     style={[

@@ -45,6 +45,7 @@ import HeaderScrollView from './../components/HeaderScrollView.js';
 import InputBox from "./../components/InputBox.js";
 import {default as Modal} from "./../components/Modal.js";
 import Button from "./../components/Button.js";
+import OneSignal from "react-native-onesignal";
 
 class AddClubScreen extends React.Component {
   constructor(props) {
@@ -275,20 +276,23 @@ class AddClubScreen extends React.Component {
 
   joinClub(club_id, groups) {
     const utils = this.state.utils;
+    const uid = utils.getUserID();
 
     // close the modal
     this.select_groups_modal.close();
 
     var selected_groups = [];
     groups.forEach((group, i) => {
-      if (group.selected) 
+      if (group.selected){
+        database().ref('clubs/' + club_id + '/groups/' + group.key + '/member_ids/'+uid).set(true);
         selected_groups.push(group)
+      }
+      else database().ref('clubs/' + club_id + '/groups/' + group.key + '/member_ids/'+uid).remove()
     });
     database().ref('clubs/' + club_id + '/name').once('value', (function(snapshot) {
       var club_name = snapshot.val();
 
       database().ref('clubs/' + club_id + '/members').once('value', (function(snapshot) {
-        const uid = utils.getUserID();
         var club_members = snapshot.val();
 
         database().ref('clubs/' + club_id + '/members').set(club_members + 1);
@@ -315,6 +319,8 @@ class AddClubScreen extends React.Component {
           ? 'admin'
           : 'subscriber'
 
+
+
         this.user.getClubRoles(function(user_club_roles) {
           if (selected_groups.length > 0) {
             database().ref('users/' + uid + '/clubs/' + club_id).set(user_club);
@@ -333,6 +339,7 @@ class AddClubScreen extends React.Component {
                   : 'Administrator'
               ) + ' mehr von ' + club_name, ' ', [' Ok '], false, false);
             }
+
           this.user.updateAccountType()
         }.bind(this))
 

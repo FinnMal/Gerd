@@ -16,9 +16,9 @@ import {
   ActionSheetIOS
 } from "react-native";
 
-import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
-import {faPlusCircle} from "@fortawesome/free-solid-svg-icons";
-import {withNavigation} from "react-navigation";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
+import { withNavigation } from "react-navigation";
 import database from "@react-native-firebase/database";
 import HeaderScrollView from "./../components/HeaderScrollView.js";
 import Setting from "./../components/Setting.js";
@@ -28,11 +28,11 @@ import ClubCard from "./../components/ClubCard.js";
 import Modal from "./../components/Modal.js";
 import Group from "./../components/Group.js";
 import User from "./../classes/User.js";
-import {Theme} from './../app/index.js';
+import { Theme } from './../app/index.js';
 
 // Setting
-import {default as UserClubs} from './../components/Settings/UserClubs.js';
-import {default as UserAccount} from './../components/Settings/UserAccount.js';
+import { default as UserClubs } from './../components/Settings/UserClubs.js';
+import { default as UserAccount } from './../components/Settings/UserAccount.js';
 
 import {
   faTrash,
@@ -43,11 +43,11 @@ import {
   faUser,
   faUsers
 } from "@fortawesome/free-solid-svg-icons";
-import {AnimatedCircularProgress} from 'react-native-circular-progress';
+import { AnimatedCircularProgress } from 'react-native-circular-progress';
 
 // user settings screen
 class SettingsScreen extends React.Component {
-  user: null;
+  user = null;
 
   constructor(props) {
     super(props);
@@ -63,7 +63,7 @@ class SettingsScreen extends React.Component {
 
     this.user = utils.getUser();
 
-    var cb = function() {
+    var cb = function () {
       this.forceUpdate();
     }.bind(this);
 
@@ -71,7 +71,7 @@ class SettingsScreen extends React.Component {
     this.user.startListener("email", cb);
     this.user.startListener("password", cb);
     this.user.startListener("img", cb);
-    this.user.startListener("options", function() {
+    this.user.startListener("options", function () {
       this.forceUpdate();
     }.bind(this));
 
@@ -79,7 +79,7 @@ class SettingsScreen extends React.Component {
   }
 
   openImagePicker() {
-    this.state.utils.openImagePicker(function(ok, percentage_done, url, error) {
+    this.state.utils.openImagePicker(function (ok, percentage_done, url, error) {
       if (ok && percentage_done > -1) {
         this.state.image_upload.active = true;
         this.state.image_upload.progress = percentage_done;
@@ -87,10 +87,10 @@ class SettingsScreen extends React.Component {
         this.state.image_upload.active = false;
         this.state.image_upload.progress = percentage_done;
 
-        if (url) 
+        if (url)
           this.user.setImage(url);
-        }
-      
+      }
+
       this.forceUpdate();
     }.bind(this));
   }
@@ -111,19 +111,19 @@ class SettingsScreen extends React.Component {
       return (
         <HeaderScrollView marginBottom={100} marginTop={80} headline="Einstellungen" headlineFontSize={47} backButton={false} showHeadline={false}>
           <View style={{
-              marginLeft: -20,
-              marginRight: -20,
-              marginBottom: 50
-            }}>
+            marginLeft: -20,
+            marginRight: -20,
+            marginBottom: 50
+          }}>
             <Theme.View style={{
-                padding: 10,
-                paddingLeft: 20
-              }}>
+              padding: 10,
+              paddingLeft: 20
+            }}>
               <View style={{
-                  flexWrap: "wrap",
-                  alignItems: "flex-start",
-                  flexDirection: "row"
-                }}>
+                flexWrap: "wrap",
+                alignItems: "flex-start",
+                flexDirection: "row"
+              }}>
                 <TouchableOpacity onPress={() => this.openImagePicker()}>
                   {
                     this.state.image_upload.active
@@ -138,7 +138,7 @@ class SettingsScreen extends React.Component {
                           }}
                           fill={this.state.image_upload.progress}
                           tintColor="#0DF5E3"
-                          backgroundColor="#201A30"/>
+                          backgroundColor="#201A30" />
                       )
                       : (void 0)
                   }
@@ -150,7 +150,7 @@ class SettingsScreen extends React.Component {
                     width={55}
                     source={{
                       uri: user.getImage()
-                    }}/>
+                    }} />
                 </TouchableOpacity>
                 <View
                   style={{
@@ -171,8 +171,8 @@ class SettingsScreen extends React.Component {
               </View>
             </Theme.View>
             <View style={{
-                marginTop: 30
-              }}>
+              marginTop: 30
+            }}>
               <Setting label="Account" icon={faUser} utils={this.props.utilsObject}>
                 <UserAccount
                   name={user.getName()}
@@ -183,12 +183,12 @@ class SettingsScreen extends React.Component {
                     this.user.updateMail(values.email);
                     this.user.updatePassword(values.password);
                     this.state.utils.getNavigation().navigate("ScreenHandler");
-                  }}/>
+                  }} />
               </Setting>
             </View>
             <View style={{
-                marginTop: 50
-              }}>
+              marginTop: 50
+            }}>
               <Setting
                 type="switch"
                 isEnabled={this.user.getOption("show_groups")}
@@ -197,7 +197,7 @@ class SettingsScreen extends React.Component {
                 }}
                 label="Empfänger anzeigen"
                 icon={faEye}
-                iconInactive={faEyeSlash}/>
+                iconInactive={faEyeSlash} />
               <Setting
                 type="switch"
                 isEnabled={this.user.getOption("send_notifications")}
@@ -206,20 +206,20 @@ class SettingsScreen extends React.Component {
                 }}
                 label="Benachrichtigungen"
                 icon={faBell}
-                iconInactive={faBellSlash}/>
+                iconInactive={faBellSlash} />
             </View>
             <View style={{
-                marginTop: 40
-              }}>
+              marginTop: 40
+            }}>
               <Setting utils={this.props.utilsObject} label="Vereine" icon={faUsers}>
-                <UserClubs user={this.user}/>
+                <UserClubs user={this.user} />
               </Setting>
             </View>
 
             <View style={{
-                marginTop: 40
-              }}>
-              <Setting color="red" label="Konto löschen" icon={faTrash} iconColor="light" type="action" onPress={() => alert("setting")}/>
+              marginTop: 40
+            }}>
+              <Setting color="red" label="Konto löschen" icon={faTrash} iconColor="light" type="action" onPress={() => alert("setting")} />
             </View>
           </View>
         </HeaderScrollView>

@@ -43,13 +43,13 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import ClubCard from "./../../components/ClubCard.js";
 import InputBox from "./../../components/InputBox.js";
-import Switch from "./../../components/Switch.js";
 import Button from "./../../components/Button.js";
 import {default as File} from './../../classes/File.js';
 import {default as EventCard} from './../../components/Event.js';
 import {default as Modal} from "./../../components/Modal.js";
 import DatePicker from './../../components/DatePicker.js'
 import SelectBox from './../../components/SelectBox.js'
+import Switch from "./../../components/Switch.js";
 
 export default class ClubEvents extends React.Component {
   constructor(props) {
@@ -101,6 +101,9 @@ export default class ClubEvents extends React.Component {
 
   _editEvent() {
     this.modal.close();
+
+    // TODO: create new event
+
     /*
     const club = this.props.club;
     var group = this.state.modal.group;

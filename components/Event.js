@@ -1,66 +1,35 @@
 import React from 'react';
 import {
   View,
-  Text,
-  TextInput,
   TouchableOpacity,
   ActionSheetIOS,
-  StyleSheet,
-  ActivityIndicator,
-  Platform,
-  Alert
+  Alert,
+  ScrollView,
+  Dimensions,
 } from 'react-native';
-import AutoHeightImage from 'react-native-auto-height-image';
-import FileViewer from 'react-native-file-viewer';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import {
-  faChevronCircleRight,
-  faArrowAltCircleDown,
-  faQuoteRight,
   faCalendar,
   faCalendarMinus,
-  faMapMarker,
-  faPen,
-  faTrash,
-  faChevronCircleLeft,
-  faChevronLeft,
-  faChevronRight,
-  faPlus,
-  faPlusCircle,
-  faUpload,
-  faCloudUploadAlt,
-  faFile,
-  faEllipsisV,
-  faFileWord,
-  faFilePowerpoint,
-  faFileExcel,
-  faFileArchive,
-  faFileCsv,
-  faFileAudio,
-  faFileVideo,
-  faFileImage,
-  faFileAlt,
-  faTimesCircle,
-  faCheck,
-  faPaperPlane,
-  faFilePdf,
-  faCloudDownloadAlt
+  faEllipsisV
 } from '@fortawesome/free-solid-svg-icons';
-import {withNavigation} from 'react-navigation';
-import {useNavigation} from '@react-navigation/native';
-import RNFetchBlob from 'rn-fetch-blob';
-import Share from 'react-native-share';
-import RNFS from 'react-native-fs';
-import CameraRoll from '@react-native-community/cameraroll';
-import {AnimatedCircularProgress} from 'react-native-circular-progress';
 import {Theme} from './../app/index.js';
 import {default as Modal} from "./../components/Modal.js";
 import {default as InputBox} from "./../components/InputBox.js";
+import DatePicker from './../components/DatePicker.js'
+import SelectBox from './../components/SelectBox.js'
+import Switch from "./../components/Switch.js";
 
 // EVENT class: component for club events
 export default class Event extends React.Component {
   constructor(props) {
     super(props);
+    this.props.event.setReadyListener(function(){
+      this.forceUpdate()
+    }.bind(this))
+  }
+
+  _onPress(){
+    if(this.props.event.isOwn()) this._showOptions()
   }
 
   _showOptions() {
@@ -76,8 +45,18 @@ export default class Event extends React.Component {
         // TODO: share event
       } else if (buttonIndex === 2) {
         // edit event
-        this.modal.open()
-        this.forceUpdate();
+
+        // load event
+        this.props.event.getValue('full_day', function(){
+          this.props.event.getValue('ends_at', function(){
+            this.props.event.getValue('location', function(){
+              this.props.event.getValue('visible', function(){
+                  this.modal.open()
+                  this.forceUpdate();
+              }.bind(this))
+            }.bind(this))
+          }.bind(this))
+        }.bind(this))
       } else if (buttonIndex === 3) {
         //this._delete();
       }
@@ -91,7 +70,13 @@ export default class Event extends React.Component {
 
   _saveEdit() {
     const event = this.props.event;
-    event.setTitle(event.getTitle(), true);
+    event.storeValue('full_day')
+    event.storeValue('title')
+    event.storeValue('location')
+    event.storeValue('full_day')
+    event.storeValue('starts_at')
+    event.storeValue('ends_at')
+    event.storeValue('repeat')
     this.forceUpdate();
   }
 
@@ -124,48 +109,75 @@ export default class Event extends React.Component {
     }
   
   render() {
+    // props.card_size === none -> Message Screen
+
     const event = this.props.event;
+    const s_width = Dimensions.get("window").width;
     const modalView = (
       <Modal ref={m => {
           this.modal = m;
         }} headline={'Event bearbeiten'} onDone={() => this._saveEdit()}>
-        <View>
-          <InputBox
-            boxColor={'light'}
-            label="Titel"
-            marginTop={20}
-            value={event.getTitle()}
-            onChange={v => {
-              event.setTitle(v)
-              this.forceUpdate()
-            }}/>
-          <View
-            style={{
-              marginTop: 30,
-              marginBottom: 30,
-              flexWrap: "wrap",
-              alignItems: "flex-start",
-              flexDirection: "row",
-              alignItems: "center"
-            }}>
-            <Theme.Text
-              style={{
-                marginLeft: 5,
-                marginRight: 20,
-                opacity: 0.8,
-                fontSize: 20,
-                fontFamily: "Poppins-SemiBold"
-              }}>
-              Sichtbar
-            </Theme.Text>
-            <Theme.Switch
-              onValueChange={(v) => {
-                event.setVisible(!event.isVisible())
+        <ScrollView>
+            <InputBox label="Name" width={s_width * .95} marginTop={20} value={event.getTitle()} onChange={v => (event.setTitle(v))}/>
+            <InputBox label="Ort" width={s_width * .95} marginTop={20} value={event.getLocation()} onChange={v => (event.setLocation(v))}/>
+
+            <Switch
+              onValueChange={() => {
+                event.setValue(!event.getValue('full_day'), 'full_day')
                 this.forceUpdate();
               }}
-              value={event.isVisible()}/>
-          </View>
-        </View>
+              value={event.getValue('full_day')}
+              label="Ganztägig"/>
+            <DatePicker
+              label={!event.getValue('full_day')
+                ? 'Beginn'
+                : 'Datum'}
+              mode={!event.getValue('full_day')
+                ? 'datetime'
+                : 'date'}
+              value={new Date(event.getValue('starts_at')*1000)}
+              onChange={v => {
+                event.setValue(v.getTime()/1000, 'starts_at')
+                this.forceUpdate()
+              }}
+              width={s_width * .95}></DatePicker>
+            {
+              !event.getValue('full_day')
+                ? <View>
+                    <DatePicker
+                      label='Ende'
+                      mode={'datetime'}
+                      marginTop={20}
+                      value={new Date(event.getValue('ends_at')*1000)}
+                      onChange={v => {
+                        event.setValue(v.getTime()/1000, 'ends_at')
+                        this.forceUpdate()
+                      }}
+                      width={s_width * .95}/></View>
+                : void 0
+            }
+
+            <SelectBox
+              marginTop={20}
+              width={s_width * .95}
+              picker_width={170}
+              label="Wiederholen"
+              sheet_headline="Intervall auswählen"
+              elements={[
+                'Nie',
+                'Täglich',
+                'Wöchentlich',
+                'Alle 2 Wochen',
+                'Monatlich',
+                'Jährlich'
+              ]}
+              value={event.getValue('repeat')}
+              onChange={(value, index) => {
+                event.setValue(value, 'repeat')
+                this.forceUpdate()
+              }}/>
+
+          </ScrollView>
       </Modal>
     )
 
@@ -220,26 +232,13 @@ export default class Event extends React.Component {
         </Theme.View>
       );
     } else {
+      // for message screen
       return (
         <View style={{
             marginBottom: 30
           }}>
-          {
-            event.isOwn()
-              ? <Modal ref={m => {
-                    this.modal = m;
-                  }} headline="Event bearbeiten" onDone={() => alert('MODAL DONE')}>
-                  <ScrollView
-                    style={{
-                      marginLeft: -20,
-                      marginBottom: 40,
-                      backgroundColor: '#1e1e1e'
-                    }}>
-                    <InputBox label="Name" marginTop={20} value={event.getTitle()} onChange={v => event.setTitle(v, true)}/>
-                  </ScrollView>
-                </Modal>
-              : void 0
-          }
+          
+          {modalView}
 
           <Theme.TouchableOpacity
             color={'selected_view'}
@@ -252,6 +251,7 @@ export default class Event extends React.Component {
             <Theme.View
               color={'selected_view'}
               style={{
+                opacity:0.8,
                 justifyContent: 'flex-start',
                 flexWrap: 'wrap',
                 flexDirection: 'row'
@@ -262,7 +262,7 @@ export default class Event extends React.Component {
                 }}>
                 <Theme.Icon style={{
                     zIndex: 0
-                  }} size={35} icon={faCalendar}></Theme.Icon>
+                  }} size={28} icon={faCalendar}></Theme.Icon>
               </View>
 
               <View
@@ -285,12 +285,10 @@ export default class Event extends React.Component {
                 <Theme.Text
                   style={{
                     fontSize: 15,
-                    fontFamily: 'Poppins-SemiBold',
-                    color: this.props.card_size != 'normal'
-                      ? '#D1CFD5'
-                      : '#ADA4A9'
+                    fontFamily: 'Poppins-Medium',
+                    opacity:0.7,
                   }}>
-                  {event.getDate() + event.getID()}
+                  {event.getDate()}
                 </Theme.Text>
               </View>
               {
@@ -301,7 +299,7 @@ export default class Event extends React.Component {
                         justifyContent: 'center',
                         alignItems: 'center'
                       }}>
-                      <TouchableOpacity onPress={() => this._openOptions()} style={{
+                      <TouchableOpacity onPress={() => this._showOptions()} style={{
                           zIndex: 0
                         }}>
                         <Theme.Icon size={20} color="#D1CFD5" icon={faEllipsisV}/>

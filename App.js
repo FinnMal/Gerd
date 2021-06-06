@@ -29,6 +29,7 @@ import FirstStartScreen from "./screens/FirstStart";
 import AddClubScreen from "./screens/AddClub";
 import ClubSettingsScreen from "./screens/ClubSettings";
 import SettingScreen from "./screens/Setting";
+import AllMessagesScreen from "./screens/AllMessages";
 import NotificationActionHandler from "./classes/NotificationActionHandler";
 
 import {LogBox, AppRegistry} from "react-native";
@@ -126,6 +127,10 @@ const MainNavigator = createStackNavigator({
     screen: ClubSettingsScreen,
     navigationOptions: navigationOptions
   },
+  AllMessagesScreen: {
+    screen: AllMessagesScreen,
+    navigationOptions: navigationOptions
+  },
   SettingScreen: {
     screen: SettingScreen,
     navigationOptions: navigationOptions
@@ -142,6 +147,8 @@ export default class App extends Component {
   constructor(properties) {
     super(properties);
 
+    OneSignal.setLogLevel(0, 0);
+
     OneSignal.init("18ae4cf5-c5af-4a62-accb-2324b9e03f2c", {
       kOSSettingsKeyAutoPrompt: false,
       kOSSettingsKeyInAppLaunchURL: false,
@@ -154,8 +161,6 @@ export default class App extends Component {
     OneSignal.addEventListener("received", this.onReceived);
     OneSignal.addEventListener("opened", this.onOpened);
     OneSignal.addEventListener("ids", this.onIds);
-
-    //OneSignal.sendTag("2", "ja");
   }
 
   componentWillUnmount() {

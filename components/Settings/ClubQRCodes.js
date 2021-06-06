@@ -72,8 +72,18 @@ export default class ClubQRCodes extends React.Component {
     this.props.setting_screen.onChildRef(this);
   }
 
+  generate_invite_code(length = 6) {
+    var result = '';
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    var charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+  }
+
   actionButtonOnPress() {
-    var code = this.props.utils.generate_invite_code();
+    var code = this.generate_invite_code();
 
     this.state.modal.headline = "QR-Code erstellen";
     var invite = {

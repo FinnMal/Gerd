@@ -1,6 +1,6 @@
 import React from "react";
 import database from "@react-native-firebase/database";
-import {openDatabase} from 'react-native-sqlite-storage';
+import { openDatabase } from 'react-native-sqlite-storage';
 
 // DatabaseConnector class: Manages the connection for Lists in the Firebase Database
 export default class DatabaseConnector {
@@ -23,7 +23,7 @@ export default class DatabaseConnector {
     }
 
     if (start_values !== false) {
-      this.startListener(this.start_values, function() {
+      this.startListener(this.start_values, function () {
         this.checkIfReady()
       }.bind(this));
     }
@@ -31,16 +31,16 @@ export default class DatabaseConnector {
 
   // runs SQL command on local database no connection to firebase
   executeSQL(s, p = [], cb) {
-    if (s.indexOf('"?"') > -1 || s.indexOf("'?'") > -1) 
+    if (s.indexOf('"?"') > -1 || s.indexOf("'?'") > -1)
       alert('[DatabaseConnector] Error: symbol "?" should not be used with quotation marks')
 
     var db = openDatabase('gerd.db');
-    db.transaction(function(txn) {
+    db.transaction(function (txn) {
       //txn.executeSql('INSERT INTO chat_messages VALUES ("MES_ID", "-MIAN2v5d1Bs4WTf7AUI", 100, "Text", 1);', [])
       txn.executeSql(s, p, (tx, results) => {
-        if (cb) 
+        if (cb)
           cb(tx, results);
-        }
+      }
       );
     });
   }
@@ -52,30 +52,31 @@ export default class DatabaseConnector {
   */
   getValue(path, cb = null, print_path = false) {
     var obj = this.data;
-    if (print_path) 
+    if (print_path)
       console.log(this.parent_path + '/' + this.id + '/' + path)
     if (obj) {
+      path = path.toString()
       path_arr = path.split("/");
       if (path_arr) {
         for (i = 0; i < path_arr.length - 1; i++) {
-          if (obj) 
+          if (obj)
             obj = obj[path_arr[i]];
-          else if (cb) 
+          else if (cb)
             this.getDatabaseValue(path, cb);
-          else 
+          else
             return null;
-          }
-        if (obj && path_arr && path_arr[i]) 
+        }
+        if (obj && path_arr && path_arr[i])
           var value = obj[path_arr[i]];
         if (value != undefined) {
-          if (cb) 
+          if (cb)
             return cb(value);
           return value;
         }
-        if (cb) 
+        if (cb)
           this.getDatabaseValue(path, cb);
-        }
       }
+    }
   }
 
   /*
@@ -84,27 +85,28 @@ export default class DatabaseConnector {
   */
   setValue(value, path, store = false) {
     if (path) {
+      path = path.toString()
       path_arr = path.split("/");
       if (path_arr) {
         var obj = this.data;
         if (obj) {
           for (i = 0; i < path_arr.length - 1; i++) {
-            if (!obj) 
+            if (!obj)
               obj = {}
             obj = obj[path_arr[i]];
           }
 
-          if (obj) 
+          if (obj)
             obj[path_arr[i]] = value;
-          else 
+          else
             database().ref(this.parent_path + "/" + this.id + "/" + path).set(value);
-          
+
           if (store) {
             database().ref(this.parent_path + "/" + this.id + "/" + path).set(value);
-          } else 
+          } else
             this._triggerCallbacks(path, value);
-          }
         }
+      }
     }
   }
 
@@ -113,23 +115,30 @@ export default class DatabaseConnector {
   */
   pushValue(value, path, cb) {
     var key = database().ref(this.parent_path + "/" + this.id + "/" + path).push(value).key;
-    if (cb) 
+    if (cb)
       cb(key);
-    else 
+    else
       return key;
-    }
-  
+  }
+
+  /*
+  uploads a local stored value to db
+  */
+  storeValue(path) {
+    this.setValue(this.getValue(path), path, true)
+  }
+
   /*
   counts path one up
   */
   countUp(path, cb) {
-    this.getDatabaseValue(path, function(value) {
+    this.getDatabaseValue(path, function (value) {
       value = value + 1;
       this.setValue(value, path, true);
-      if (cb) 
+      if (cb)
         cb(value);
-      }
-    .bind(this))
+    }
+      .bind(this))
   }
 
   /*
@@ -157,16 +166,16 @@ export default class DatabaseConnector {
       var obj = this.data;
       if (obj) {
         for (i = 0; i < path_arr.length - 1; i++) {
-          if (!obj) 
+          if (!obj)
             obj = {}
           obj = obj[path_arr[i]];
         }
         if (obj) {
           if (path_arr) {
-            if (path_arr[i]) 
+            if (path_arr[i])
               obj[path_arr[i]] = undefined;
-            }
           }
+        }
       }
       database().ref(this.parent_path + "/" + this.id + "/" + path).remove();
       this._triggerCallbacks(path, undefined);
@@ -177,7 +186,7 @@ export default class DatabaseConnector {
   gives the current value from path in firebase datbase to callback function
   */
   getDatabaseValue(path, cb) {
-    database().ref(this.parent_path + "/" + this.id + "/" + path).once("value", function(snap) {
+    database().ref(this.parent_path + "/" + this.id + "/" + path).once("value", function (snap) {
       this.setValue(snap.val(), path);
       cb(snap.val());
     }.bind(this));
@@ -204,7 +213,7 @@ export default class DatabaseConnector {
         }
 
         this.listener[path].ref = database().ref(this.parent_path + "/" + this.id + "/" + path);
-        this.listener[path].ref.on("value", function(snap) {
+        this.listener[path].ref.on("value", function (snap) {
           if (!this.listener[path] && cb) {
             this.listener[path] = {
               callbacks: [cb],
@@ -228,7 +237,7 @@ export default class DatabaseConnector {
   stopListener(path) {
     if (this.listener) {
       if (this.listener[path]) {
-        if (this.listener[path].ref) 
+        if (this.listener[path].ref)
           this.listener[path].ref.off();
         this.listener[path] = null;
       }
@@ -250,13 +259,13 @@ export default class DatabaseConnector {
     if (this.listener[path]) {
       if (this.listener[path].callbacks) {
         this.listener[path].callbacks.forEach((cb, i) => {
-          if (cb) 
+          if (cb)
             cb(
               value
                 ? value
                 : this.getValue(path)
             );
-          }
+        }
         );
       }
     }
@@ -264,16 +273,15 @@ export default class DatabaseConnector {
 
   setReadyListener(cb) {
     if (!this.ready) {
-      if (!this.ready_listeners) 
+      if (!this.ready_listeners)
         this.ready_listeners = [];
       this.ready_listeners.push(cb);
       this.checkIfReady();
-    } else 
+    } else
       cb(this);
-    }
-  
+  }
+
   triggerReadyListeners(value) {
-    console.log('in triggerReadyListeners')
     this.ready_listeners.forEach((listener, i) => {
       listener(value);
     });
@@ -285,12 +293,12 @@ export default class DatabaseConnector {
       if (this.start_values) {
         this.start_values.forEach((path, i) => {
           if (this.listener[path]) {
-            if (this.listener[path].is_db_value !== true) 
+            if (this.listener[path].is_db_value !== true)
               values_ok = false;
-            }
-          else 
-            values_ok = false;
           }
+          else
+            values_ok = false;
+        }
         );
       }
 

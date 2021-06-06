@@ -57,7 +57,7 @@ export default class Event extends DatabaseConnector {
 
   constructor(id, club, user = null, data = false) {
     super('clubs/' + club.getID() + '/events', id, [
-      'title', 'visible', 'starts_at'
+      'title', 'visible', 'starts_at', 'repeat'
     ], data);
     this.id = id;
     this.club = club;
@@ -191,6 +191,7 @@ export default class Event extends DatabaseConnector {
       };
       return "Jählich am " + date.toLocaleTimeString('de-DE', options);
     }
+    return 'Fehler beim Abrufen des Datums'
   }
 
   setDate(v, store = false) {
@@ -224,8 +225,12 @@ export default class Event extends DatabaseConnector {
     this.setValue(v, 'location', store);
   }
 
-  isOwnEvent() {
+  isOwn() {
     return this.getValue('author') == this.uid;
+  }
+
+  isOwnEvent() {
+    return this.isOwn()
   }
 
   hasRepeat() {
