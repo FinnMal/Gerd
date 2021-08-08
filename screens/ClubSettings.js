@@ -27,9 +27,10 @@ import {
   faTrash,
   faTint,
   faPen,
-  faImage,
-  faUnlock,
   faLock,
+  faUnlock,
+  faImage,
+  faLockOpen,
   faCloudUploadAlt
 } from "@fortawesome/free-solid-svg-icons";
 import {withNavigation} from "react-navigation";
@@ -219,9 +220,8 @@ class ClubSettings extends React.Component {
                   this.forceUpdate();
                 }}
                 label="Öffentlich"
-                icon={club.isPublic()
-                  ? faUnlock
-                  : faLock}/>
+                icon={faLock}
+                iconInactive={faUnlock}/>
             </View>
             <View style={{
                 marginTop: 40

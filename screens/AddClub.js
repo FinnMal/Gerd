@@ -304,14 +304,16 @@ class AddClubScreen extends React.Component {
         }
 
         var is_admin = false;
+        var has_private_group = false;
         selected_groups.forEach((group, i) => {
           if (group.has_admin_rights) 
             is_admin = true;
           if (group.is_public) {
             database().ref('clubs/' + club_id + '/groups/' + group.key + '/members').set(group.members + 1);
-          } else 
+          } else {
+            has_private_group = true
             database().ref('clubs/' + club_id + '/groups/' + group.key + '/queue/' + uid).set(true);
-          
+          }
           user_club.groups[group.key] = true;
         });
 
@@ -326,7 +328,7 @@ class AddClubScreen extends React.Component {
             database().ref('users/' + uid + '/clubs/' + club_id).set(user_club);
 
             utils.showAlert('Du bist jetzt ' + (
-              is_admin
+              is_admin && !has_private_group
                 ? 'Administrator'
                 : 'Mitglied'
             ) + ' von ' + club_name, '', ['Ok'], false, false);

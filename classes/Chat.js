@@ -289,4 +289,8 @@ export default class Chat extends DatabaseConnector {
       }.bind(this))
     }
   }
+
+  leave(){
+    this.remove()
+  }
 }

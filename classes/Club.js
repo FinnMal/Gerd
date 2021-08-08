@@ -115,7 +115,7 @@ export default class Club extends DatabaseConnector {
     return this.hasValue('groups');
   }
 
-  getGroups() {
+  getGroups(sorted=false) {
     if (this.hasValue('groups')) {
       var groups = this.getValue('groups');
       Object.keys(groups).map(group_id => {
@@ -125,6 +125,25 @@ export default class Club extends DatabaseConnector {
           groups[group_id].has_admin_rights = groups[group_id].has_admin_rights === true;
         }
       });
+      if (sorted){
+        var names = []
+        var new_groups = {}
+        console.log(groups)
+        for (let group_id in groups){
+          console.log(group_id)
+          names.push({id: group_id, name: groups[group_id].name})
+        }
+        names.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
+
+        console.log('for (let group in names)')
+        for (let i in names){
+          const group = names[i]
+          console.log(group)
+          new_groups[group.id] = groups[group.id]
+        }
+        console.log(new_groups)
+        return new_groups
+      }
       return groups;
     }
     return {};

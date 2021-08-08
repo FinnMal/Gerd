@@ -1,28 +1,8 @@
-import React from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ActionSheetIOS,
-  StyleSheet,
-  ActivityIndicator,
-  Modal,
-  Platform,
-  Dimensions,
-  Image
-} from "react-native";
-import AutoHeightImage from "react-native-auto-height-image";
-import FileViewer from "react-native-file-viewer";
-import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
-import {faChevronCircleRight} from "@fortawesome/free-solid-svg-icons";
-import {withNavigation} from "react-navigation";
-import {useNavigation} from "@react-navigation/native";
-import database from "@react-native-firebase/database";
-import OneSignal from "react-native-onesignal";
-import DatabaseConnector from "./database/DatabaseConnector";
 import Chat from './Chat.js';
 import Club from './Club.js';
+import auth from '@react-native-firebase/auth';
+import database from "@react-native-firebase/database";
+import DatabaseConnector from "./database/DatabaseConnector";
 
 // USER class: manages a user object in firebase database
 export default class User extends DatabaseConnector {
@@ -94,7 +74,7 @@ export default class User extends DatabaseConnector {
     var img = this.getValue("img");
     return img
       ? img
-      : "https://yt3.ggpht.com/a/AATXAJy6_f0l3LV_ewft6LltTAEwa1NO8nwbFtkvFz6S4w=s900-c-k-c0xffffffff-no-rj-mo";
+      : "https://finnmalkus.de/wp-content/themes/finnmalkus/assets/patrick.jpg";
   }
 
   setImage(url) {
@@ -166,6 +146,37 @@ export default class User extends DatabaseConnector {
     .bind(this));
   }
 
+  getChatsList(cb, startListener = false, start_values = null) {
+    if (!startListener) {
+      this.getValue('chats', function(chats) {
+        this._chatToObjects(chats, cb, start_values);
+      }.bind(this))
+    } else {
+      this.startListener('chats', function(chats) {
+        this._chatToObjects(chats, cb, start_values);
+      }.bind(this))
+    }
+  }
+
+  _chatToObjects(chats, cb, start_values = null) {
+    var chats_list = []
+    if (chats){
+      if (Object.keys(chats).length > 0){
+        for(let chat_id in chats){
+          const chat = new Chat(chat_id, this);
+          chat.setReadyListener(function() {
+            chats_list.push(chat);
+            var chat_ids = Object.keys(chats)
+            if (chat_id == chat_ids[chat_ids.length-1])
+              cb(chats_list);
+          }.bind(this))
+        }
+      }
+      else cb(false)
+    }
+    else cb(false)
+  }
+
   getClubsList(cb, startListener = false, start_values = null) {
     if (!startListener) {
       this.getValue('clubs', function(club_infos) {
@@ -192,7 +203,7 @@ export default class User extends DatabaseConnector {
         }
       });
     } else 
-      cb([null]);
+      cb([]);
     }
   
   getClubRoles(cb) {
@@ -288,7 +299,7 @@ export default class User extends DatabaseConnector {
             database().ref("users/" + partner.getUID() + "/chats/" + chatRef.key).set(true);
             utils.getNavigation().navigate('ChatScreen', {
               focused: true,
-              chat: new Chat(chatRef.key, this.getUID()),
+              chat: new Chat(chatRef.key, this),
               utils: utils,
               partner_name: name
             });
@@ -296,5 +307,58 @@ export default class User extends DatabaseConnector {
         });
       }.bind(this));
     }.bind(this))
+  }
+
+  delete(cb){
+    console.log('++++++ DELETING ACCOUNT +++')
+    this.stopAllListener()
+
+    // log off from all groups
+    this.getClubsList(function(clubs){
+      console.log(clubs)
+      for (let i in clubs){
+        const club = clubs[i]
+        this.getClubGroups(club, function(groups){
+          for(let group_id in groups){
+            database().ref('clubs/'+club.getID()+'/groups/'+group_id+'/member_ids/'+this.getID()).remove();
+
+            var ids = Object.keys(groups)
+            if (group_id == ids[ids.length-1] && i == clubs.length-1){
+              // groups done
+
+              // leave all chats
+              this.getChatsList(function(chats){
+                if(chats){
+                  chats.forEach((chat, i) => {
+                    chat.leave()
+                    if (i == chats.length-1){
+                      // chats done
+                      database().ref("users/" + this.getID()).remove()
+                      cb(true)
+                    }
+                  });
+                }
+                else {
+                  database().ref("users/" + this.getID()).remove()
+                  cb(true)
+                }
+              }.bind(this))
+            }
+          }
+        }.bind(this))
+      }
+      if (clubs.length < 1) {
+        database().ref("users/" + this.getID()).remove()
+        cb(true)
+      }
+    }.bind(this), false, [])
+  }
+
+  logout(cb){
+    auth().signOut().then(() => {
+      cb(true)
+    }).catch((error) => {
+      cb(false, error)
+    });
   }
 }

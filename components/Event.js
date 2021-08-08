@@ -191,16 +191,16 @@ export default class Event extends React.Component {
           <Theme.TouchableOpacity
             style={{
               padding: 10,
-              paddingLeft: 12,
+              paddingLeft: 15,
               flexWrap: "wrap",
               alignItems: 'center',
               justifyContent: 'center',
               flexDirection: "row"
             }}
             onPress={() => this._showOptions()}>
-            <Theme.Icon size={35} color={'primary'} icon={this._getIcon()}/>
+            <Theme.Icon size={27} color={'primary'} icon={this._getIcon()}/>
             <View style={{
-                marginLeft: 20,
+                marginLeft: 18,
                 maxWidth: 220,
                 justifyContent: "center"
               }}>

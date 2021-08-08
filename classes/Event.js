@@ -57,7 +57,7 @@ export default class Event extends DatabaseConnector {
 
   constructor(id, club, user = null, data = false) {
     super('clubs/' + club.getID() + '/events', id, [
-      'title', 'visible', 'starts_at', 'repeat'
+      'title', 'location', 'visible', 'starts_at', 'repeat'
     ], data);
     this.id = id;
     this.club = club;

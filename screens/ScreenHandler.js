@@ -1,22 +1,11 @@
 import React from 'react';
 import * as utils from './../utils.js';
-import AutoHeightImage from 'react-native-auto-height-image';
-import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
 import {
-  Alert,
-  TextInput,
   StyleSheet,
-  Text,
   View,
   StatusBar,
-  Image,
-  Button,
-  TouchableOpacity,
-  ScrollView,
   Animated,
   Easing,
-  Dimensions,
-  RefreshControl,
   Pressable
 } from 'react-native';
 import HomeScreen from './Home';
@@ -24,9 +13,7 @@ import ManagmentScreen from './Managment';
 import MessagesScreen from './Messages';
 import SettingsScreen from './Settings';
 import AddClubScreen from './AddClub';
-import FirstStartScreen from './FirstStart';
 import {ifIphoneX} from 'react-native-iphone-x-helper';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
 import {
@@ -35,8 +22,6 @@ import {
   faComment,
   faCog,
   faPlusCircle,
-  faPlus,
-  faPlusSquare
 } from '@fortawesome/free-solid-svg-icons';
 import User from "./../classes/User.js";
 import {useDarkMode} from 'react-native-dynamic'
@@ -119,35 +104,39 @@ export default class ScreenHandler extends React.Component {
     };
     this.navbarMarginBottom = new Animated.Value(0);
     auth().onAuthStateChanged((function(user) {
-      database().ref('users/' + user.uid + '/account_type').once('value', (function(snap) {
-        if (!snap.val()) {
-          // account does not exist
-          this.props.navigation.navigate('FirstStartScreen', {
-            utils: utils,
-            uid: user.uid,
-            onDone: this._onAuthDone.bind(this)
-          });
-        } else {
-          // acount exists
-          utils.setUser(new User(user.uid))
-          utils.setUserID(user.uid);
-          utils.setAccountType(snap.val());
-          utils.getUser().startListener('account_type', function(){
-            this.forceUpdate()
-          }.bind(this))
-          utils.setNavigation(this.props.navigation);
-          this.AppContext = React.createContext(utils);
-          this.state.nav[0].visible = true;
-          this.state.first_start_done = true;
-          this.state.account_type = snap.val();
-          this.forceUpdate();
+      if (user){
+        if (user.uid){
+          database().ref('users/' + user.uid + '/account_type').once('value', (function(snap) {
+            if (!snap.val()) {
+              // account does not exist
+              this.props.navigation.navigate('FirstStartScreen', {
+                utils: utils,
+                uid: user.uid,
+                onDone: this._onAuthDone.bind(this)
+              });
+            } else {
+              // acount exists
+              this._onAuthDone(user.uid, false)
+            }
+          }).bind(this));
         }
-      }).bind(this));
+      }
     }).bind(this));
   }
 
-  _onAuthDone() {
-    this.props.navigation.navigate('ScreenHandler');
+  _onAuthDone(uid, firststart=false) {
+    if (firststart !== false)
+      this.props.navigation.navigate('ScreenHandler');
+
+    utils.setUser(new User(uid))
+    utils.setUserID(uid);
+    //utils.setAccountType(snap.val());
+    utils.getUser().startListener('account_type', function(v){
+      this.state.account_type = v
+      this.forceUpdate()
+    }.bind(this))
+    utils.setNavigation(this.props.navigation);
+    this.AppContext = React.createContext(utils);
     this.state.nav[0].visible = true;
     this.state.first_start_done = true;
     this.forceUpdate();
@@ -207,10 +196,10 @@ export default class ScreenHandler extends React.Component {
       outputRange: [-100, 0]
     });
 
-    if (this.state.first_start_done) {
+    if (this.state.first_start_done && utils.getUser()) {
       console.log('first start is done 1')
       return (
-        <this.AppContext.Provider>
+        <View>
           <CStatusBar/>
           <Toast ref={(toast) => {
               utils.setToast(toast)
@@ -260,7 +249,7 @@ export default class ScreenHandler extends React.Component {
               <NavItem index={4} label="Settings" icon={faCog} active={this.state.nav[4].active} navigate={this.navigate.bind(this)}/>
             </View>
           </Theme.View>
-        </this.AppContext.Provider>
+        </View>
       );
     } else {
       //<NavItem index={2} label="Hinzufügen" icon={faPlusCircle} active={this.state.nav[2].active} navigate={this.navigate.bind(this)}/>

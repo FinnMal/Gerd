@@ -122,7 +122,7 @@ export default class EventCard extends React.Component {
                     flexWrap: 'wrap',
                     flexDirection: 'row'
                   }}>
-                  <FontAwesomeIcon size={28} color={fontColor} icon={faQuoteRight}/>
+                  <FontAwesomeIcon size={25} color={fontColor} icon={faQuoteRight}/>
                   <Text
                     style={{
                       marginLeft: 20,
@@ -142,7 +142,7 @@ export default class EventCard extends React.Component {
               flexWrap: 'wrap',
               flexDirection: 'row'
             }}>
-            <FontAwesomeIcon size={28} color={fontColor} icon={faCalendar}/>
+            <FontAwesomeIcon size={25} color={fontColor} icon={faCalendar}/>
             <Text
               style={{
                 marginLeft: 20,
@@ -160,7 +160,7 @@ export default class EventCard extends React.Component {
               flexWrap: 'wrap',
               flexDirection: 'row'
             }}>
-            <FontAwesomeIcon size={28} color={fontColor} icon={faMapMarker}/>
+            <FontAwesomeIcon size={25} color={fontColor} icon={faMapMarker}/>
             <Text
               style={{
                 marginLeft: 20,

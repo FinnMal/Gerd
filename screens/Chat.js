@@ -118,8 +118,8 @@ class ChatScreen extends React.Component {
       setTimeout(function() {
         if (this.textInput) 
           this.textInput.focus();
-        this.forceUpdate().bind(this)
-      }, 300)
+        this.forceUpdate()
+      }.bind(this), 300)
 
     }
     return (

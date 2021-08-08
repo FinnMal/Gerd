@@ -94,7 +94,7 @@ export class EventsList {
           }.bind(this));
         }.bind(this));
       }
-    }.bind(this))
+    }.bind(this), true)
   }
 
   refresh(cb) {

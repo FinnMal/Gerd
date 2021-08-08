@@ -90,7 +90,7 @@ export class MessagesList {
           }
         });
       }
-    }.bind(this), false, ['logo', 'color', 'name'])
+    }.bind(this), true, ['logo', 'color', 'name'])
   }
 
   refresh(cb) {

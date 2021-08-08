@@ -84,7 +84,7 @@ class FirstStartScreen extends React.Component {
     this.key_manager.saveKey('private_key', keys[1])
     database().ref('users/' + uid + '/public_key').set(JSON.parse(keys[0]));
 
-    onDone()
+    onDone(uid, true)
   }
 
   async _saveUserID(id) {

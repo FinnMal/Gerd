@@ -35,12 +35,15 @@ class MessagesScreen extends React.Component {
     };
 
     // get all active chats of user
-    utils.getUser().getChats(function(c) {
-      c.forEach((chat, i) => {
-        if (chat) 
+    utils.getUser().getChatsList(function(c) {
+      if (c){
+        this.chats = []
+        c.forEach((chat, i) => {
           this.chats.push(chat)
-      });
-    }.bind(this))
+          this.forceUpdate()
+        });
+      }
+    }.bind(this), true)
   }
 
   render() {

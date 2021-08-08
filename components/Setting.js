@@ -1,22 +1,9 @@
 import React from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ActionSheetIOS,
-  StyleSheet,
-  ActivityIndicator,
-  Modal,
-  Platform
+  TouchableOpacity
 } from "react-native";
-import AutoHeightImage from "react-native-auto-height-image";
-import FileViewer from "react-native-file-viewer";
-import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
-import {faPlusCircle, faChevronCircleLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
+import {faChevronRight} from "@fortawesome/free-solid-svg-icons";
 import {Theme} from './../app/index.js';
-
-import database from "@react-native-firebase/database";
 
 // SETTING class: component for a setting element (used for User Settings)
 export default class Setting extends React.Component {

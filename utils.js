@@ -16,9 +16,13 @@ this.state = {};
 // utils class, was written at the beginning of the project. But it is only used in a few places. Almost just the alert function.
 
 auth().onAuthStateChanged(function(user) {
-  console.log(user)
-  console.log("onAuthStateChanged utils: " + user.uid);
-  USER_ID = user.uid;
+  if (user){
+    if (user.uid){
+      console.log(user)
+      console.log("onAuthStateChanged utils: " + user.uid);
+      USER_ID = user.uid;
+    }
+  }
 }.bind(this));
 
 //Reads the user ID

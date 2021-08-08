@@ -1,46 +1,18 @@
 import React from "react";
 import {
-  Alert,
-  TextInput,
-  StyleSheet,
-  Text,
   View,
-  StatusBar,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-  Animated,
-  Easing,
   Dimensions,
   ActionSheetIOS,
-  Switch,
-  ActivityIndicator,
-  ImageBackground
 } from "react-native";
-import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
-import ReactNativeHapticFeedback from "react-native-haptic-feedback"
 import {Theme} from './../../app/index.js';
-import AutoHeightImage from "react-native-auto-height-image";
-import RNFetchBlob from "rn-fetch-blob";
-import CheckBox from "@react-native-community/checkbox";
 import {
-  faPlus,
-  faChevronCircleLeft,
   faLayerGroup,
   faLock,
   faEllipsisV,
   faExclamationCircle,
-  faQrcode,
-  faTimesCircle,
-  faPlusCircle,
-  faInfoCircle,
-  faCheck,
-  faChevronLeft,
   faTrash
 } from "@fortawesome/free-solid-svg-icons";
-import ClubCard from "./../../components/ClubCard.js";
 import InputBox from "./../../components/InputBox.js";
-import Button from "./../../components/Button.js";
 import {default as Modal} from "./../../components/Modal.js";
 
 export default class ClubGroups extends React.Component {
@@ -141,7 +113,7 @@ export default class ClubGroups extends React.Component {
         }}>
         <Theme.TouchableOpacity
           style={{
-            padding: 7,
+            padding: 8.5,
             borderRadius: 15,
             borderBottomLeftRadius: group.public && group.has_admin_rights
               ? 0
@@ -155,7 +127,8 @@ export default class ClubGroups extends React.Component {
           }}
           onPress={() => this._openOptions(group.id)}>
           <View style={{
-              padding: 8
+              padding: 8,
+              marginLeft:4
             }}>
             <Theme.Icon
               backgroundColor={group.has_admin_rights
@@ -170,8 +143,7 @@ export default class ClubGroups extends React.Component {
                 : faLayerGroup}/>
           </View>
           <View style={{
-              marginLeft: 20,
-              height: 42,
+              marginLeft: 15,
               maxWidth: 220,
               justifyContent: "center"
             }}>
@@ -190,7 +162,7 @@ export default class ClubGroups extends React.Component {
                 ? 'primary'
                 : ''}
               style={{
-                marginTop: -4,
+                marginTop: 0,
                 fontFamily: "Poppins-Medium",
                 fontSize: 16,
                 opacity: 0.77
@@ -202,7 +174,7 @@ export default class ClubGroups extends React.Component {
           <Theme.TouchableOpacity
             style={{
               padding: 11,
-              opacity: 0.7,
+              opacity: 0.8,
               marginLeft: 'auto',
               alignSelf: 'flex-end'
             }}
@@ -249,11 +221,8 @@ export default class ClubGroups extends React.Component {
   }
 
   render() {
-    const s_width = Dimensions.get("window").width;
-    const s_height = Dimensions.get("window").height;
-
     const club = this.props.club;
-    const groups = club.getGroups();
+    const groups = club.getGroups(sorted=true);
     const pageContent = Object.keys(groups).map(group_id => {
       var group = groups[group_id];
       if (group) {

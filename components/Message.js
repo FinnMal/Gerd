@@ -15,6 +15,7 @@ import ReactNativeHapticFeedback from "react-native-haptic-feedback"
 class Message extends React.Component {
     club = {};
     user = null;
+    showRead = false;
     author_info = {};
 
     constructor(props) {
@@ -104,7 +105,8 @@ class Message extends React.Component {
             mes: this.mes,
             utils: this.props.utils
         })
-        this.mes.setRead(true)
+        if(!this.showRead)
+            this.mes.setRead(true)
         this.forceUpdate()
     }
 
@@ -115,6 +117,7 @@ class Message extends React.Component {
 
         if (mes) {
             if (this.render_ready){
+                this.showRead = this.props.showRead
                 if ((!mes.isRead()  || this.props.showRead) && mes.isViewable()){
                     if (mes.getHeadline() && mes.getShortText() && club.getColor() && club.getImage() && club.getName()) {
 

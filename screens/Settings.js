@@ -219,7 +219,17 @@ class SettingsScreen extends React.Component {
             <View style={{
               marginTop: 40
             }}>
-              <Setting color="red" label="Konto löschen" icon={faTrash} iconColor="light" type="action" onPress={() => alert("setting")} />
+              <Setting color="red" label="Konto löschen" icon={faTrash} iconColor="light" type="action" onPress={() => {
+                this.user.delete(function(ok){
+                  if (ok){
+                    this.user.logout(function(ok, error){
+                      if (ok) alert('Konto gelöscht. Starte die App neu.')
+                      else console.log(error)
+                    }.bind(this))
+                  }
+                  else alert('Fehler beim Löschen des Accounts')
+                }.bind(this))
+              }} />
             </View>
           </View>
         </HeaderScrollView>
