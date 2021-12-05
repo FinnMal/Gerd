@@ -34,6 +34,7 @@
 		B63EC26924FAF84600269DCC /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B63EC26824FAF84600269DCC /* NotificationService.swift */; };
 		B63EC26D24FAF84600269DCC /* OneSignalNotificationServiceExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = B63EC26624FAF84600269DCC /* OneSignalNotificationServiceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B6698E8C261286DC00B4EE58 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = B6698E8B261286DC00B4EE58 /* GoogleService-Info.plist */; };
+		B6D17C1D275D85C7000845A4 /* ####.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6D17C1C275D85C7000845A4 /* ####.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		ECE7E493CB674E19A67BE10E /* Poppins-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 24DA2476571B46D7BC48BA40 /* Poppins-Regular.ttf */; };
 /* End PBXBuildFile section */
@@ -99,6 +100,8 @@
 		B63EC26A24FAF84600269DCC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B63EC27224FAF90D00269DCC /* OneSignalNotificationServiceExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OneSignalNotificationServiceExtension.entitlements; sourceTree = "<group>"; };
 		B6698E8B261286DC00B4EE58 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		B6D17C1B275D85C7000845A4 /* Gerd-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Gerd-Bridging-Header.h"; sourceTree = "<group>"; };
+		B6D17C1C275D85C7000845A4 /* ####.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "####.swift"; sourceTree = "<group>"; };
 		B7EC418360704BB48F90B788 /* Poppins-ExtraLightItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-ExtraLightItalic.ttf"; path = "../assets/fonts/Poppins-ExtraLightItalic.ttf"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		BCA7335DA809890384FCD1F2 /* Pods-OneSignalNotificationServiceExtension.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OneSignalNotificationServiceExtension.release.xcconfig"; path = "Target Support Files/Pods-OneSignalNotificationServiceExtension/Pods-OneSignalNotificationServiceExtension.release.xcconfig"; sourceTree = "<group>"; };
@@ -142,6 +145,8 @@
 				13B07FB11A68108700A75B9A /* LaunchScreen.xib */,
 				13B07FB71A68108700A75B9A /* main.m */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
+				B6D17C1C275D85C7000845A4 /* ####.swift */,
+				B6D17C1B275D85C7000845A4 /* Gerd-Bridging-Header.h */,
 			);
 			name = Gerd;
 			sourceTree = "<group>";
@@ -302,7 +307,7 @@
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
 						DevelopmentTeam = 3JBG684829;
-						LastSwiftMigration = 1120;
+						LastSwiftMigration = 1300;
 					};
 					B63EC26524FAF84600269DCC = {
 						CreatedOnToolsVersion = 11.6;
@@ -506,6 +511,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				13B07FBC1A68108700A75B9A /* AppDelegate.m in Sources */,
+				B6D17C1D275D85C7000845A4 /* ####.swift in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -566,6 +572,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = de.gerd;
 				PRODUCT_NAME = Gerd;
+				SWIFT_OBJC_BRIDGING_HEADER = "Gerd-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -592,6 +599,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = de.gerd;
 				PRODUCT_NAME = Gerd;
+				SWIFT_OBJC_BRIDGING_HEADER = "Gerd-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
