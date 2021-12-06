@@ -41,7 +41,7 @@ import {useDarkMode} from 'react-native-dynamic'
 
 // access data for firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyA8WgcS53qQskfdqzJInCK-VlBOU_gPMYI",
+  apiKey: "...",
   authDomain: "gerd-eu.firebaseapp.com",
   databaseURL: "https://gerd-eu.firebaseio.com",
   projectId: "gerd-eu",
